@@ -50,3 +50,31 @@ def test_mission_authorization_and_approval_persist_together(tmp_path):
     assert repository.store.verify_project_integrity("p2")
     restarted = VaneEngine(repository=repository)
     assert restarted.get_mission("p2", mission.mission_id).status == MissionStatus.AUTHORIZED
+
+def test_evidence_attachment_after_restart_reloads_signed_authorization(tmp_path):
+    from vane.storage.repository import SQLiteRepository
+    from vane.storage.sqlite_store import SQLiteStore
+    repository = SQLiteRepository(SQLiteStore(tmp_path / "resume.sqlite3"))
+    engine = VaneEngine(enforcer=SecurityEnforcer(PolicyEngine(TestVerifier())),
+                        repository=repository)
+    engine.register_project("p3", "Resume Project", "master")
+    mission = engine.create_mission("p3", "Observe approved host")
+    engine.submit_mission(mission)
+    now = datetime.now(timezone.utc)
+    envelope = AuthorizationEnvelope("a3", "master", "p3",
+        (ScopeRule("hostname", "example.net"),), ("http_metadata",),
+        starts_at=now - timedelta(minutes=1), expires_at=now + timedelta(hours=1),
+        approval_id="approval-3")
+    approval = Approval("approval-3", "master", authorization_digest(envelope),
+        "APPROVE", now, "master-key-1", "test-signature", envelope.expires_at)
+    engine.authorize_mission(mission, envelope, approval)
+    engine.start_mission(mission)
+    restarted = VaneEngine(enforcer=SecurityEnforcer(PolicyEngine(TestVerifier())),
+                           repository=repository)
+    resumed_mission = restarted.get_mission("p3", mission.mission_id)
+    evidence = EvidenceRecord("e3", "p3", mission.mission_id, "http_observation",
+        "operator", now, "d" * 64, authorization_id="a3",
+        collection_method="http_metadata",
+        metadata={"locator":"https://example.net","method":"http_metadata"})
+    restarted.attach_evidence(resumed_mission, evidence)
+    assert repository.get_evidence("p3", "e3").authorization_id == "a3"
