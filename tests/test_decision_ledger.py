@@ -74,3 +74,22 @@ def test_decision_ledger_requires_authority_and_supersession_link(tmp_path):
         ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
                           target=DecisionStatus.SUPERSEDED, actor="master",
                           authority_reference="master-2", trigger="replace", rationale="R")
+
+def test_event_append_compare_and_swap_rejects_stale_chain_head(tmp_path):
+    store = SQLiteStore(tmp_path / "cas.sqlite3")
+    _project(store)
+    store.append_chained_event(project_id="p1", event_type="baseline", actor="master",
+                               payload={"version": 1})
+    with pytest.raises(ValueError, match="head changed"):
+        store.append_chained_event(
+            project_id="p1", event_type="decision.snapshot", actor="vane",
+            payload={"snapshot": {}}, expected_previous_digest=None,
+            enforce_expected_head=True,
+        )
+    current_head = store.list_events("p1", limit=None)[-1]["digest"]
+    store.append_chained_event(
+        project_id="p1", event_type="decision.snapshot", actor="vane",
+        payload={"snapshot": {}}, expected_previous_digest=current_head,
+        enforce_expected_head=True,
+    )
+    assert store.verify_project_chain("p1")
