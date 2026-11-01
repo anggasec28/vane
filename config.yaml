@@ -39,6 +39,7 @@ mcp_servers:
         - vane_list_evidence
         - vane_save_finding
         - vane_list_findings
+        - vane_list_projects
         - vane_create_project
         - vane_create_mission
         - vane_get_mission
