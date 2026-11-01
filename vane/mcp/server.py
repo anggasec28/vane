@@ -136,6 +136,7 @@ def vane_status() -> dict[str, Any]:
     """Return VANE engine version and safe capability status."""
     return {"name": "VANE", "version": __version__, "runtime": "Hermes Agent",
             "default_policy": "deny", "live_scanning_enabled": False,
+            "passive_http_metadata_enabled": True,
             "transaction_submission_enabled": False, "signing_keys_in_engine": False}
 
 
