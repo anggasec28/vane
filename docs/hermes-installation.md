@@ -56,6 +56,18 @@ cp config/approval-public-keys.example.json config/approval-public-keys.json
 
 Populate `keys` with the key IDs and base64-encoded 32-byte Ed25519 public keys supplied by the separate signing authority. The private key never belongs in this profile or repository. Until a trusted public key is configured, mission/action approval verification fails closed. The local keyring path is ignored by Git.
 
+## Configure Master emergency authority
+
+The Hermes-native bootstrap requires Master emergency suspension control by default. Configure the following variables in the VANE profile's actual gateway/service environment, not merely in an interactive shell:
+
+- `VANE_REQUIRE_EMERGENCY_CONTROL=true`
+- `VANE_MASTER_PRINCIPAL`: the canonical Master principal produced by the operator-owned, authenticated Telegram identity binding.
+- `VANE_MASTER_KEY_IDS`: comma-separated key IDs for the Master public signing keys already present in the public keyring.
+
+Do not substitute a Telegram display name or username for an authenticated principal. The live Telegram identity binding and external signing authority must be verified by the operator-owned Hermes setup before these values are populated. Until the Master principal and key IDs are configured, the central policy engine intentionally denies target-facing actions. Do not disable the required-control gate to bypass this condition.
+
+The emergency control is global and separate from project authorization. Master-only signed SUSPEND and RELEASE approvals are bound to the operation, expected revision, reason, authority reference, and trigger. The control history is independently checked on every read; invalid or unavailable state blocks actions.
+
 ## First-run checks
 1. Read `SOUL.md` and `policies/` before using the profile.
 2. Confirm `config/vane.example.json` retains default-deny policy, external MCP capabilities disabled by default, the local VANE MCP server limited to profile-local project/mission/evidence/finding state plus deterministic planning/validation, with no target requests, and external signing custody.
