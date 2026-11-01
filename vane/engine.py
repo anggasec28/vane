@@ -21,6 +21,12 @@ class VaneEngine:
         self.workers = WorkerOrchestrator()
 
     def register_project(self, project_id: str, name: str, owner: str) -> Project:
+        try:
+            self.projects.get(project_id)
+        except KeyError:
+            pass
+        else:
+            raise ValueError(f"Project already exists: {project_id}")
         if self.repository is not None:
             try:
                 self.repository.get_project(project_id)
