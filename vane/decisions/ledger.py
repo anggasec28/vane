@@ -1,6 +1,6 @@
 """Append-only, evidence-linked Central Decision Ledger.
 
-The project event chain is the authoritative history. This module stores complete
+The central ledger event chain is the authoritative history. This module stores complete
 decision snapshots in immutable events and uses event-head compare-and-swap so
 concurrent writers cannot silently fork or overwrite the ledger.
 """
@@ -119,7 +119,6 @@ class DecisionLedger:
         self.store = store
         if store.get_record(project_id=self.LEDGER_PROJECT_ID, record_type="project",
                             record_id=self.LEDGER_PROJECT_ID) is None:
-            from datetime import timezone
             store.save_record(
                 project_id=self.LEDGER_PROJECT_ID, record_type="project",
                 record_id=self.LEDGER_PROJECT_ID, actor="vane-ledger",
