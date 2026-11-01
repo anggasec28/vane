@@ -162,13 +162,10 @@ def vane_create_mission(project_id: str, objective: str,
                         required_evidence_json: str = "[]") -> dict[str, Any]:
     """Create a draft mission with explicit evidence objectives."""
     engine = _get_engine()
-    mission = engine.create_mission(project_id, objective)
     required = json.loads(required_evidence_json)
     if not isinstance(required, list) or not all(isinstance(item, str) and item for item in required):
         raise ValueError("required_evidence_json must be a JSON array of non-empty strings.")
-    mission.required_evidence = set(required)
-    if engine.repository is not None:
-        engine.repository.save_mission(mission)
+    mission = engine.create_mission(project_id, objective, set(required))
     return _mission_payload(mission)
 
 
@@ -195,12 +192,13 @@ def vane_submit_mission(project_id: str, mission_id: str) -> dict[str, Any]:
 
 
 @server.tool()
-def vane_authorize_mission(envelope_json: str, approval_json: str) -> dict[str, Any]:
+def vane_authorize_mission(project_id: str, mission_id: str, envelope_json: str,
+                           approval_json: str) -> dict[str, Any]:
     """Authorize a mission only after validating its Ed25519 envelope approval."""
     engine = _get_engine()
     envelope = authorization_from_dict(json.loads(envelope_json))
     approval = _approval_from_dict(json.loads(approval_json))
-    mission = engine.get_mission(envelope.project_id, str(json.loads(envelope_json)["mission_id"]))
+    mission = engine.get_mission(project_id, mission_id)
     return _mission_payload(engine.authorize_mission(mission, envelope, approval))
 
 
