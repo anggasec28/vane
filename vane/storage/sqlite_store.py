@@ -116,51 +116,71 @@ class SQLiteStore:
 
     def save_record(self, *, project_id: str, record_type: str, record_id: str,
                     record: dict[str, Any], actor: str) -> int:
-        """Persist a versioned record and its hash-linked audit event atomically."""
+        """Persist one versioned record and its hash-linked event atomically."""
+        return self.save_records_atomic([{
+            "project_id": project_id, "record_type": record_type, "record_id": record_id,
+            "record": record, "actor": actor,
+        }])[0]
+
+    def save_records_atomic(self, records: list[dict[str, Any]]) -> list[int]:
+        """Persist several records and their audit events in one SQLite transaction."""
         if self.read_only:
             raise PermissionError("SQLite store is read-only.")
-        if record_type not in self.ALLOWED_RECORD_TYPES:
-            raise ValueError(f"Unsupported record type: {record_type}")
-        if not all((project_id, record_id, actor)):
-            raise ValueError("project_id, record_id, and actor are required.")
-        encoded = json.dumps(record, sort_keys=True, separators=(",", ":"),
-                             ensure_ascii=False, default=_json_default)
-        digest = __import__("hashlib").sha256(encoded.encode("utf-8")).hexdigest()
+        if not records:
+            return []
+        prepared: list[tuple[dict[str, Any], str, str]] = []
+        for item in records:
+            if item["record_type"] not in self.ALLOWED_RECORD_TYPES:
+                raise ValueError(f"Unsupported record type: {item['record_type']}")
+            if not all((item["project_id"], item["record_id"], item["actor"])):
+                raise ValueError("project_id, record_id, and actor are required.")
+            encoded = json.dumps(item["record"], sort_keys=True, separators=(",", ":"),
+                                 ensure_ascii=False, default=_json_default)
+            digest = __import__("hashlib").sha256(encoded.encode("utf-8")).hexdigest()
+            prepared.append((item, encoded, digest))
         db = self._connect()
+        revisions: list[int] = []
         try:
             db.execute("BEGIN IMMEDIATE")
-            if record_type == "project":
+            for item, encoded, digest in prepared:
+                project_id = item["project_id"]
+                record_type = item["record_type"]
+                record_id = item["record_id"]
+                record = item["record"]
+                if record_type == "project":
+                    db.execute(
+                        """INSERT INTO projects(project_id,name,owner,created_at) VALUES(?,?,?,?)
+                        ON CONFLICT(project_id) DO UPDATE SET name=excluded.name, owner=excluded.owner""",
+                        (project_id, record["name"], record["owner"], record["created_at"]),
+                    )
+                else:
+                    exists = db.execute("SELECT 1 FROM projects WHERE project_id=?",
+                                        (project_id,)).fetchone()
+                    if exists is None:
+                        raise ValueError(f"Project does not exist: {project_id}")
+                row = db.execute(
+                    """SELECT revision FROM domain_records
+                    WHERE project_id=? AND record_type=? AND record_id=?""",
+                    (project_id, record_type, record_id),
+                ).fetchone()
+                revision = int(row["revision"]) + 1 if row else 1
                 db.execute(
-                    """INSERT INTO projects(project_id,name,owner,created_at) VALUES(?,?,?,?)
-                    ON CONFLICT(project_id) DO UPDATE SET name=excluded.name, owner=excluded.owner""",
-                    (project_id, record["name"], record["owner"], record["created_at"]),
+                    """INSERT INTO domain_records
+                    (project_id,record_type,record_id,revision,record_json,updated_at)
+                    VALUES(?,?,?,?,?,?)
+                    ON CONFLICT(project_id,record_type,record_id) DO UPDATE SET
+                      revision=excluded.revision, record_json=excluded.record_json,
+                      updated_at=excluded.updated_at""",
+                    (project_id, record_type, record_id, revision, encoded,
+                     datetime.now(timezone.utc).isoformat()),
                 )
-            else:
-                exists = db.execute("SELECT 1 FROM projects WHERE project_id=?", (project_id,)).fetchone()
-                if exists is None:
-                    raise ValueError(f"Project does not exist: {project_id}")
-            row = db.execute(
-                """SELECT revision FROM domain_records
-                WHERE project_id=? AND record_type=? AND record_id=?""",
-                (project_id, record_type, record_id),
-            ).fetchone()
-            revision = int(row["revision"]) + 1 if row else 1
-            db.execute(
-                """INSERT INTO domain_records
-                (project_id,record_type,record_id,revision,record_json,updated_at)
-                VALUES(?,?,?,?,?,?)
-                ON CONFLICT(project_id,record_type,record_id) DO UPDATE SET
-                  revision=excluded.revision, record_json=excluded.record_json,
-                  updated_at=excluded.updated_at""",
-                (project_id, record_type, record_id, revision, encoded,
-                 datetime.now(timezone.utc).isoformat()),
-            )
-            self._append_event_locked(db, project_id=project_id,
-                event_type=f"{record_type}.saved", actor=actor,
-                payload={"record_type": record_type, "record_id": record_id,
-                         "revision": revision, "record_digest": digest})
+                self._append_event_locked(db, project_id=project_id,
+                    event_type=f"{record_type}.saved", actor=item["actor"],
+                    payload={"record_type": record_type, "record_id": record_id,
+                             "revision": revision, "record_digest": digest})
+                revisions.append(revision)
             db.commit()
-            return revision
+            return revisions
         except Exception:
             db.rollback()
             raise
