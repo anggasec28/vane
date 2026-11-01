@@ -6,9 +6,10 @@ from datetime import datetime
 from typing import Any
 
 from vane.models import (
-    Asset, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
+    Asset, AuthorizationEnvelope, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
 )
 from vane.security.approval import Approval
+from vane.security.authorization import authorization_from_dict
 from vane.workers.contracts import WorkerTask
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
@@ -36,14 +37,17 @@ class SQLiteRepository:
         return Project(record["project_id"], record["name"], record["owner"],
                        datetime.fromisoformat(record["created_at"]))
 
-    def save_authorized_mission(self, mission: Mission, approval: Approval,
-                                *, actor: str = "master") -> tuple[int, int]:
+    def save_authorized_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
+                                approval: Approval, *, actor: str = "master") -> tuple[int, int, int]:
         mission_record = asdict(mission)
         mission_record["status"] = mission.status.value
         mission_record["required_evidence"] = sorted(mission.required_evidence)
         mission_record["completed_evidence"] = sorted(mission.completed_evidence)
         approval_record = asdict(approval)
+        envelope_record = asdict(envelope)
         revisions = self.store.save_records_atomic([
+            {"project_id": mission.project_id, "record_type": "authorization",
+             "record_id": envelope.envelope_id, "record": envelope_record, "actor": actor},
             {"project_id": mission.project_id, "record_type": "approval",
              "record_id": approval.approval_id, "record": approval_record, "actor": actor},
             {"project_id": mission.project_id, "record_type": "mission",
@@ -64,7 +68,15 @@ class SQLiteRepository:
             {"project_id": mission.project_id, "record_type": "mission",
              "record_id": mission.mission_id, "record": mission_record, "actor": actor},
         ])
-        return revisions[0], revisions[1]
+        return revisions[0], revisions[1], revisions[2]
+
+    def get_authorization(self, project_id: str, envelope_id: str) -> AuthorizationEnvelope:
+        result = self.store.get_record(project_id=project_id, record_type="authorization",
+                                       record_id=envelope_id)
+        if result is None:
+            raise KeyError(envelope_id)
+        record, _ = result
+        return authorization_from_dict(record)
 
     def save_mission(self, mission: Mission, *, actor: str = "master") -> int:
         record = asdict(mission)
