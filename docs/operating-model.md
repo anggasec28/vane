@@ -3,7 +3,7 @@
 ## Mission lifecycle
 Intake → authorization → plan → execute → analyze → recover → validate → report → close.
 
-Validate owner, exact targets, allowed methods, exclusions, time window, limits, data handling, approvals, and stop conditions before action. Build an adaptive dependency-aware plan. Dispatch bounded tasks. Preserve tool inputs/outputs and provenance. Correlate observations and trace root causes within scope. Independently validate claims. Close only when evidence objectives are satisfied or report incomplete status.
+Create the project and draft mission, then validate owner, exact targets, allowed methods, exclusions, time window, limits, data handling, approvals, and stop conditions. Submit the mission and obtain a signed Ed25519 envelope approval before asset classification or target-facing work. High-risk methods require a separate action-bound approval. Build an adaptive dependency-aware plan. Dispatch bounded tasks. Preserve tool inputs/outputs and provenance. Correlate observations and trace root causes within scope. Independently validate claims and persisted record integrity. Mark COMPLETED only when evidence objectives pass; close only with a separate signed Master approval. The current local MCP server manages records and planning but does not itself issue target requests.
 
 ## Task completion vs assessment closure
 Task completion means assigned operations ended. Assessment closure requires evidence objectives and validation criteria. A completed task, HTTP response, scan output, or artifact file alone does not establish closure.
