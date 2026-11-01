@@ -75,3 +75,41 @@ class SQLiteRepository:
         record["status"] = finding.status.value
         return self.store.save_record(project_id=finding.project_id, record_type="finding",
             record_id=finding.finding_id, record=record, actor=actor)
+
+    def get_evidence(self, project_id: str, evidence_id: str) -> EvidenceRecord:
+        result = self.store.get_record(project_id=project_id, record_type="evidence",
+                                       record_id=evidence_id)
+        if result is None:
+            raise KeyError(evidence_id)
+        record, _ = result
+        record["observed_at"] = datetime.fromisoformat(record["observed_at"])
+        record["status"] = EvidenceStatus(record["status"])
+        return EvidenceRecord(**record)
+
+    def list_evidence(self, project_id: str) -> list[EvidenceRecord]:
+        records = self.store.list_records(project_id=project_id, record_type="evidence")
+        result: list[EvidenceRecord] = []
+        for record in records:
+            record["observed_at"] = datetime.fromisoformat(record["observed_at"])
+            record["status"] = EvidenceStatus(record["status"])
+            result.append(EvidenceRecord(**record))
+        return result
+
+    def get_finding(self, project_id: str, finding_id: str) -> Finding:
+        result = self.store.get_record(project_id=project_id, record_type="finding",
+                                       record_id=finding_id)
+        if result is None:
+            raise KeyError(finding_id)
+        record, _ = result
+        record["created_at"] = datetime.fromisoformat(record["created_at"])
+        record["status"] = FindingStatus(record["status"])
+        return Finding(**record)
+
+    def list_findings(self, project_id: str) -> list[Finding]:
+        records = self.store.list_records(project_id=project_id, record_type="finding")
+        result: list[Finding] = []
+        for record in records:
+            record["created_at"] = datetime.fromisoformat(record["created_at"])
+            record["status"] = FindingStatus(record["status"])
+            result.append(Finding(**record))
+        return result
