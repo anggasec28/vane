@@ -1,5 +1,6 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
+from vane.decisions.ledger import DecisionLedger, DecisionSnapshot, DecisionStatus
 from copy import deepcopy
 from datetime import datetime
 from vane.assessment.asset_mapping import classify_discovered_asset
@@ -40,6 +41,7 @@ class VaneEngine:
         self.projects = projects or ProjectRegistry()
         self.repository = repository
         self.governance_repository = GovernanceRepository(repository.store) if repository is not None else None
+        self.decision_ledger = DecisionLedger(repository.store) if repository is not None else None
         self.orchestrator = AssessmentOrchestrator(self.enforcer)
         self.specialists = default_specialist_registry()
         self.workers = WorkerOrchestrator(self.specialists)
@@ -95,6 +97,47 @@ class VaneEngine:
             project = self.repository.get_project(project_id)
             self.projects.add(project)
             return project
+
+    def create_decision(self, *, project_id: str, title: str, rationale: str,
+                        actor: str, authority_reference: str, trigger: str,
+                        evidence_references: tuple[str, ...] = (),
+                        dependency_decision_ids: tuple[str, ...] = (),
+                        policy_version: str = "1", uncertainty: str = "",
+                        decision_id: str | None = None) -> DecisionSnapshot:
+        """Create an unresolved authoritative decision in the durable project ledger."""
+        if self.decision_ledger is None:
+            raise PolicyViolation("The durable Central Decision Ledger requires a configured repository.")
+        self.get_project(project_id)
+        return self.decision_ledger.create(
+            project_id=project_id, title=title, rationale=rationale, actor=actor,
+            authority_reference=authority_reference, trigger=trigger,
+            evidence_references=evidence_references,
+            dependency_decision_ids=dependency_decision_ids,
+            policy_version=policy_version, uncertainty=uncertainty,
+            decision_id=decision_id,
+        )
+
+    def transition_decision(self, *, project_id: str, decision_id: str,
+                            expected_revision: int, target: DecisionStatus,
+                            actor: str, authority_reference: str, trigger: str,
+                            rationale: str, evidence_references: tuple[str, ...] | None = None,
+                            policy_version: str | None = None,
+                            uncertainty: str | None = None,
+                            supersedes_decision_id: str | None = None,
+                            supersedes_revision: int | None = None) -> DecisionSnapshot:
+        """Append a governed decision transition using optimistic concurrency."""
+        if self.decision_ledger is None:
+            raise PolicyViolation("The durable Central Decision Ledger requires a configured repository.")
+        self.get_project(project_id)
+        return self.decision_ledger.transition(
+            project_id=project_id, decision_id=decision_id,
+            expected_revision=expected_revision, target=target, actor=actor,
+            authority_reference=authority_reference, trigger=trigger,
+            rationale=rationale, evidence_references=evidence_references,
+            policy_version=policy_version, uncertainty=uncertainty,
+            supersedes_decision_id=supersedes_decision_id,
+            supersedes_revision=supersedes_revision,
+        )
 
     def create_mission(self, project_id: str, objective: str,
                        required_evidence: set[str] | None = None) -> Mission:
