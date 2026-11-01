@@ -1,4 +1,4 @@
-"""Local VANE MCP server exposing bounded governance utilities only.
+"""Local VANE MCP server exposing durable governance and mission workflow operations.
 
 No network scanning, exploitation, transaction submission, key operations, or target mutation
 is exposed by this server. Hermes connects over stdio after the Python extra is installed.
