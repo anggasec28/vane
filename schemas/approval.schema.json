@@ -8,7 +8,9 @@
     "approver",
     "subject_digest",
     "decision",
-    "decided_at"
+    "decided_at",
+    "key_id",
+    "signature"
   ],
   "properties": {
     "approval_id": {
@@ -42,6 +44,15 @@
     },
     "rationale": {
       "type": "string"
+    },
+    "key_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Base64-encoded Ed25519 signature"
     }
   },
   "additionalProperties": false
