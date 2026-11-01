@@ -14,9 +14,9 @@ Package version: 0.2.0 development baseline.
 - Adaptive recovery planner and hybrid lifecycle policy.
 - Project registry, SQLite event persistence, MCP capability allowlist.
 - Worker delegation contracts and independent mission closure validator.
-- External Ed25519 signing interface and inert Hermes adapter.
+- External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
 - Local stdio MCP server exposing policy, planning, evidence, and event-chain utilities only.
-- JSON schemas and initial unit tests.
+- JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
 
 ## Remaining implementation and verification
 - Complete durable repositories for all domain objects and schema migrations; the SQLite event chain is implemented as a foundation.
