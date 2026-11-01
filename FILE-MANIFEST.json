@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 180,
+  "file_count": 182,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -98,6 +98,7 @@
     "tests/test_internal_intel_project.py",
     "tests/test_keyring.py",
     "tests/test_lifecycle.py",
+    "tests/test_lifecycle_review.py",
     "tests/test_mcp_registry.py",
     "tests/test_mcp_server.py",
     "tests/test_migrations.py",
@@ -157,6 +158,7 @@
     "vane/intelligence/threat_intel.py",
     "vane/lifecycle/__init__.py",
     "vane/lifecycle/policy.py",
+    "vane/lifecycle/review.py",
     "vane/mcp/__init__.py",
     "vane/mcp/registry.py",
     "vane/mcp/server.py",
@@ -188,5 +190,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline with forward-only transactional SQLite migrations through schema version 2, typed JSON Schema enforcement on core records, durable governance repositories, and expanded unit coverage. Hermes runtime validation and external anchoring remain open."
+  "completion_note": "Active development baseline with Master/specialist profiles, durable worker and governance repositories, typed JSON Schema enforcement, forward SQLite migrations, auditable data-lifecycle reviews, and expanded tests. Hermes runtime validation and external L3 anchoring remain open."
 }
