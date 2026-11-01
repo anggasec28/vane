@@ -219,6 +219,23 @@ class DecisionLedger:
 
     def _append(self, snapshot: DecisionSnapshot, *, expected_revision: int) -> DecisionSnapshot:
         _validate_snapshot(snapshot)
+        latest = {item.decision_id: item for item in self.list_decisions(snapshot.project_id)}
+        for dependency_id in snapshot.dependency_decision_ids:
+            if dependency_id not in latest:
+                raise ValueError(f"Dependency decision does not exist in this project: {dependency_id}")
+            if latest[dependency_id].status == DecisionStatus.SUPERSEDED:
+                raise ValueError(f"Dependency decision is superseded: {dependency_id}")
+        if snapshot.status == DecisionStatus.SUPERSEDED:
+            target_id = snapshot.superseded_by_decision_id
+            if target_id == snapshot.decision_id:
+                raise ValueError("A decision cannot supersede itself.")
+            target = latest.get(target_id or "")
+            if target is None:
+                raise ValueError("Superseding decision must exist in the same project.")
+            if target.revision != snapshot.superseded_by_revision:
+                raise ValueError("Superseding decision revision does not match the current ledger.")
+            if target.status == DecisionStatus.SUPERSEDED:
+                raise ValueError("A superseded decision cannot supersede another decision.")
         events = self._events(snapshot.project_id)
         current = next((item for item in reversed(events)
                         if item["payload"]["snapshot"]["decision_id"] == snapshot.decision_id), None)
