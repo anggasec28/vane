@@ -8,7 +8,8 @@ def envelope():
     return AuthorizationEnvelope(
         envelope_id="auth-1", principal="master", project_id="p-1",
         rules=(ScopeRule("hostname", "example.com", include_subdomains=True),),
-        allowed_methods=("http_metadata",), expires_at=datetime.now(timezone.utc) + timedelta(hours=1))
+        allowed_methods=("http_metadata",), expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        approval_id="approval-1")
 
 def test_exact_and_subdomain_scope():
     assert asset_is_in_scope("https://example.com", envelope().rules)
@@ -22,3 +23,10 @@ def test_denies_unlisted_method():
 def test_denies_out_of_scope_asset():
     with pytest.raises(AuthorizationError):
         require_authorized(envelope(), "https://other.example.net", "http_metadata")
+
+def test_denies_missing_approval_reference():
+    item = envelope()
+    invalid = AuthorizationEnvelope(item.envelope_id, item.principal, item.project_id,
+        item.rules, item.allowed_methods, expires_at=item.expires_at)
+    with pytest.raises(AuthorizationError):
+        require_authorized(invalid, "https://example.com", "http_metadata")
