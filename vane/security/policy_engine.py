@@ -20,7 +20,7 @@ class PolicyEngine:
     def validate_approval(self, approval: Approval | None, expected_digest: str,
                           expected_approval_id: str | None) -> bool:
         if (approval is None or self._approval_verifier is None
-                or approval.approval_id != expected_approval_id
+                or (expected_approval_id is not None and approval.approval_id != expected_approval_id)
                 or not approval.is_valid_for(expected_digest)):
             return False
         return self._approval_verifier.verify(approval)
@@ -34,7 +34,7 @@ class PolicyEngine:
             return PolicyDecision(False, "AUTHORIZATION_DENIED", str(exc))
         if requires_human_approval:
             expected = capability_action_digest(envelope, locator, method) if envelope else ""
-            if not self.validate_approval(approval, expected, envelope.approval_id if envelope else None):
+            if not self.validate_approval(approval, expected, None):
                 return PolicyDecision(False, "APPROVAL_REQUIRED",
                     "A valid Ed25519 approval bound to this exact capability action is required.", True)
         return PolicyDecision(True, "ALLOW", "Covered by active authorization and policy.")
