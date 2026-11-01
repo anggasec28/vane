@@ -35,6 +35,26 @@ from vane.storage.sqlite_store import SQLiteStore
 
 server = FastMCP("vane-engine")
 
+_ENGINE = None
+
+def _get_engine():
+    global _ENGINE
+    if _ENGINE is None:
+        from vane.bootstrap import create_engine
+        _ENGINE = create_engine()
+    return _ENGINE
+
+
+def _mission_payload(mission: Mission) -> dict[str, Any]:
+    return {"mission_id": mission.mission_id, "project_id": mission.project_id,
+        "objective": mission.objective, "status": mission.status.value,
+        "authorization_id": mission.authorization_id,
+        "required_evidence": sorted(mission.required_evidence),
+        "completed_evidence": sorted(mission.completed_evidence),
+        "blockers": list(mission.blockers), "history": list(mission.history)}
+
+
+
 
 def _evidence_from_dict(item: dict[str, Any]) -> EvidenceRecord:
     observed = datetime.fromisoformat(str(item["observed_at"]).replace("Z", "+00:00"))
@@ -127,6 +147,121 @@ def vane_verify_action_approval(envelope_json: str, approval_json: str,
     result["action_approval_verified"] = result.pop("signature_valid", False)
     result.update({"locator": locator, "method": method, "execution_authorized": False})
     return result
+
+
+
+@server.tool()
+def vane_create_project(project_id: str, name: str, owner: str) -> dict[str, Any]:
+    """Create a durable project record. This does not authorize an assessment."""
+    project = _get_engine().register_project(project_id, name, owner)
+    return {"created": True, "project_id": project.project_id, "name": project.name}
+
+
+@server.tool()
+def vane_create_mission(project_id: str, objective: str,
+                        required_evidence_json: str = "[]") -> dict[str, Any]:
+    """Create a draft mission with explicit evidence objectives."""
+    engine = _get_engine()
+    mission = engine.create_mission(project_id, objective)
+    required = json.loads(required_evidence_json)
+    if not isinstance(required, list) or not all(isinstance(item, str) and item for item in required):
+        raise ValueError("required_evidence_json must be a JSON array of non-empty strings.")
+    mission.required_evidence = set(required)
+    if engine.repository is not None:
+        engine.repository.save_mission(mission)
+    return _mission_payload(mission)
+
+
+@server.tool()
+def vane_get_mission(project_id: str, mission_id: str) -> dict[str, Any]:
+    """Retrieve the current durable mission state."""
+    return _mission_payload(_get_engine().get_mission(project_id, mission_id))
+
+
+@server.tool()
+def vane_list_missions(project_id: str) -> list[dict[str, Any]]:
+    """List durable missions for a project."""
+    engine = _get_engine()
+    if engine.repository is None:
+        return [_mission_payload(m) for m in engine.get_project(project_id).missions.values()]
+    return [_mission_payload(m) for m in engine.repository.list_missions(project_id)]
+
+
+@server.tool()
+def vane_submit_mission(project_id: str, mission_id: str) -> dict[str, Any]:
+    """Move a draft mission to the explicit approval queue."""
+    engine = _get_engine()
+    return _mission_payload(engine.submit_mission(engine.get_mission(project_id, mission_id)))
+
+
+@server.tool()
+def vane_authorize_mission(envelope_json: str, approval_json: str) -> dict[str, Any]:
+    """Authorize a mission only after validating its Ed25519 envelope approval."""
+    engine = _get_engine()
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    approval = _approval_from_dict(json.loads(approval_json))
+    mission = engine.get_mission(envelope.project_id, str(json.loads(envelope_json)["mission_id"]))
+    return _mission_payload(engine.authorize_mission(mission, envelope, approval))
+
+
+@server.tool()
+def vane_start_mission(project_id: str, mission_id: str) -> dict[str, Any]:
+    """Start an already authorized mission."""
+    engine = _get_engine()
+    return _mission_payload(engine.start_mission(engine.get_mission(project_id, mission_id)))
+
+
+@server.tool()
+def vane_attach_evidence(project_id: str, mission_id: str,
+                         evidence_json: str) -> dict[str, Any]:
+    """Validate and persist evidence, then update the mission evidence objectives it satisfies."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    evidence = _evidence_from_dict(json.loads(evidence_json))
+    return _mission_payload(engine.attach_evidence(mission, evidence))
+
+
+@server.tool()
+def vane_add_blocker(project_id: str, mission_id: str, reason: str) -> dict[str, Any]:
+    """Record a blocker and move an authorized/running mission into BLOCKED."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    return _mission_payload(engine.add_blocker(mission, reason))
+
+
+@server.tool()
+def vane_clear_blocker(project_id: str, mission_id: str, reason: str) -> dict[str, Any]:
+    """Clear an exact blocker; resume a blocked mission only when no blockers remain."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    return _mission_payload(engine.clear_blocker(mission, reason))
+
+
+@server.tool()
+def vane_request_evidence_review(project_id: str, mission_id: str) -> dict[str, Any]:
+    """Submit a running or blocked mission for independent evidence review."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    return _mission_payload(engine.request_evidence_review(mission))
+
+
+@server.tool()
+def vane_complete_mission(project_id: str, mission_id: str) -> dict[str, Any]:
+    """Run independent closure checks and mark the mission COMPLETED only on full pass."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    return _mission_payload(engine.complete_mission(mission))
+
+
+@server.tool()
+def vane_close_mission(envelope_json: str, mission_id: str,
+                       closure_approval_json: str) -> dict[str, Any]:
+    """Close a COMPLETED mission only with a signed approval of its exact final snapshot."""
+    engine = _get_engine()
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    approval = _approval_from_dict(json.loads(closure_approval_json))
+    mission = engine.get_mission(envelope.project_id, mission_id)
+    return _mission_payload(engine.close_mission(mission, envelope, approval))
 
 
 @server.tool()
