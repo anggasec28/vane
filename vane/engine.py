@@ -234,9 +234,11 @@ class VaneEngine:
             raise
         return mission
 
-    def complete_mission(self, mission: Mission, *, actor: str = "verifier") -> Mission:
+    def _load_validation_inputs(self, mission: Mission):
         project = self.get_project(mission.project_id)
         if self.repository is not None:
+            if not self.repository.store.verify_project_integrity(mission.project_id):
+                raise PolicyViolation("Project persistence integrity check failed.")
             evidence = {item.evidence_id: item
                         for item in self.repository.list_evidence(mission.project_id)
                         if item.mission_id == mission.mission_id}
@@ -247,6 +249,12 @@ class VaneEngine:
                         if value.mission_id == mission.mission_id}
             findings = [item for item in project.findings.values()
                         if set(item.evidence_ids) & set(evidence)]
+        for record in evidence.values():
+            validate_evidence(record)
+        return evidence, findings
+
+    def complete_mission(self, mission: Mission, *, actor: str = "verifier") -> Mission:
+        evidence, findings = self._load_validation_inputs(mission)
         checks = validate_mission_closure(mission, evidence, findings)
         failures = [f"{check.code}: {check.detail}" for check in checks if not check.passed]
         if failures:
@@ -269,6 +277,10 @@ class VaneEngine:
             raise PolicyViolation("Only independently validated COMPLETED missions can be closed.")
         if envelope.envelope_id != mission.authorization_id or envelope.project_id != mission.project_id:
             raise PolicyViolation("Closure envelope does not match the mission authorization.")
+        evidence, findings = self._load_validation_inputs(mission)
+        checks = validate_mission_closure(mission, evidence, findings)
+        if any(not check.passed for check in checks):
+            raise PolicyViolation("Independent validation no longer passes; mission cannot be closed.")
         digest = mission_closure_digest(mission)
         if (not self.enforcer.validate_approval(closure_approval, digest, None)
                 or closure_approval.expires_at is None):
