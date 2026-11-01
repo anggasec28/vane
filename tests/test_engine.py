@@ -21,6 +21,7 @@ def test_engine_requires_explicit_mission_submission_and_bound_signed_approval()
         starts_at=datetime.now(timezone.utc) - timedelta(minutes=1),
         expires_at=datetime.now(timezone.utc) + timedelta(hours=1), approval_id="approval-1")
     approval = Approval("approval-1", "master", authorization_digest(envelope), "APPROVE",
-                        datetime.now(timezone.utc), "master-key-1", "test-signature")
+                        datetime.now(timezone.utc), "master-key-1", "test-signature",
+                        envelope.expires_at)
     engine.authorize_mission(mission, envelope, approval)
     assert mission.status == MissionStatus.AUTHORIZED
