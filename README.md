@@ -55,7 +55,7 @@ Then install the Python engine in the new profile's environment. Follow [the com
 - **Specialists:** subordinate bounded roles; they do not become separate competing orchestrators.
 - **MCP/tools:** local VANE workflow tools are explicitly allowlisted in the profile; external MCP capabilities remain disabled by default.
 
-See [Python engine](docs/python-engine.md), [architecture](docs/architecture.md), [security model](docs/security-model.md), [Master decisions](docs/master-decisions.md), and [build status](docs/build-status.md).
+See [Python engine](docs/python-engine.md), [architecture](docs/architecture.md), [security model](docs/security-model.md), [Master decisions](docs/master-decisions.md), [architecture conflicts](docs/architecture-conflicts.md), and [build status](docs/build-status.md).
 
 ## Security defaults
 Default deny. Every mission requires a signed Ed25519 approval bound to its authorization envelope. High-risk methods require a second approval bound to the exact locator and method. Discovery does not grant scope. Workers inherit a strict subset of authority; unsupported high-risk worker delegation is denied. Unknown or out-of-scope assets are not inspected. Evidence is checked against the signed authorization at observation time. Mission completion requires evidence sufficiency and independent validation, then a separate signed Master closure approval. The local MCP server manages profile-local records and deterministic workflows only; it performs no target requests. External MCP capabilities remain disabled by default. No private signing key belongs in this repository or engine.
