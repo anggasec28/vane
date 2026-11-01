@@ -18,7 +18,7 @@ This is the initial code-level traceability map. A mapping means the requirement
 | Hybrid policy-driven data lifecycle | `vane/lifecycle/policy.py` | Preservation and approval decisions |
 | Ed25519 signer/verifier separation | `vane/crypto/signing.py` | External signer contract; no key provisioning |
 | MCP capability governance | `vane/mcp/registry.py` | Explicit registration, disabled by default |
-| Worker authority is subordinate | `vane/workers/contracts.py` | Delegation contract; runtime scheduler absent |
+| Worker authority is subordinate | `vane/workers/contracts.py`, `vane/workers/orchestrator.py` | Bounded task delegation/result validation; Hermes session scheduler absent |
 | L3/R-12 external anchor and reset ledger | `docs/master-decisions.md`, `policies/cryptographic-trust.md` | OPEN / NOT IMPLEMENTED |
 
 ## Gaps requiring implementation
