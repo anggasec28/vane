@@ -1,5 +1,6 @@
 """Central policy decision point. All capability adapters must call this first."""
 from dataclasses import dataclass
+from datetime import datetime
 from vane.errors import AuthorizationError, PolicyViolation
 from vane.models import AuthorizationEnvelope
 from vane.security.approval import Approval, ApprovalVerifier
@@ -23,10 +24,11 @@ class PolicyEngine:
         self._approval_verifier = approval_verifier
 
     def validate_approval(self, approval: Approval | None, expected_digest: str,
-                          expected_approval_id: str | None) -> bool:
+                          expected_approval_id: str | None,
+                          now: datetime | None = None) -> bool:
         if (approval is None or self._approval_verifier is None
                 or (expected_approval_id is not None and approval.approval_id != expected_approval_id)
-                or not approval.is_valid_for(expected_digest)):
+                or not approval.is_valid_for(expected_digest, now)):
             return False
         return self._approval_verifier.verify(approval)
 
