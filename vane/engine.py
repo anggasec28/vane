@@ -2,6 +2,7 @@
 from vane.core.orchestrator import AssessmentOrchestrator
 from vane.models import AuthorizationEnvelope, EvidenceRecord, Finding, Mission
 from vane.projects.registry import Project, ProjectRegistry
+from vane.security.approval import Approval
 from vane.security.enforcement import SecurityEnforcer
 from vane.storage.repository import SQLiteRepository
 
@@ -64,7 +65,7 @@ class VaneEngine:
         return result
 
     def authorize_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
-                          approval, *, actor: str = "master") -> Mission:
+                          approval: Approval, *, actor: str = "master") -> Mission:
         result = self.orchestrator.authorize_mission(mission, envelope, approval, actor=actor)
         if self.repository is not None:
             self.repository.save_mission(result, actor=actor)
