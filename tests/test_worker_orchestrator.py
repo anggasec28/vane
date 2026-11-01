@@ -23,7 +23,8 @@ def test_worker_delegation_is_bounded_and_result_is_checked():
     assignment = orchestrator.delegate(task, mission, envelope, {"asset-1": asset})
     assert assignment.status == WorkerTaskStatus.DELEGATED
     completed = orchestrator.complete("t1", {"task_id":"t1", "worker_profile":"web-worker",
-        "asset_ids":["asset-1"], "methods":["http_metadata"]})
+        "asset_ids":["asset-1"], "methods":["http_metadata"],
+        "output":{"type":"web_worker_result"}})
     assert completed.status == WorkerTaskStatus.COMPLETED
 
 def test_worker_cannot_expand_parent_method_authority():
