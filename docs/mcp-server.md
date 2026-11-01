@@ -32,7 +32,7 @@ Hermes connects to the local stdio server using the `mcp_servers.vane_engine` en
 
 ## Project and mission operations
 
-The local server also exposes a Central Decision Ledger. New decisions begin as UNRESOLVED; permitted transitions are appended as complete snapshots to the project event chain. The event chain is the authoritative history, with explicit actor, authority reference, trigger, rationale, evidence/dependency references, policy version, and revision. Stale revisions and stale event-chain heads are rejected. This is a ledger foundation, not yet the complete blueprint arbitration, appeals, reversals, continuity, or reconciliation system.
+The local server also exposes a Central Decision Ledger. New decisions begin as UNRESOLVED; permitted transitions are appended as complete snapshots to the central ledger event chain. The event chain is the authoritative history, with explicit actor, authority reference, trigger, rationale, evidence/dependency references, policy version, and revision. Stale revisions and stale event-chain heads are rejected. This is a ledger foundation, not yet the complete blueprint arbitration, appeals, reversals, continuity, or reconciliation system.
 
 The local server also exposes durable project/mission workflow tools: create/list projects, create mission, retrieve/list missions, submit for approval, verify and authorize a mission, start, attach evidence, add/clear blockers, request independent review, complete, and close with signed Master approval. Inventory tools persist assets and list assets/evidence/findings; finding tools persist drafts or evidence-validated findings.
 
