@@ -249,6 +249,9 @@ def vane_verify_closure_approval(envelope_json: str, mission_json: str,
     if mission.status != MissionStatus.COMPLETED:
         return {"closure_approval_verified": False, "execution_authorized": False,
                 "reason": "mission_not_completed"}
+    if envelope.envelope_id != mission.authorization_id or envelope.project_id != mission.project_id:
+        return {"closure_approval_verified": False, "execution_authorized": False,
+                "reason": "authorization_mismatch"}
     result = _verify_approval(envelope_json, approval_json, mission_closure_digest(mission), None,
                               enforce_envelope_expiry=False)
     result["closure_approval_verified"] = result.pop("signature_valid", False)
