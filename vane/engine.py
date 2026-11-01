@@ -9,6 +9,8 @@ from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import ReportBundle, build_report
 from vane.findings.remediation import RemediationAction, validate_remediation, validate_remediation_graph
+from vane.intelligence.threat_intel import ThreatIntelRecord
+from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem
 from vane.models import (
     Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus, utc_now,
 )
@@ -19,6 +21,7 @@ from vane.security.enforcement import SecurityEnforcer
 from vane.security.authorization import asset_is_in_scope
 from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.storage.repository import SQLiteRepository
+from vane.storage.governance_repository import GovernanceRepository
 from vane.validation.independent import validate_mission_closure
 from vane.workers.contracts import WorkerTask
 from vane.workers.orchestrator import WorkerAssignment, WorkerOrchestrator
@@ -34,6 +37,7 @@ class VaneEngine:
         self.enforcer = enforcer or SecurityEnforcer()
         self.projects = projects or ProjectRegistry()
         self.repository = repository
+        self.governance_repository = GovernanceRepository(repository.store) if repository is not None else None
         self.orchestrator = AssessmentOrchestrator(self.enforcer)
         self.specialists = default_specialist_registry()
         self.workers = WorkerOrchestrator(self.specialists)
@@ -361,6 +365,42 @@ class VaneEngine:
         evidence, findings = self._load_validation_inputs(mission)
         return build_report(mission, findings, evidence,
                             report_id=report_id, limitations=limitations)
+
+    def save_case_work_item(self, item: CaseWorkItem, *, actor: str = "master") -> int:
+        if self.governance_repository is None:
+            raise PolicyViolation("Durable case operations require a configured repository.")
+        mission = self.get_mission(item.project_id, item.mission_id)
+        if mission.project_id != item.project_id:
+            raise PolicyViolation("Case work item does not match its parent mission.")
+        return self.governance_repository.save_work_item(item, actor=actor)
+
+    def save_case_timeline_event(self, event: CaseTimelineEvent, *, actor: str = "system") -> int:
+        if self.governance_repository is None:
+            raise PolicyViolation("Durable case operations require a configured repository.")
+        self.get_mission(event.project_id, event.mission_id)
+        return self.governance_repository.save_timeline_event(event, actor=actor)
+
+    def save_threat_intel(self, record: ThreatIntelRecord, *, actor: str = "intel-ingest") -> int:
+        if self.governance_repository is None:
+            raise PolicyViolation("Durable threat-intelligence storage requires a configured repository.")
+        return self.governance_repository.save_threat_intel(record, actor=actor)
+
+    def save_remediation_action(self, project_id: str, action: RemediationAction,
+                                *, actor: str = "remediation-advisor") -> int:
+        if self.governance_repository is None or self.repository is None:
+            raise PolicyViolation("Durable remediation storage requires a configured repository.")
+        findings = {item.finding_id: item for item in self.repository.list_findings(project_id)}
+        return self.governance_repository.save_remediation_action(
+            project_id, action, findings, actor=actor)
+
+    def persist_mission_report(self, mission: Mission, *, report_id: str,
+                               limitations: tuple[str, ...] = ()) -> ReportBundle:
+        if self.governance_repository is None:
+            raise PolicyViolation("Durable report storage requires a configured repository.")
+        bundle = self.build_mission_report(
+            mission, report_id=report_id, limitations=limitations)
+        self.governance_repository.save_report(bundle)
+        return bundle
 
     def close_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
                       closure_approval: Approval, *, actor: str = "master") -> Mission:
