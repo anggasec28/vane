@@ -102,3 +102,39 @@ def build_report(mission: Mission, findings: list[Finding],
         limitations=tuple(limitations),
         unresolved_blockers=tuple(mission.blockers),
     )
+
+
+def render_markdown(bundle: ReportBundle) -> str:
+    """Render a portable Markdown view without embedding raw evidence payloads."""
+    lines = [
+        "# VANE Assessment Report", "",
+        f"Report ID: {bundle.report_id}",
+        f"Generated: {bundle.generated_at}", "",
+        "## Executive Summary", "", bundle.executive_summary, "",
+        "## Mission", "",
+        f"- Project: {bundle.mission['project_id']}",
+        f"- Mission: {bundle.mission['mission_id']}",
+        f"- Objective: {bundle.mission['objective']}",
+        f"- State: {bundle.mission['status']}", "",
+        "## Findings", "",
+    ]
+    if not bundle.findings:
+        lines.append("No findings were recorded.")
+    for item in bundle.findings:
+        lines.extend([
+            f"### [{item['severity'].upper()}] {item['title']}", "",
+            item["description"], "",
+            f"- Finding ID: {item['finding_id']}",
+            f"- Status: {item['status']}",
+            f"- Confidence: {item['confidence']}",
+            f"- Affected assets: {', '.join(item['affected_assets']) or 'Not specified'}",
+            "- Evidence:",
+        ])
+        for link in item["evidence"]:
+            lines.append(f"  - {link['evidence_id']}: {link['state']}")
+        lines.append("")
+    lines.extend(["## Limitations", ""])
+    lines.extend([f"- {item}" for item in bundle.limitations] or ["- None recorded."])
+    lines.extend(["", "## Unresolved Blockers", ""])
+    lines.extend([f"- {item}" for item in bundle.unresolved_blockers] or ["- None recorded."])
+    return "\\n".join(lines) + "\\n"
