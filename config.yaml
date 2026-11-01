@@ -20,7 +20,12 @@ mcp_servers:
         - vane_status
         - vane_scope_check
         - vane_plan_web2
+        - vane_plan_web3
         - vane_validate_evidence
+        - vane_validate_finding
+        - vane_validate_mission_closure
+        - vane_plan_recovery
+        - vane_lifecycle_decision
         - vane_verify_event_chain
       resources: false
       prompts: false
