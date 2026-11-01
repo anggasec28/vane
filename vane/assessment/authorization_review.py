@@ -15,6 +15,8 @@ def review_envelope(envelope: AuthorizationEnvelope) -> EnvelopeReview:
     if not envelope.rules: issues.append("empty_scope")
     if not envelope.allowed_methods: issues.append("empty_method_allowlist")
     if not envelope.approval_id: issues.append("missing_approval_reference")
-    if envelope.starts_at and envelope.expires_at and envelope.starts_at >= envelope.expires_at:
+    if envelope.starts_at is None or envelope.expires_at is None:
+        issues.append("missing_finite_validity_window")
+    elif envelope.starts_at >= envelope.expires_at:
         issues.append("invalid_validity_window")
     return EnvelopeReview(not issues, tuple(issues))
