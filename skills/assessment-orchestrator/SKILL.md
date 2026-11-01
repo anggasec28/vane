@@ -27,8 +27,8 @@ Use for a new assessment, a changed objective, a recovery decision, or a mission
 - Use `vane_create_project` and `vane_create_mission` to create durable draft records.
 - Use `vane_submit_mission` to place a mission into the approval queue.
 - Use `vane_authorize_mission` only with the exact signed envelope and Ed25519 approval.
-- Use `vane_start_mission` only after authorization is verified.
-- Use `vane_request_evidence_review`, `vane_complete_mission`, and `vane_close_mission` for the independent review and signed closure gates.
+- Use `vane_start_mission` only after authorization is verified. The engine revalidates the stored signature before starting or resuming.
+- Save assets only after signed mission authorization. Use `vane_request_evidence_review`, `vane_complete_mission`, and `vane_close_mission` for the independent review and signed closure gates.
 
 ## Pitfalls
 - Discovery is not authorization.
