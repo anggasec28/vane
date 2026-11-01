@@ -21,7 +21,7 @@ from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.lifecycle.policy import DataClass, LifecycleContext, decide_lifecycle
 from vane.models import (
-    Asset, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
+    Asset, AssetDisposition, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
 )
 from vane.recovery.planner import plan_recovery
 from vane.security.authorization import require_authorized
