@@ -68,6 +68,7 @@ class VaneEngine:
                           approval: Approval, *, actor: str = "master") -> Mission:
         result = self.orchestrator.authorize_mission(mission, envelope, approval, actor=actor)
         if self.repository is not None:
+            self.repository.save_approval(envelope.project_id, approval, actor=actor)
             self.repository.save_mission(result, actor=actor)
         return result
 
@@ -85,6 +86,9 @@ class VaneEngine:
                               locator: str, method: str, *, mission_approval: Approval,
                               action_approval: Approval | None = None,
                               requires_human_approval: bool = False):
-        return self.orchestrator.authorize_observation(envelope, locator, method,
+        decision = self.orchestrator.authorize_observation(envelope, locator, method,
             mission_approval=mission_approval, action_approval=action_approval,
             requires_human_approval=requires_human_approval)
+        if decision.allowed and action_approval is not None and self.repository is not None and envelope is not None:
+            self.repository.save_approval(envelope.project_id, action_approval, actor="master")
+        return decision
