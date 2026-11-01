@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 173,
+  "file_count": 174,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -53,6 +53,7 @@
     "profiles/specialists/root-cause-analyst.yaml",
     "profiles/specialists/web2-assessment-analyst.yaml",
     "profiles/specialists/web3-contract-analyst.yaml",
+    "profiles/vane-master.yaml",
     "pyproject.toml",
     "schemas/approval.schema.json",
     "schemas/asset.schema.json",
@@ -181,5 +182,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline. Specialist contracts, durable worker assignment state, evidence graph, report assembly, remediation validation, threat-intelligence normalization, case operations, and schema validation foundations are implemented. CI covers the repository baseline and newly added governance/worker tests; remaining work includes broader schema/traceability validation, Hermes compatibility review, and release gates."
+  "completion_note": "Active development baseline. Master and eight specialist role contracts, typed worker registry, durable worker assignment lifecycle, evidence graph, report assembly, remediation validation, threat-intelligence normalization, case operations contracts, schema validation, and expanded unit coverage are implemented. Hermes runtime validation and remaining traceability/release gates remain open."
 }
