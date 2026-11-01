@@ -24,6 +24,10 @@ def load_config(path: str | Path) -> dict[str, Any]:
         raise ConfigurationError("Authorization envelopes must be mandatory.")
     if policy.get("require_explicit_method_allowlist") is not True:
         raise ConfigurationError("Explicit method allowlisting must remain enabled.")
+    required_high_risk = {"active_scan", "exploit_validation", "credential_test",
+        "transaction_submit", "state_change", "data_export", "destructive_action"}
+    if not required_high_risk.issubset(set(policy.get("high_risk_methods", []))):
+        raise ConfigurationError("The complete high-risk method approval set is required.")
     mcp = data.get("mcp", {})
     if mcp.get("default_enabled") is not False:
         raise ConfigurationError("MCP capabilities must be disabled by default.")
