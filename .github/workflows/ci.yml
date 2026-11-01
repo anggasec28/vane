@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install package and development tools
-        run: python -m pip install -e ".[dev,mcp]"
+        run: python -m pip install -e ".[dev,mcp,crypto]"
       - name: Compile package
         run: python -m compileall -q vane
       - name: Run tests
