@@ -23,7 +23,7 @@ Use for smart-contract, wallet, protocol, and on-chain application review.
 
 ## Engine Tool
 
-Use `mcp__vane_engine__vane_plan_web3` with the exact envelope, chain ID, and contract address. It returns review tracks only and performs no RPC call or transaction.
+Use `vane_plan_web3` with the exact envelope, chain ID, and contract address. It returns review tracks only and performs no RPC call or transaction.
 
 ## Pitfalls
 - A token, proxy, implementation, wallet, or linked contract is not automatically in scope.
