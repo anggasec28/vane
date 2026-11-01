@@ -127,7 +127,7 @@ def vane_verify_mission_approval(envelope_json: str, approval_json: str) -> dict
     """Verify the Ed25519 approval bound to the exact authorization envelope."""
     envelope = authorization_from_dict(json.loads(envelope_json))
     if not envelope.is_time_valid():
-        return {"verified": False, "execution_authorized": False,
+        return {"mission_approval_verified": False, "execution_authorized": False,
                 "reason": "Authorization envelope is expired, revoked, or missing a finite validity window."}
     result = _verify_approval(envelope_json, approval_json, authorization_digest(envelope),
                               envelope.approval_id)
