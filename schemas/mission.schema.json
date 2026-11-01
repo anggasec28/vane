@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vane.invalid/schemas/mission.schema.json",
+  "title": "VANE Mission",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "project_id",
+    "objective",
+    "status",
+    "required_evidence",
+    "completed_evidence",
+    "blockers"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "AWAITING_APPROVAL",
+        "AUTHORIZED",
+        "RUNNING",
+        "BLOCKED",
+        "EVIDENCE_REVIEW",
+        "COMPLETED",
+        "CLOSED",
+        "REJECTED"
+      ]
+    },
+    "authorization_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "required_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "completed_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
