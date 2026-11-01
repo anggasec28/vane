@@ -216,3 +216,8 @@ class SQLiteRepository:
             disposition=AssetDisposition(record["disposition"]),
             discovered_from=record.get("discovered_from"), notes=record.get("notes", ""),
         ) for record in records]
+
+    def list_projects(self) -> list[Project]:
+        return [Project(item["project_id"], item["name"], item["owner"],
+                        datetime.fromisoformat(item["created_at"]))
+                for item in self.store.list_projects()]
