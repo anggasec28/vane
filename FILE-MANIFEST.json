@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 174,
+  "file_count": 176,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -93,6 +93,7 @@
     "tests/test_evidence.py",
     "tests/test_finding_governance.py",
     "tests/test_governance_extensions.py",
+    "tests/test_governance_repository.py",
     "tests/test_independent_validation.py",
     "tests/test_keyring.py",
     "tests/test_lifecycle.py",
@@ -170,6 +171,7 @@
     "vane/security/policy_engine.py",
     "vane/security/serialization.py",
     "vane/storage/__init__.py",
+    "vane/storage/governance_repository.py",
     "vane/storage/repository.py",
     "vane/storage/sqlite_store.py",
     "vane/validation/__init__.py",
@@ -182,5 +184,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline. Master and eight specialist role contracts, typed worker registry, durable worker assignment lifecycle, evidence graph, report assembly, remediation validation, threat-intelligence normalization, case operations contracts, schema validation, and expanded unit coverage are implemented. Hermes runtime validation and remaining traceability/release gates remain open."
+  "completion_note": "Active development baseline with Master and specialist profiles, durable worker lifecycle, evidence/report/remediation governance, durable case and threat-intelligence repositories, JSON Schema validation, and expanded unit coverage. Hermes runtime validation, external anchoring, and remaining release gates remain open."
 }

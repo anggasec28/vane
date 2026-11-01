@@ -46,6 +46,14 @@ mcp_servers:
         - vane_list_specialists
         - vane_build_mission_report
         - vane_validate_remediation_plan
+        - vane_save_case_work_item
+        - vane_list_case_work_items
+        - vane_save_case_timeline_event
+        - vane_list_case_timeline
+        - vane_save_threat_intel
+        - vane_list_threat_intel
+        - vane_save_remediation_action
+        - vane_list_remediation_actions
         - vane_save_asset
         - vane_list_assets
         - vane_list_evidence

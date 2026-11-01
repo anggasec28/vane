@@ -19,6 +19,10 @@ from vane.assessment.web3 import plan_contract_review
 from vane.evidence.chain import verify_event_chain
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
+from vane.findings.reporting import render_markdown
+from vane.findings.remediation import RemediationAction, RemediationStatus
+from vane.intelligence.threat_intel import IntelConfidence, ThreatIntelRecord
+from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem, WorkItemStatus
 from vane.findings.remediation import RemediationAction, RemediationStatus
 from vane.lifecycle.policy import DataClass, LifecycleContext, decide_lifecycle
 from vane.models import (
@@ -515,15 +519,16 @@ def vane_list_specialists() -> list[dict[str, Any]]:
 
 @server.tool()
 def vane_build_mission_report(project_id: str, mission_id: str, report_id: str,
-                              limitations_json: str = "[]") -> dict[str, Any]:
+                              limitations_json: str = "[]", persist: bool = False) -> dict[str, Any]:
     """Build an evidence-linked report bundle from a mission's durable records."""
     engine = _get_engine()
     mission = engine.get_mission(project_id, mission_id)
     limitations = json.loads(limitations_json)
     if not isinstance(limitations, list) or not all(isinstance(item, str) for item in limitations):
         raise ValueError("limitations_json must be a JSON array of strings.")
-    report = engine.build_mission_report(
-        mission, report_id=report_id, limitations=tuple(limitations))
+    report = (engine.persist_mission_report(
+        mission, report_id=report_id, limitations=tuple(limitations)) if persist else
+        engine.build_mission_report(mission, report_id=report_id, limitations=tuple(limitations)))
     return {
         "report_id": report.report_id,
         "generated_at": report.generated_at,
@@ -533,6 +538,8 @@ def vane_build_mission_report(project_id: str, mission_id: str, report_id: str,
         "evidence_index": list(report.evidence_index),
         "limitations": list(report.limitations),
         "unresolved_blockers": list(report.unresolved_blockers),
+        "markdown": render_markdown(report),
+        "persisted": persist,
     }
 
 
@@ -557,6 +564,138 @@ def vane_validate_remediation_plan(project_id: str, actions_json: str) -> dict[s
     _get_engine().validate_remediation_plan(project_id, actions)
     return {"valid": True, "action_ids": [item.action_id for item in actions],
             "application_performed": False}
+
+
+@server.tool()
+def vane_save_case_work_item(item_json: str) -> dict[str, Any]:
+    """Persist a case work item with validated ownership, dependencies, and due date."""
+    item = json.loads(item_json)
+    due_at = datetime.fromisoformat(str(item["due_at"]).replace("Z", "+00:00"))
+    record = CaseWorkItem(
+        item_id=str(item["item_id"]), project_id=str(item["project_id"]),
+        mission_id=str(item["mission_id"]), title=str(item["title"]),
+        owner=str(item["owner"]), due_at=due_at,
+        dependencies=tuple(item.get("dependencies", [])),
+        status=WorkItemStatus(item.get("status", "OPEN")),
+        escalation_level=int(item.get("escalation_level", 0)),
+    )
+    revision = _get_engine().save_case_work_item(record)
+    return {"saved": True, "item_id": record.item_id, "revision": revision}
+
+
+@server.tool()
+def vane_list_case_work_items(project_id: str) -> list[dict[str, Any]]:
+    """List persisted case work items for a project."""
+    repository = _get_engine().governance_repository
+    if repository is None:
+        raise RuntimeError("Durable case repository is not configured.")
+    return [{
+        "item_id": item.item_id, "project_id": item.project_id,
+        "mission_id": item.mission_id, "title": item.title, "owner": item.owner,
+        "due_at": item.due_at.isoformat(), "dependencies": list(item.dependencies),
+        "status": item.status.value, "escalation_level": item.escalation_level,
+    } for item in repository.list_work_items(project_id)]
+
+
+@server.tool()
+def vane_save_case_timeline_event(event_json: str) -> dict[str, Any]:
+    """Append a validated case timeline event to the project audit chain."""
+    item = json.loads(event_json)
+    event = CaseTimelineEvent(
+        event_id=str(item["event_id"]), project_id=str(item["project_id"]),
+        mission_id=str(item["mission_id"]), event_type=str(item["event_type"]),
+        actor=str(item["actor"]),
+        occurred_at=datetime.fromisoformat(str(item["occurred_at"]).replace("Z", "+00:00")),
+        summary=str(item["summary"]), references=tuple(item.get("references", [])),
+    )
+    revision = _get_engine().save_case_timeline_event(event, actor=event.actor)
+    return {"saved": True, "event_id": event.event_id, "revision": revision}
+
+
+@server.tool()
+def vane_list_case_timeline(project_id: str, mission_id: str = "") -> list[dict[str, Any]]:
+    """List case timeline events in chronological order."""
+    repository = _get_engine().governance_repository
+    if repository is None:
+        raise RuntimeError("Durable case repository is not configured.")
+    events = repository.list_timeline_events(project_id, mission_id or None)
+    return [{
+        "event_id": event.event_id, "mission_id": event.mission_id,
+        "event_type": event.event_type, "actor": event.actor,
+        "occurred_at": event.occurred_at.isoformat(), "summary": event.summary,
+        "references": list(event.references),
+    } for event in events]
+
+
+@server.tool()
+def vane_save_threat_intel(intel_json: str) -> dict[str, Any]:
+    """Validate and persist a supplied threat-intelligence record."""
+    item = json.loads(intel_json)
+    expiry = item.get("expires_at")
+    record = ThreatIntelRecord(
+        intel_id=str(item["intel_id"]), source_id=str(item["source_id"]),
+        source_uri=str(item["source_uri"]), title=str(item["title"]),
+        summary=str(item["summary"]),
+        published_at=datetime.fromisoformat(str(item["published_at"]).replace("Z", "+00:00")),
+        observed_at=datetime.fromisoformat(str(item["observed_at"]).replace("Z", "+00:00")),
+        expires_at=datetime.fromisoformat(str(expiry).replace("Z", "+00:00")) if expiry else None,
+        indicators=tuple(item.get("indicators", [])),
+        affected_products=tuple(item.get("affected_products", [])),
+        affected_versions=tuple(item.get("affected_versions", [])),
+        confidence=IntelConfidence(item["confidence"]), tags=tuple(item.get("tags", [])),
+    )
+    revision = _get_engine().save_threat_intel(record)
+    return {"saved": True, "intel_id": record.intel_id, "revision": revision}
+
+
+@server.tool()
+def vane_list_threat_intel() -> list[dict[str, Any]]:
+    """List normalized threat-intelligence records from supplied feeds."""
+    repository = _get_engine().governance_repository
+    if repository is None:
+        raise RuntimeError("Durable intelligence repository is not configured.")
+    return [{
+        "intel_id": item.intel_id, "source_id": item.source_id, "source_uri": item.source_uri,
+        "title": item.title, "summary": item.summary,
+        "published_at": item.published_at.isoformat(), "observed_at": item.observed_at.isoformat(),
+        "expires_at": item.expires_at.isoformat() if item.expires_at else None,
+        "indicators": list(item.indicators), "affected_products": list(item.affected_products),
+        "affected_versions": list(item.affected_versions), "confidence": item.confidence.value,
+        "tags": list(item.tags),
+    } for item in repository.list_threat_intel()]
+
+
+@server.tool()
+def vane_save_remediation_action(project_id: str, action_json: str) -> dict[str, Any]:
+    """Persist a remediation action after validating its accepted finding and plan dependencies."""
+    item = json.loads(action_json)
+    action = RemediationAction(
+        action_id=str(item["action_id"]), finding_id=str(item["finding_id"]),
+        title=str(item["title"]), description=str(item["description"]),
+        owner=str(item["owner"]), priority=str(item["priority"]),
+        dependencies=tuple(item.get("dependencies", [])),
+        verification_criteria=tuple(item.get("verification_criteria", [])),
+        status=RemediationStatus(item.get("status", "PROPOSED")),
+        verification_evidence_ids=tuple(item.get("verification_evidence_ids", [])),
+    )
+    revision = _get_engine().save_remediation_action(project_id, action)
+    return {"saved": True, "action_id": action.action_id, "revision": revision}
+
+
+@server.tool()
+def vane_list_remediation_actions(project_id: str) -> list[dict[str, Any]]:
+    """List persisted remediation actions for a project."""
+    repository = _get_engine().governance_repository
+    if repository is None:
+        raise RuntimeError("Durable governance repository is not configured.")
+    return [{
+        "action_id": item.action_id, "finding_id": item.finding_id,
+        "title": item.title, "description": item.description, "owner": item.owner,
+        "priority": item.priority, "dependencies": list(item.dependencies),
+        "verification_criteria": list(item.verification_criteria),
+        "status": item.status.value,
+        "verification_evidence_ids": list(item.verification_evidence_ids),
+    } for item in repository.list_remediation_actions(project_id)]
 
 
 def main() -> None:

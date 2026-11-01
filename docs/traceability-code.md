@@ -9,7 +9,7 @@ This is the initial code-level traceability map. A mapping means the requirement
 | Central enforcement (Decision 59 A) | `vane/security/enforcement.py`, `policy_engine.py` | Central decision facade |
 | Hybrid finding governance (Decision 56 C) | `vane/findings/governance.py`, `vane/findings/reporting.py` | Evidence-linked validation and mission report assembly; full reporting workflow still developing |
 | Hybrid evidence management (Decision 57 C) | `vane/evidence/`, `vane/storage/sqlite_store.py` | Integrity, provenance, persistence foundation |
-| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/projects/case_ops.py`, `vane/storage/repository.py`, `vane/engine.py` | Durable core records plus validated case work-item/timeline contracts; complete case workflow remains open |
+| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/projects/case_ops.py`, `vane/storage/governance_repository.py`, `vane/engine.py` | Durable project/mission records, case work items, and chronological timeline; dashboards/SLA automation remain open |
 | Independent hybrid validation (Decision 60 C) | `vane/validation/independent.py` | Deterministic closure checks |
 | Adaptive hybrid workflow | `vane/core/state_machine.py`, `vane/core/orchestrator.py` | Mission lifecycle foundation |
 | Deep root-cause within approved scope | `vane/assessment/root_cause.py`, `vane/assessment/graph.py` | Bounded evidence-aware dependency graph; causal proof remains separate from correlation |
@@ -22,7 +22,7 @@ This is the initial code-level traceability map. A mapping means the requirement
 | L3/R-12 external anchor and reset ledger | `docs/master-decisions.md`, `policies/cryptographic-trust.md` | OPEN / NOT IMPLEMENTED |
 
 ## Gaps requiring implementation
-- Complete case work-item/timeline persistence and lifecycle integration.
+- Case dashboards, SLA automation, and lifecycle orchestration across project work items.
 - External anchor publication and trusted-head recovery beyond the local hash chain.
 - All historical L3/R-12 requirements and AUD findings translated into executable tests.
 - Full worker scheduler and separately hosted verifier separation.
