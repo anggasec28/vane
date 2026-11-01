@@ -20,6 +20,9 @@ Use when building an inventory from user-supplied assets or previously authorize
 5. Record redirects, aliases, dependencies, and symlink targets as relationships, not scope grants.
 6. Build a dependency graph only from evidence-backed relationships. Traverse only nodes explicitly marked in scope.
 
+## Inventory Tools
+Use `vane_save_asset` to classify and persist each supplied/discovered asset against the active envelope, then `vane_list_assets` to reconcile the project inventory. Preserve OUT_OF_SCOPE and NOT_INSPECTED entries.
+
 ## Pitfalls
 - Do not probe a discovered asset to determine whether it is in scope.
 - Do not silently drop unresolved or inaccessible assets.
