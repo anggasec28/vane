@@ -20,8 +20,9 @@ class AssessmentOrchestrator:
             raise ValueError("Mission must be awaiting approval before authorization.")
         if not envelope.is_time_valid():
             raise ValueError("Authorization envelope is invalid or lacks a finite validity window.")
-        if not self.enforcer.validate_approval(approval, authorization_digest(envelope),
-                                               envelope.approval_id):
+        if (not self.enforcer.validate_approval(approval, authorization_digest(envelope),
+                                                envelope.approval_id)
+                or approval.expires_at is None or approval.expires_at > envelope.expires_at):
             raise ValueError("Approval signature is invalid or not bound to this authorization envelope.")
         mission.authorization_id = envelope.envelope_id
         transition(mission, MissionStatus.AUTHORIZED, actor=actor,
