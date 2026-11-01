@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 166,
+  "file_count": 170,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -145,6 +145,8 @@
     "vane/integrations/__init__.py",
     "vane/integrations/hermes/__init__.py",
     "vane/integrations/hermes/adapter.py",
+    "vane/intelligence/__init__.py",
+    "vane/intelligence/threat_intel.py",
     "vane/lifecycle/__init__.py",
     "vane/lifecycle/policy.py",
     "vane/mcp/__init__.py",
@@ -152,6 +154,7 @@
     "vane/mcp/server.py",
     "vane/models.py",
     "vane/projects/__init__.py",
+    "vane/projects/case_ops.py",
     "vane/projects/registry.py",
     "vane/recovery/__init__.py",
     "vane/recovery/planner.py",
@@ -168,11 +171,12 @@
     "vane/validation/__init__.py",
     "vane/validation/independent.py",
     "vane/validation/readiness.py",
+    "vane/validation/schema_contracts.py",
     "vane/workers/__init__.py",
     "vane/workers/catalog.py",
     "vane/workers/contracts.py",
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline. Specialist role contracts, typed registry, evidence graph, report assembly, remediation validation, and durable worker assignment state have been added. Completion still requires full traceability, automated validation, Hermes compatibility review, and release gates."
+  "completion_note": "Active development baseline. Repository-side specialist contracts, typed worker registry, evidence graph, report assembly, remediation validation, durable worker assignment state, threat-intelligence normalization, case operations contracts, and JSON Schema validation have been added. Completion still requires isolated validation, full traceability, Hermes compatibility review, and release gates."
 }
