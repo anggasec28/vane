@@ -388,8 +388,15 @@ class VaneEngine:
                               locator: str, method: str, *, mission_approval: Approval,
                               action_approval: Approval | None = None,
                               requires_human_approval: bool = False):
-        decision = self.orchestrator.authorize_observation(envelope, locator, method,
-            mission_approval=mission_approval, action_approval=action_approval,
+        if envelope is None:
+            raise PolicyViolation("An authorization envelope is required.")
+        trusted_envelope, trusted_approval = self._trusted_authorization(
+            envelope.project_id, envelope.envelope_id)
+        if (authorization_digest(trusted_envelope) != authorization_digest(envelope)
+                or mission_approval.approval_id != trusted_approval.approval_id):
+            raise PolicyViolation("Observation authorization does not match the stored signed mission approval.")
+        decision = self.orchestrator.authorize_observation(trusted_envelope, locator, method,
+            mission_approval=trusted_approval, action_approval=action_approval,
             requires_human_approval=requires_human_approval)
         if (decision.allowed and action_approval is not None and envelope is not None
                 and (requires_human_approval or method.strip().lower() in HIGH_RISK_METHODS)):
