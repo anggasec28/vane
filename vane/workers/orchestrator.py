@@ -5,6 +5,7 @@ from typing import Any
 
 from vane.models import Asset, AssetDisposition, AuthorizationEnvelope, Mission, MissionStatus
 from vane.security.authorization import asset_is_in_scope
+from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.workers.contracts import WorkerTask, validate_worker_result
 
 
@@ -38,8 +39,10 @@ class WorkerOrchestrator:
         if not task.is_valid() or task.deadline > envelope.expires_at:
             raise PermissionError("Worker task is expired or outlives the parent authorization.")
         allowed_methods = {method.lower() for method in envelope.allowed_methods}
-        if not set(task.allowed_methods).issubset(allowed_methods):
+        if not {method.lower() for method in task.allowed_methods}.issubset(allowed_methods):
             raise PermissionError("Worker task methods exceed parent authorization.")
+        if {method.lower() for method in task.allowed_methods} & HIGH_RISK_METHODS:
+            raise PermissionError("High-risk worker methods require a separately approved delegation path.")
         if not task.allowed_asset_ids:
             raise PermissionError("Worker task must have a finite asset allowlist.")
         for asset_id in task.allowed_asset_ids:
@@ -59,6 +62,8 @@ class WorkerOrchestrator:
         if assignment.status != WorkerTaskStatus.DELEGATED:
             raise ValueError("Only a delegated task can be completed.")
         validate_worker_result(result, assignment.task)
+        if set(result.get("methods", [])) - set(assignment.task.allowed_methods):
+            raise PermissionError("Worker result reports methods outside delegated authority.")
         assignment.result = dict(result)
         assignment.status = WorkerTaskStatus.COMPLETED
         assignment.history.append({"event": "COMPLETED", "worker": assignment.task.worker_profile})
