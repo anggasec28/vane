@@ -8,15 +8,15 @@ Hermes Agent provides runtime, sessions, profile loading, and tool execution. VA
 2. Authorization envelope and scope resolution.
 3. Central security enforcement and approval binding.
 4. Adaptive mission orchestration and explicit state machine.
-5. Web2/Web3 planning, asset mapping, and root-cause dependency analysis.
+5. Web2/Web3 planning, asset mapping, evidence-aware dependency graph, and root-cause analysis.
 6. Evidence provenance, integrity, storage, and lifecycle.
 7. Finding governance and project/case operations.
-8. Worker delegation and independent hybrid validation.
+8. Specialist registry, durable worker delegation, reporting/remediation governance, and independent hybrid validation.
 9. MCP capability registry and governed skills.
 10. Hermes adapter boundary and external signing service.
 
 ## Python package map
-`core` orchestration; `security` policy and authorization; `assessment` Web2/Web3 planning; `evidence` integrity/provenance; `findings` governance; `projects` registry; `recovery` adaptive recovery; `lifecycle` data lifecycle; `storage` versioned SQLite domain records and hash-linked events; `workers` bounded delegation lifecycle; `validation` independent checks; `mcp` local stdio workflow server and capability registry; `crypto` public-only Ed25519 approval verifier/keyring; `integrations/hermes` runtime boundary.
+`core` orchestration; `security` policy and authorization; `assessment` Web2/Web3 planning and evidence graph; `evidence` integrity/provenance; `findings` governance, report assembly, and remediation validation; `projects` registry and case operations; `intelligence` supplied threat-intelligence normalization; `recovery` adaptive recovery; `lifecycle` data lifecycle; `storage` versioned SQLite domain records and hash-linked events; `workers` specialist catalog, typed contracts, and durable delegation lifecycle; `validation` independent checks and JSON Schema validation; `mcp` local stdio workflow server and capability registry; `crypto` public-only Ed25519 approval verifier/keyring; `integrations/hermes` runtime boundary.
 
 ## Trust boundaries
 Master↔VANE; orchestrator↔worker; VANE↔Hermes host; policy engine↔capability adapter; target↔observation channel; evidence producer↔store; signer↔verifier; local event store↔external anchor.
