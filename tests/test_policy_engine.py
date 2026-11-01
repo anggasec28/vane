@@ -19,12 +19,14 @@ def test_capability_requires_signed_approval_bound_to_exact_action():
     assert not denied.allowed
     approval = Approval("ap1", "master",
         capability_action_digest(envelope, "https://example.com", "http_metadata"),
-        "APPROVE", datetime.now(timezone.utc), "key-1", "test-signature")
+        "APPROVE", datetime.now(timezone.utc), "key-1", "test-signature",
+        envelope.expires_at)
     allowed = engine.evaluate(envelope=envelope, locator="https://example.com",
         method="http_metadata", requires_human_approval=True, approval=approval)
     assert allowed.allowed
     wrong_action = engine.evaluate(envelope=envelope, locator="https://example.com",
         method="http_metadata", requires_human_approval=True,
         approval=Approval("ap1", "master", "0" * 64, "APPROVE",
-                          datetime.now(timezone.utc), "key-1", "test-signature"))
+                          datetime.now(timezone.utc), "key-1", "test-signature",
+                          envelope.expires_at))
     assert not wrong_action.allowed
