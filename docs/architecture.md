@@ -18,6 +18,25 @@ The Python engine is a supporting domain capability layer exposed through govern
 
 These are logical responsibility domains, not a requirement to create seven separate agents or services. Central governance defines authoritative cross-domain policy; each domain remains accountable for its own operations and state transitions.
 
+## Operational autonomy and decision memory
+VANE follows Adaptive Delegated Autonomy (ODA): it may reason, plan, reprioritize, coordinate specialists, and make bounded operational decisions inside its effective authority. Higher-impact, critical, irreversible, or out-of-envelope decisions escalate to Master. Autonomy never creates execution permission.
+
+Decision arbitration is hierarchical and evidence-weighted, not a vote. It considers provenance, freshness, relevance, dependency/trust-boundary context, uncertainty, alternative explanations, mission priority, impact, specialist competence, task scope, policy, and authority. Material unresolved conflicts preserve competing hypotheses and escalate or request further authorized evidence.
+
+Decision memory is hybrid:
+- Central Decision Ledger: authoritative decisions, authority references, rationale, status, and revisions.
+- Domain working memory: bounded task/domain context.
+- Relationship index: traceable links among decisions, evidence, findings, assets, missions, and dependencies.
+- Rebuildable projections: query-optimized views derived from authoritative records.
+- Contextual retrieval: prior decisions are retrieved with provenance and applicability constraints.
+
+Caches and projections never outrank their authoritative source. Cross-mission knowledge reuse requires classification, sanitization, provenance/ownership review, quality assessment, authorization, and applicability checks. Reused knowledge is a lead or reference, never a substitute for target-specific evidence. Project data must not leak across mission boundaries through memory, prompts, logs, or derived artifacts.
+
+## Authority hierarchy and emergency suspension
+Master is the ultimate authority. Central governance/arbitration, domain authorities, specialists, and validators operate only within explicit delegation. Effective authority is the intersection of mission scope, approval, parent authority, and policy, subject to current validity and revocation.
+
+Emergency Suspension Authority is Master-only. Central Security Enforcement may block an individual action that violates policy or lacks authority, but it does not possess global Emergency Suspension Authority and cannot release a Master suspension. If authority or revocation status cannot be verified, affected work is blocked.
+
 ## Layers and implementation mapping
 1. Human authority principal and protected VANE identity.
 2. Authorization envelope, scope resolution, and effective-authority calculation.
