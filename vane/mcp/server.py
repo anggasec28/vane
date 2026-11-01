@@ -241,7 +241,7 @@ def vane_verify_project_integrity(project_id: str) -> dict[str, Any]:
     db_path = os.environ.get("VANE_DB_PATH", "data/vane.sqlite3")
     if not os.path.isfile(db_path):
         return {"valid": False, "reason": "database_not_found", "project_id": project_id}
-    store = SQLiteStore(db_path)
+    store = SQLiteStore(db_path, read_only=True)
     return {"valid": store.verify_project_integrity(project_id),
             "event_chain_valid": store.verify_project_chain(project_id),
             "domain_records_valid": store.verify_domain_records(project_id),
