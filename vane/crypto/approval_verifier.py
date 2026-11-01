@@ -14,11 +14,12 @@ class Ed25519ApprovalVerifier:
         try:
             from cryptography.exceptions import InvalidSignature
             from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        except ImportError:
+            return False
+        try:
             signature = base64.b64decode(approval.signature, validate=True)
             Ed25519PublicKey.from_public_bytes(public_key).verify(
                 signature, approval_signing_payload(approval))
             return True
         except (ValueError, InvalidSignature):
-            return False
-        except ImportError:
             return False
