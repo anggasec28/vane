@@ -20,6 +20,7 @@ from vane.evidence.chain import verify_event_chain
 from vane.decisions.ledger import DecisionStatus
 from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
 from vane.decisions.relationships import DecisionRelationshipIndex
+from vane.intelligence.knowledge_reuse import (KnowledgeCandidate, KnowledgeForm, evaluate_knowledge_reuse)
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import render_markdown
@@ -257,6 +258,46 @@ def vane_list_projects() -> list[dict[str, Any]]:
                 else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
     return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
              "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
+def vane_evaluate_knowledge_reuse(candidate_json: str) -> dict[str, Any]:
+    """Evaluate cross-project knowledge reuse; permitted material is only a contextual lead."""
+    raw = json.loads(candidate_json)
+    if not isinstance(raw, dict):
+        raise ValueError("candidate_json must be a JSON object.")
+    revoked = raw.get("revoked", False)
+    if type(revoked) is not bool:
+        raise ValueError("revoked must be a JSON boolean.")
+    expires_at = raw.get("expires_at")
+    if expires_at is not None:
+        if not isinstance(expires_at, str):
+            raise ValueError("expires_at must be an ISO-8601 string or null.")
+        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    candidate = KnowledgeCandidate(
+        knowledge_id=raw["knowledge_id"],
+        source_project_id=raw["source_project_id"],
+        target_project_id=raw["target_project_id"],
+        data_class=DataClass(raw["data_class"]),
+        form=KnowledgeForm(raw["form"]),
+        provenance_reference=raw["provenance_reference"],
+        ownership_reference=raw["ownership_reference"],
+        quality_review_reference=raw["quality_review_reference"],
+        reuse_authorization_reference=raw["reuse_authorization_reference"],
+        applicability_reference=raw["applicability_reference"],
+        sanitized_record_reference=raw.get("sanitized_record_reference"),
+        sanitization_method=raw.get("sanitization_method"),
+        sanitization_reviewer=raw.get("sanitization_reviewer"),
+        expires_at=expires_at, revoked=revoked,
+    )
+    result = evaluate_knowledge_reuse(candidate)
+    return {
+        "status": result.status.value, "knowledge_id": result.knowledge_id,
+        "source_project_id": result.source_project_id,
+        "target_project_id": result.target_project_id,
+        "reasons": list(result.reasons),
+        "authoritative_evidence": False, "grants_authorization": False,
+    }
 
 
 @server.tool()
