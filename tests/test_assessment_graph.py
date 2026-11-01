@@ -11,7 +11,8 @@ def test_graph_paths_are_bounded_and_scope_filtered():
          GraphEdge("b", "c", "calls", ("ev-2",))],
     )
     assert len(graph.paths("a", max_depth=1)) == 1
-    assert len(graph.paths("a", allowed_asset_ids={"asset-b"})) == 1
+    assert len(graph.paths("a", allowed_asset_ids={"asset-a", "asset-b"})) == 1
+    assert graph.paths("a", allowed_asset_ids={"asset-b"}) == ()
     assert graph.paths("a", allowed_asset_ids=set()) == ()
 
 
