@@ -1,11 +1,13 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
-from vane.models import AuthorizationEnvelope, EvidenceRecord, Finding, Mission
+from vane.models import Asset, AuthorizationEnvelope, EvidenceRecord, Finding, Mission
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
 from vane.security.enforcement import SecurityEnforcer
 from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.storage.repository import SQLiteRepository
+from vane.workers.contracts import WorkerTask
+from vane.workers.orchestrator import WorkerAssignment, WorkerOrchestrator
 
 class VaneEngine:
     """Composition root. Persistence and trusted approval verification are injected."""
@@ -16,6 +18,7 @@ class VaneEngine:
         self.projects = projects or ProjectRegistry()
         self.repository = repository
         self.orchestrator = AssessmentOrchestrator(self.enforcer)
+        self.workers = WorkerOrchestrator()
 
     def register_project(self, project_id: str, name: str, owner: str) -> Project:
         if self.repository is not None:
