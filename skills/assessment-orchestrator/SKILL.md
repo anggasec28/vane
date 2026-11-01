@@ -1,11 +1,32 @@
-# Skill: Assessment Orchestrator
+---
+name: assessment-orchestrator
+description: Plan and govern evidence-led security assessments.
+version: 0.2.0
+metadata:
+  hermes:
+    tags: [security, orchestration, assessment]
+    category: security
+---
+# Assessment Orchestrator
 
-Coordinate end-to-end adaptive hybrid assessments.
+## When to Use
+Use for a new assessment, a changed objective, a recovery decision, or a mission closure review.
 
-Inputs: objective, authorization envelope, project/case context, evidence objectives, constraints, approval rules.
+## Procedure
+1. Identify the project, objective, and current mission state.
+2. Obtain the exact, current authorization envelope and approval reference from the Master.
+3. Use `mcp__vane_engine__vane_status` to confirm the local engine is available.
+4. Use `mcp__vane_engine__vane_scope_check` for every proposed asset and method before planning.
+5. Use `mcp__vane_engine__vane_plan_web2` for passive Web2 work planning. It does not make network requests.
+6. Keep Web2 and Web3 work items, tasks, evidence objectives, blockers, and findings separate.
+7. Adapt the plan when evidence is incomplete. Never treat a task result as mission closure.
+8. Request independent validation before recommending closure.
 
-Procedure: validate authorization; build dependency-aware plan; dispatch bounded tasks; track task and mission states separately; adapt based on evidence; invoke bounded recovery; request independent validation; close only against evidence criteria.
+## Pitfalls
+- Discovery is not authorization.
+- A redirect, related hostname, dependency, wallet, contract, or repository does not enter scope automatically.
+- Blocked or missing observations are not passes.
+- The current MCP server plans and validates; it does not perform live scans.
 
-Outputs: plan, task graph, decision log, evidence gaps, findings, validation status, closure recommendation.
-
-Never expand scope, infer consent, bypass central enforcement, or equate task completion with assessment closure.
+## Verification
+Return the authorization reference, scoped assets, approved methods, evidence gaps, blockers, and validation result. State clearly whether the mission is open, blocked, completed, or closed.
