@@ -46,7 +46,7 @@ Then install the Python engine in the new profile's environment. Follow [the com
 See [Python engine](docs/python-engine.md), [architecture](docs/architecture.md), [security model](docs/security-model.md), [Master decisions](docs/master-decisions.md), and [build status](docs/build-status.md).
 
 ## Security defaults
-Default deny. A valid authorization envelope must explicitly cover the asset and method. Discovery does not grant scope. Workers inherit a strict subset of authority. Unknown or out-of-scope assets are not inspected. Task completion is not assessment closure. MCP capabilities are disabled by default. No private signing key belongs in this repository or engine.
+Default deny. A valid authorization envelope must explicitly cover the asset and method. Discovery does not grant scope. Workers inherit a strict subset of authority. Unknown or out-of-scope assets are not inspected. Task completion is not assessment closure. External MCP capabilities are disabled by default; the local VANE governance MCP server exposes only deterministic planning and validation tools. No private signing key belongs in this repository or engine.
 
 ## Important boundaries
 The default codebase contains planning, policy, validation, and adapter contracts. It does not ship an enabled live scanner, exploit runner, transaction sender, key manager, or autonomous scope expansion. The default Hermes adapter is inert and does not modify Hermes runtime state.
