@@ -34,6 +34,7 @@ mcp_servers:
         - vane_verify_mission_approval
         - vane_verify_action_approval
         - vane_verify_closure_approval
+        - vane_observe_tls_metadata
         - vane_observe_http_metadata
         - vane_plan_web2
         - vane_plan_web3

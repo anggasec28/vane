@@ -91,3 +91,57 @@ def test_http_metadata_adapter_rejects_unsupported_urls_without_transport():
     ))
     assert result.success is False
     assert called == []
+
+
+def test_tls_metadata_adapter_requires_policy_and_emits_certificate_evidence():
+    from vane.assessment.base import ObservationRequest, TLSMetadataAdapter
+    from vane.security.policy_engine import PolicyDecision
+
+    class AllowEnforcer:
+        def authorize_action(self, *args, **kwargs):
+            assert args[2] == "tls_metadata"
+            return PolicyDecision(True, "ALLOW", "approved")
+
+    def fake_certificate(locator, timeout):
+        assert locator == "https://example.com"
+        assert timeout == 8.0
+        return {
+            "subject": ["commonName=example.com"],
+            "issuer": ["commonName=Example CA"],
+            "not_after": "Dec 31 23:59:59 2027 GMT",
+            "subject_alt_names": ["DNS:example.com"],
+            "sha256_fingerprint": "a" * 64,
+        }
+
+    auth = envelope(methods=("tls_metadata",))
+    adapter = TLSMetadataAdapter(AllowEnforcer(), transport=fake_certificate)
+    result = adapter.observe(ObservationRequest(
+        "https://example.com", "tls_metadata", "certificate", auth,
+        mission_id="mission-1", mission_approval=object(),
+    ))
+    assert result.success is True
+    assert result.evidence is not None
+    assert result.evidence.kind == "tls_certificate"
+    assert result.evidence.metadata["sha256_fingerprint"] == "a" * 64
+    assert result.evidence.metadata["method"] == "tls_metadata"
+
+
+def test_tls_metadata_adapter_rejects_http_scheme():
+    from vane.assessment.base import ObservationRequest, TLSMetadataAdapter
+    from vane.security.policy_engine import PolicyDecision
+
+    class AllowEnforcer:
+        def authorize_action(self, *args, **kwargs):
+            return PolicyDecision(True, "ALLOW", "approved")
+
+    called = []
+    adapter = TLSMetadataAdapter(
+        AllowEnforcer(), transport=lambda *args: called.append(args) or {}
+    )
+    auth = envelope(methods=("tls_metadata",))
+    result = adapter.observe(ObservationRequest(
+        "http://example.com", "tls_metadata", "certificate", auth,
+        mission_id="mission-1", mission_approval=object(),
+    ))
+    assert result.success is False
+    assert called == []
