@@ -209,6 +209,9 @@ class VaneEngine:
             raise PolicyViolation("Evidence observation is not covered by a valid signed mission approval.")
         locator = evidence.metadata.get("locator")
         method = str(evidence.metadata.get("method", evidence.collection_method)).strip().lower()
+        allowed_methods = {item.lower() for item in envelope.allowed_methods}
+        if locator is None and (method in allowed_methods or method in HIGH_RISK_METHODS):
+            raise PolicyViolation("Target-facing evidence must identify its exact authorized locator.")
         if locator is not None:
             allowed = {item.lower() for item in envelope.allowed_methods}
             prohibited = {item.lower() for item in envelope.prohibited_methods}
