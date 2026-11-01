@@ -194,8 +194,10 @@ class SQLiteStore:
 
     def append_chained_event(self, *, project_id: str, event_type: str,
                              actor: str, payload: dict[str, Any],
-                             event_id: str | None = None) -> int:
-        """Atomically read the project head, calculate digest, and append the event."""
+                             event_id: str | None = None,
+                             expected_previous_digest: str | None = None,
+                             enforce_expected_head: bool = False) -> int:
+        """Append an immutable event, optionally using compare-and-swap on the chain head."""
         if self.read_only:
             raise PermissionError("SQLite store is read-only.")
         identifier = event_id or str(uuid4())
@@ -213,6 +215,8 @@ class SQLiteStore:
                 (project_id,),
             ).fetchone()
             previous = str(row["digest"]) if row else None
+            if enforce_expected_head and previous != expected_previous_digest:
+                raise ValueError("Event-chain head changed; refresh before appending.")
             digest = chain_digest(previous, event_payload)
             cursor = db.execute(
                 """INSERT INTO events
