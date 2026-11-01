@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from vane.engine import VaneEngine
 from vane.models import AuthorizationEnvelope, EvidenceRecord, MissionStatus, ScopeRule
 from vane.security.approval import Approval
-from vane.security.digests import authorization_digest
+from vane.security.digests import authorization_digest, mission_closure_digest
 from vane.security.enforcement import SecurityEnforcer
 from vane.security.policy_engine import PolicyEngine
 
@@ -32,6 +32,10 @@ def test_evidence_drives_mission_completion():
     engine.request_evidence_review(mission)
     engine.complete_mission(mission)
     assert mission.status == MissionStatus.COMPLETED
+    closure = Approval("closure1", "master", mission_closure_digest(mission),
+        "APPROVE", datetime.now(timezone.utc), "master-key", "ok", envelope.expires_at)
+    engine.close_mission(mission, envelope, closure)
+    assert mission.status == MissionStatus.CLOSED
 
 def test_mission_cannot_complete_with_missing_evidence():
     engine = VaneEngine()
