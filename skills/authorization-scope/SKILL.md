@@ -15,9 +15,9 @@ Use before any assessment action, tool call, asset mapping, recovery attempt, or
 ## Procedure
 1. Obtain the exact authorization envelope from the Master. Do not infer it from previous access or discovery.
 2. Confirm principal, project, validity window, approval reference, asset rules, allowed methods, and prohibited methods.
-3. Call `mcp__vane_engine__vane_scope_check` with the exact envelope JSON, locator, and method.
+3. Call `vane_scope_check` with the exact envelope JSON, locator, and method.
 4. Treat any denial, malformed envelope, missing approval reference, expired envelope, or ambiguous locator as DENY.
-5. For a mission, verify its Ed25519 approval with `mcp__vane_engine__vane_verify_mission_approval`. For any separately gated action, verify the action-bound approval with `mcp__vane_engine__vane_verify_action_approval`.
+5. For a mission, verify its Ed25519 approval with `vane_verify_mission_approval`. For any separately gated action, verify the action-bound approval with `vane_verify_action_approval`.
 6. Record out-of-scope discoveries as NOT_INSPECTED. Do not resolve them by probing.
 7. Re-check authorization when the method, asset, project, or time window changes.
 
