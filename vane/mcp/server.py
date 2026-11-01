@@ -26,7 +26,7 @@ from vane.models import (
 from vane.recovery.planner import plan_recovery
 from vane.security.authorization import require_authorized
 from vane.security.approval import Approval
-from vane.security.digests import authorization_digest, capability_action_digest
+from vane.security.digests import authorization_digest, capability_action_digest, mission_closure_digest
 from vane.crypto.approval_verifier import Ed25519ApprovalVerifier
 from vane.crypto.keyring import load_public_keyring
 from vane.security.serialization import authorization_from_dict
@@ -229,6 +229,29 @@ def vane_lifecycle_decision(data_class: str, project_active: bool, disputed: boo
         legal_or_contractual_hold, ownership_known, retention_expired)
     action = decide_lifecycle(context)
     return {"action": action.value, "deletion_performed": False}
+
+
+@server.tool()
+def vane_verify_closure_approval(envelope_json: str, mission_json: str,
+                                 approval_json: str) -> dict[str, Any]:
+    """Verify Master Ed25519 approval for a completed mission closure snapshot."""
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    item = json.loads(mission_json)
+    mission = Mission(
+        mission_id=str(item["mission_id"]), project_id=str(item["project_id"]),
+        objective=str(item["objective"]), status=MissionStatus(item["status"]),
+        authorization_id=item.get("authorization_id"),
+        required_evidence=set(item.get("required_evidence", [])),
+        completed_evidence=set(item.get("completed_evidence", [])),
+        blockers=list(item.get("blockers", [])), history=list(item.get("history", [])),
+    )
+    if mission.status != MissionStatus.COMPLETED:
+        return {"closure_approval_verified": False, "execution_authorized": False,
+                "reason": "mission_not_completed"}
+    result = _verify_approval(envelope_json, approval_json, mission_closure_digest(mission), None)
+    result["closure_approval_verified"] = result.pop("signature_valid", False)
+    result["execution_authorized"] = False
+    return result
 
 
 @server.tool()
