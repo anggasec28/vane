@@ -34,7 +34,9 @@ class PolicyEngine:
             return PolicyDecision(False, "AUTHORIZATION_DENIED", str(exc))
         if requires_human_approval:
             expected = capability_action_digest(envelope, locator, method) if envelope else ""
-            if not self.validate_approval(approval, expected, None):
+            if (not self.validate_approval(approval, expected, None)
+                    or approval is None or envelope is None
+                    or approval.expires_at is None or approval.expires_at > envelope.expires_at):
                 return PolicyDecision(False, "APPROVAL_REQUIRED",
                     "A valid Ed25519 approval bound to this exact capability action is required.", True)
         return PolicyDecision(True, "ALLOW", "Covered by active authorization and policy.")
