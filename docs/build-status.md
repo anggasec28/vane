@@ -14,7 +14,7 @@ Package version: 0.2.0 development baseline.
 - Adaptive recovery planner and hybrid lifecycle policy.
 - Project registry, typed SQLite repositories for projects/missions/evidence/findings/assets/approvals, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
-- Bounded worker delegation lifecycle, strict result validation, durable task-contract persistence, and independent mission closure validator. Worker session spawning and durable completion-state storage remain open.
+- Bounded worker delegation lifecycle, strict result validation, durable task-contract persistence, evidence-led mission workflow, independent validation, and signed Master closure gate. Worker session spawning and durable completion-state storage remain open.
 - External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
 - Local stdio MCP server exposing policy, planning, evidence, and event-chain utilities only.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
