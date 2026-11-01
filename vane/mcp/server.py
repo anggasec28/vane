@@ -162,7 +162,7 @@ def vane_save_asset(asset_json: str, envelope_json: str) -> dict[str, Any]:
         AssetDisposition(item.get("disposition", "UNKNOWN")),
         item.get("discovered_from"), str(item.get("notes", "")))
     classify_discovered_asset(asset, envelope)
-    engine.save_asset(envelope.project_id, asset)
+    engine.save_asset(envelope, asset)
     return {"asset_id": asset.asset_id, "locator": asset.locator,
             "disposition": asset.disposition.value, "notes": asset.notes}
 
