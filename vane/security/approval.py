@@ -25,8 +25,9 @@ class Approval:
                      and self.key_id and self.signature)
                 and self.decision == "APPROVE"
                 and self.subject_digest == subject_digest
-                and self.decided_at <= current
-                and (self.expires_at is None or current < self.expires_at))
+                and self.expires_at is not None
+                and self.decided_at < self.expires_at
+                and self.decided_at <= current < self.expires_at)
 
 class ApprovalVerifier(Protocol):
     def verify(self, approval: Approval) -> bool: ...
