@@ -225,6 +225,16 @@ def vane_list_findings(project_id: str) -> list[dict[str, Any]]:
 
 
 @server.tool()
+def vane_list_projects() -> list[dict[str, Any]]:
+    """List durable VANE project records."""
+    engine = _get_engine()
+    projects = (engine.repository.list_projects() if engine.repository is not None
+                else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
+    return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
+             "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
 def vane_create_project(project_id: str, name: str, owner: str) -> dict[str, Any]:
     """Create a durable project record. This does not authorize an assessment."""
     project = _get_engine().register_project(project_id, name, owner)
