@@ -5,7 +5,7 @@ This is the initial code-level traceability map. A mapping means the requirement
 | Decision / requirement | Code or artifact | Current coverage |
 |---|---|---|
 | VANE hosted by Hermes, not replacement runtime | `SOUL.md`, `vane/integrations/hermes/adapter.py` | Boundary contract; Hermes compatibility unverified |
-| Autonomous with approval | `vane/security/approval.py`, `vane/security/policy_engine.py` | Approval model and gate |
+| Autonomous with approval | `vane/security/approval.py`, `vane/security/policy_engine.py`, `vane/crypto/approval_verifier.py` | Ed25519 signed approval, action digest binding, public-only verification |
 | Central enforcement (Decision 59 A) | `vane/security/enforcement.py`, `policy_engine.py` | Central decision facade |
 | Hybrid finding governance (Decision 56 C) | `vane/findings/governance.py` | Evidence-linked validation; workflow incomplete |
 | Hybrid evidence management (Decision 57 C) | `vane/evidence/`, `vane/storage/sqlite_store.py` | Integrity, provenance, persistence foundation |
