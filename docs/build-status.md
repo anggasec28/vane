@@ -6,13 +6,13 @@ Package version: 0.2.0 development baseline.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
-- Authorization envelope, exact asset/method scope checks, signed mission approval, separate action-bound approval for high-risk methods, observation-time approval verification, public-only Ed25519 verification, and central policy enforcement.
+- Authorization envelope, exact asset/method scope checks, signed mission approval, separate action-bound approval for high-risk methods, observation-time approval verification and signed authorization revalidation on resume/delegation, public-only Ed25519 verification, and central policy enforcement.
 - Mission lifecycle with evidence-gated completion and orchestration facade.
 - Web2/Web3 planning, asset disposition, dependency graph, and authorization envelope review.
 - Evidence record validation, SHA-256 helpers, canonical provenance, and event-chain verification.
 - Finding validation linked to usable evidence.
 - Adaptive recovery planner and hybrid lifecycle policy.
-- Project registry, typed SQLite repositories for projects/missions/evidence/findings/assets/approvals, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
+- Project registry, typed SQLite repositories for projects/authorization envelopes/missions/evidence/findings/assets/approvals/worker tasks, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
 - Bounded worker delegation lifecycle, strict result validation, durable task-contract persistence, evidence-led mission workflow, independent validation, and signed Master closure gate. Worker session spawning and durable completion-state storage remain open.
 - External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
