@@ -61,6 +61,7 @@
       "enum": [
         "RETAIN",
         "PRESERVE",
+        "REVIEW",
         "DISPOSE_PENDING_APPROVAL"
       ]
     },
