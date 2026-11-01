@@ -9,7 +9,7 @@ from vane.models import (
     Asset, AuthorizationEnvelope, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
 )
 from vane.security.approval import Approval
-from vane.security.authorization import authorization_from_dict
+from vane.security.serialization import authorization_from_dict
 from vane.workers.contracts import WorkerTask
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
