@@ -29,5 +29,9 @@ class AssessmentOrchestrator:
                    reason="Trusted Ed25519 approval bound to authorization envelope.")
         return mission
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
-                              locator: str, method: str):
-        return self.enforcer.authorize_action(envelope, locator, method)
+                              locator: str, method: str, *, mission_approval: Approval | None,
+                              action_approval: Approval | None = None,
+                              requires_human_approval: bool = False):
+        return self.enforcer.authorize_action(envelope, locator, method,
+            mission_approval=mission_approval, action_approval=action_approval,
+            requires_human_approval=requires_human_approval)
