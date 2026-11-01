@@ -23,7 +23,7 @@ Use before a mission is marked completed or closed, and when a finding is promot
 
 ## Engine Tool
 
-Use `mcp__vane_engine__vane_validate_mission_closure` with mission, evidence, and finding records. Treat every failed or indeterminate check as unresolved.
+Use `vane_validate_mission_closure` with mission, evidence, and finding records. Treat every failed or indeterminate check as unresolved.
 
 ## Pitfalls
 - The worker who performed an observation is not automatically an independent verifier.
