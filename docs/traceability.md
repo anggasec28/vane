@@ -31,6 +31,13 @@ Decision Ledger source: `vane/decisions/ledger.py`; storage CAS: `vane/storage/s
 | VANE is the primary Hermes profile, not a competing runtime | `SOUL.md`, `config.yaml`, `README.md`, `docs/architecture.md` | Hermes profile compatibility and runtime boundary review | DOCUMENTED; runtime NOT_VERIFIED |
 | Master is a human principal, not an agent/profile | `SOUL.md`, `profiles/registry.yaml`, `profiles/README.md` | Identity and authority consistency review | DOCUMENTED |
 | Master interacts with VANE through Telegram | `docs/operating-model.md`, `README.md` | Operator-side Hermes gateway/profile check | NOT_VERIFIED |
+| Adaptive Delegated Autonomy (ODA C) | `docs/architecture.md`, `vane/core/`, `vane/workers/` | Autonomy bounded by mission ∩ approval ∩ parent ∩ policy | PARTIAL |
+| Hierarchical evidence-weighted arbitration (C) | `vane/decisions/`, `vane/evidence/`, `docs/architecture.md` | Multi-factor evidence comparison; dissent and uncertainty preserved; no majority vote | PARTIAL / GAP |
+| Hybrid Decision Memory (C) | `vane/decisions/`, `vane/storage/`, `docs/architecture.md` | Authoritative ledger, bounded working memory, relationship index, rebuildable projections, provenance-aware retrieval | PARTIAL / GAP |
+| Governed cross-mission knowledge (C) | `vane/intelligence/`, `vane/lifecycle/`, `docs/architecture.md` | Classification, sanitization, provenance, ownership, quality, authorization, applicability, no cross-project leakage | GAP |
+| Emergency Suspension Authority (Master-only A) | `docs/architecture.md`, `profiles/registry.yaml`, `vane/security/` | Authenticated Master-only suspend/release; central enforcement remains action-level control | NOT_IMPLEMENTED |
+| Eleven-phase adaptive workflow and frontier states | `docs/operating-model.md`, `vane/core/`, `vane/assessment/` | Phase traceability, L1-L5 depth, explicit frontier states, evidence-based exhaustion | PARTIAL / GAP |
+| Capability maturity L0-L4 | `docs/build-status.md`, `docs/validation-plan.md` | UNDECLARED → DECLARED → CONFIGURED → OPERATIONAL → VERIFIED, each evidence-backed | NOT_IMPLEMENTED
 | Authorization before action | authorization, enforcement, approval policy | deny-path and approval-binding scenarios | PARTIAL |
 | Deep root cause within approved scope | operating model, assessment graph, root-cause module | bounded dependency tracing and causal evidence | PARTIAL |
 | Adaptive hybrid workflow | operating model, orchestrator, state machine | evidence/risk/dependency-driven workflow scenarios | PARTIAL |
@@ -59,6 +66,7 @@ Decision Ledger source: `vane/decisions/ledger.py`; storage CAS: `vane/storage/s
 
 - Expand each domain row into requirement-level traceability against the full blueprint and documents 00–07.
 - Define objective acceptance criteria and evidence records for each mandatory requirement.
+- Implement evidence-weighted arbitration, hybrid decision-memory projections/relationship retrieval, governed cross-mission knowledge gates, Master-only emergency suspension, and explicit frontier lifecycle/maturity tracking.
 - Complete and test Decision Ledger arbitration, appeals/reversals, authoritative projections, continuity, dependency-health, cross-domain reconciliation, and recovery mechanisms.
 - Validate meaningful independent verification and signing-service boundaries.
 - Complete worker orchestration handoff to the operator-owned Hermes agent without creating a second runtime.
