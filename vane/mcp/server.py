@@ -16,6 +16,7 @@ from vane import __version__
 from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.assessment.web2 import plan_web2_surface_review
 from vane.assessment.web3 import plan_contract_review
+from vane.assessment.base import build_assessment_plan
 from vane.evidence.chain import verify_event_chain
 from vane.decisions.ledger import DecisionStatus
 from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
@@ -1037,6 +1038,34 @@ def vane_list_lifecycle_reviews(project_id: str) -> list[dict[str, Any]]:
         "reviewed_at": item.reviewed_at.isoformat(),
         "approval_reference": item.approval_reference,
     } for item in repository.list_lifecycle_reviews(project_id)]
+
+
+
+@server.tool()
+def vane_build_assessment_plan(envelope_json: str, assets_json: str, platform: str = "web2") -> dict[str, Any]:
+    """Build an authorization-bounded eleven-phase assessment plan; performs no target requests."""
+    try:
+        envelope = authorization_from_dict(json.loads(envelope_json))
+        raw_assets = json.loads(assets_json)
+        if not isinstance(raw_assets, list):
+            raise ValueError("assets_json must be a JSON array.")
+        assets = [
+            Asset(
+                asset_id=str(item["asset_id"]),
+                locator=str(item["locator"]),
+                asset_type=str(item.get("asset_type", "unknown")),
+                disposition=AssetDisposition(str(item.get("disposition", "UNKNOWN"))),
+            )
+            for item in raw_assets
+        ]
+        return build_assessment_plan(envelope, assets, platform)
+    except Exception as exc:
+        return {
+            "plan_created": False,
+            "execution_performed": False,
+            "target_requests_performed": False,
+            "error": str(exc),
+        }
 
 
 def main() -> None:
