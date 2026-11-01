@@ -21,7 +21,7 @@ Use whenever observations, logs, screenshots, code excerpts, or derived artifact
 6. Distinguish evidence presence from evidence sufficiency. Preserve disputed and insufficient records without treating them as proof.
 
 ## Persistence Tools
-Use `vane_attach_evidence` to validate, persist, and attach evidence to its mission. Use `vane_list_evidence` to reconcile persisted records. Never mark evidence objectives complete from an artifact that failed validation.
+Use `vane_attach_evidence` to validate, persist, and attach evidence to its mission. Target-facing records must include `metadata.locator` and `metadata.method`; high-risk methods also require `metadata.action_approval_id`. The signed mission approval is checked against the evidence observation timestamp. Use `vane_list_evidence` to reconcile persisted records. Never mark evidence objectives complete from an artifact that failed validation.
 
 ## Pitfalls
 - A digest proves byte identity, not truth, origin, or authorization.
