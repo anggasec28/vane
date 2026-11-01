@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 186,
+  "file_count": 188,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -89,6 +89,7 @@
     "tests/test_authorization.py",
     "tests/test_authorization_review.py",
     "tests/test_config.py",
+    "tests/test_decision_arbitration.py",
     "tests/test_decision_ledger.py",
     "tests/test_ed25519_approval.py",
     "tests/test_engine.py",
@@ -143,6 +144,7 @@
     "vane/crypto/keyring.py",
     "vane/crypto/signing.py",
     "vane/decisions/__init__.py",
+    "vane/decisions/arbitration.py",
     "vane/decisions/ledger.py",
     "vane/engine.py",
     "vane/errors.py",
@@ -194,5 +196,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline with one VANE Hermes primary profile, human Master authority, subordinate specialist contracts, append-only decision ledger foundation, durable worker and governance repositories, typed JSON Schema enforcement, forward SQLite migrations, auditable data-lifecycle reviews, and expanded tests. Hermes runtime validation, full arbitration/continuity, and external L3 anchoring remain open."
+  "completion_note": "Active development baseline with one VANE Hermes primary profile, human Master authority, subordinate specialists, append-only decision ledger and conservative evidence-weighted arbitration foundations, durable governance/worker repositories, JSON Schema enforcement, and expanded tests. Full arbitration, decision memory, authority continuity, emergency suspension, Hermes runtime validation, and external L3 anchoring remain open."
 }
