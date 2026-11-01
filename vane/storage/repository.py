@@ -296,4 +296,5 @@ class SQLiteRepository:
     def list_projects(self) -> list[Project]:
         return [Project(item["project_id"], item["name"], item["owner"],
                         datetime.fromisoformat(item["created_at"]))
-                for item in self.store.list_projects()]
+                for item in self.store.list_projects()
+                if item["project_id"] != "__global_intelligence__"]
