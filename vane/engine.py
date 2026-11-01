@@ -343,6 +343,13 @@ class VaneEngine:
             raise PolicyViolation("Only independently validated COMPLETED missions can be closed.")
         if envelope.envelope_id != mission.authorization_id or envelope.project_id != mission.project_id:
             raise PolicyViolation("Closure envelope does not match the mission authorization.")
+        if self.repository is not None:
+            stored_envelope = self.repository.get_authorization(mission.project_id, mission.authorization_id)
+        else:
+            stored_envelope = self._authorization_cache.get(mission.authorization_id)
+        if (stored_envelope is None
+                or authorization_digest(stored_envelope) != authorization_digest(envelope)):
+            raise PolicyViolation("Closure envelope does not match the stored authorization record.")
         evidence, findings = self._load_validation_inputs(mission)
         checks = validate_mission_closure(mission, evidence, findings)
         if any(not check.passed for check in checks):
