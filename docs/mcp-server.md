@@ -17,6 +17,7 @@ VANE ships a local stdio MCP server for local governance and workflow operations
 - `vane_verify_project_integrity`: verifies the local SQLite event chain and current domain records for a project.
 - `vane_create_decision`, `vane_get_decision`, and `vane_list_decisions`: create and inspect immutable decision snapshots in the Central Decision Ledger.
 - `vane_transition_decision`: append an allowed decision-state transition with authority references, evidence references, optimistic revision checking, and event-head compare-and-swap.
+- `vane_arbitrate_claims`: compare competing claims through provenance, integrity, independence, reproducibility, freshness, relevance, and hard scope/policy/authority gates. It uses strict Pareto dominance, not numeric weighted scores or majority voting; ties and incomparable evidence remain UNRESOLVED.
 
 It does not expose live scanners, exploit execution, credential attacks, transaction submission, private-key operations, or target mutation.
 
