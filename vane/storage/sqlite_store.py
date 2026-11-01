@@ -26,16 +26,26 @@ class SQLiteStore:
 
     ALLOWED_RECORD_TYPES = {"project", "mission", "asset", "evidence", "finding", "approval", "worker_task"}
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, *, read_only: bool = False) -> None:
         self.path = str(path)
-        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        self._initialize()
+        self.read_only = read_only
+        if read_only:
+            if not Path(self.path).is_file():
+                raise FileNotFoundError(self.path)
+        else:
+            Path(self.path).parent.mkdir(parents=True, exist_ok=True)
+            self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=10, isolation_level=None)
+        if self.read_only:
+            uri = Path(self.path).resolve().as_uri() + "?mode=ro"
+            connection = sqlite3.connect(uri, uri=True, timeout=10, isolation_level=None)
+        else:
+            connection = sqlite3.connect(self.path, timeout=10, isolation_level=None)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
-        connection.execute("PRAGMA journal_mode = WAL")
+        if not self.read_only:
+            connection.execute("PRAGMA journal_mode = WAL")
         return connection
 
     def _initialize(self) -> None:
@@ -107,6 +117,8 @@ class SQLiteStore:
     def save_record(self, *, project_id: str, record_type: str, record_id: str,
                     record: dict[str, Any], actor: str) -> int:
         """Persist a versioned record and its hash-linked audit event atomically."""
+        if self.read_only:
+            raise PermissionError("SQLite store is read-only.")
         if record_type not in self.ALLOWED_RECORD_TYPES:
             raise ValueError(f"Unsupported record type: {record_type}")
         if not all((project_id, record_id, actor)):
@@ -186,6 +198,8 @@ class SQLiteStore:
                              actor: str, payload: dict[str, Any],
                              event_id: str | None = None) -> int:
         """Atomically read the project head, calculate digest, and append the event."""
+        if self.read_only:
+            raise PermissionError("SQLite store is read-only.")
         identifier = event_id or str(uuid4())
         occurred = datetime.now(timezone.utc).isoformat()
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"),
