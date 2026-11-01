@@ -1,4 +1,4 @@
-"""Explicit human approval records."""
+"""Explicit human approval records issued by a trusted host authority."""
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -11,7 +11,11 @@ class Approval:
     decided_at: datetime
     expires_at: datetime | None = None
     rationale: str = ""
+
     def is_valid_for(self, subject_digest: str, now: datetime | None = None) -> bool:
         current = now or datetime.now(timezone.utc)
-        return self.decision == "APPROVE" and self.subject_digest == subject_digest and (
-            self.expires_at is None or current < self.expires_at)
+        return (bool(self.approval_id and self.approver and self.subject_digest)
+                and self.decision == "APPROVE"
+                and self.subject_digest == subject_digest
+                and self.decided_at <= current
+                and (self.expires_at is None or current < self.expires_at))
