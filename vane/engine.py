@@ -11,6 +11,8 @@ from vane.findings.reporting import ReportBundle, build_report
 from vane.findings.remediation import RemediationAction, validate_remediation, validate_remediation_graph
 from vane.intelligence.threat_intel import ThreatIntelRecord
 from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem
+from vane.lifecycle.policy import LifecycleContext
+from vane.lifecycle.review import LifecycleReview, create_lifecycle_review
 from vane.models import (
     Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus, utc_now,
 )
@@ -365,6 +367,20 @@ class VaneEngine:
         evidence, findings = self._load_validation_inputs(mission)
         return build_report(mission, findings, evidence,
                             report_id=report_id, limitations=limitations)
+
+    def review_data_lifecycle(self, *, review_id: str, project_id: str,
+                             record_id: str, context: LifecycleContext,
+                             rationale: str, actor: str,
+                             approval_reference: str | None = None) -> LifecycleReview:
+        if self.governance_repository is None:
+            raise PolicyViolation("Durable lifecycle reviews require a configured repository.")
+        review = create_lifecycle_review(
+            review_id=review_id, project_id=project_id, record_id=record_id,
+            context=context, rationale=rationale, actor=actor,
+            approval_reference=approval_reference,
+        )
+        self.governance_repository.save_lifecycle_review(review, actor=actor)
+        return review
 
     def save_case_work_item(self, item: CaseWorkItem, *, actor: str = "master") -> int:
         if self.governance_repository is None:

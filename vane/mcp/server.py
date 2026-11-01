@@ -23,6 +23,7 @@ from vane.findings.reporting import render_markdown
 from vane.findings.remediation import RemediationAction, RemediationStatus
 from vane.intelligence.threat_intel import IntelConfidence, ThreatIntelRecord
 from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem, WorkItemStatus
+from vane.lifecycle.policy import DataClass, LifecycleContext
 from vane.findings.remediation import RemediationAction, RemediationStatus
 from vane.lifecycle.policy import DataClass, LifecycleContext, decide_lifecycle
 from vane.models import (
@@ -696,6 +697,46 @@ def vane_list_remediation_actions(project_id: str) -> list[dict[str, Any]]:
         "status": item.status.value,
         "verification_evidence_ids": list(item.verification_evidence_ids),
     } for item in repository.list_remediation_actions(project_id)]
+
+
+@server.tool()
+def vane_review_data_lifecycle(project_id: str, review_id: str, record_id: str,
+                               data_class: str, project_active: bool, disputed: bool,
+                               legal_or_contractual_hold: bool, ownership_known: bool,
+                               retention_expired: bool, rationale: str, actor: str,
+                               approval_reference: str = "") -> dict[str, Any]:
+    """Record a policy-driven lifecycle decision; this tool never deletes data."""
+    context = LifecycleContext(
+        data_class=DataClass(data_class), project_active=project_active,
+        disputed=disputed, legal_or_contractual_hold=legal_or_contractual_hold,
+        ownership_known=ownership_known, retention_expired=retention_expired,
+    )
+    review = _get_engine().review_data_lifecycle(
+        review_id=review_id, project_id=project_id, record_id=record_id,
+        context=context, rationale=rationale, actor=actor,
+        approval_reference=approval_reference or None,
+    )
+    return {
+        "review_id": review.review_id, "record_id": review.record_id,
+        "action": review.action.value, "rationale": review.rationale,
+        "approval_reference": review.approval_reference,
+        "deletion_performed": False,
+    }
+
+
+@server.tool()
+def vane_list_lifecycle_reviews(project_id: str) -> list[dict[str, Any]]:
+    """List auditable lifecycle decisions for a project."""
+    repository = _get_engine().governance_repository
+    if repository is None:
+        raise RuntimeError("Durable governance repository is not configured.")
+    return [{
+        "review_id": item.review_id, "record_id": item.record_id,
+        "data_class": item.data_class.value, "action": item.action.value,
+        "rationale": item.rationale, "actor": item.actor,
+        "reviewed_at": item.reviewed_at.isoformat(),
+        "approval_reference": item.approval_reference,
+    } for item in repository.list_lifecycle_reviews(project_id)]
 
 
 def main() -> None:

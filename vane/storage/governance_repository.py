@@ -18,6 +18,8 @@ from vane.projects.case_ops import (
     validate_timeline_event, validate_work_items,
 )
 from vane.storage.sqlite_store import SQLiteStore
+from vane.lifecycle.review import LifecycleReview, validate_lifecycle_review
+from vane.lifecycle.policy import DataClass, LifecycleAction
 
 
 class GovernanceRepository:
@@ -112,6 +114,28 @@ class GovernanceRepository:
             verification_criteria=tuple(row.get("verification_criteria", [])),
             status=RemediationStatus(row.get("status", "PROPOSED")),
             verification_evidence_ids=tuple(row.get("verification_evidence_ids", [])),
+        ) for row in rows]
+
+    def save_lifecycle_review(self, review: LifecycleReview, *, actor: str | None = None) -> int:
+        validate_lifecycle_review(review)
+        record = asdict(review)
+        record["data_class"] = review.data_class.value
+        record["action"] = review.action.value
+        return self.store.save_record(project_id=review.project_id,
+            record_type="lifecycle_review", record_id=review.review_id,
+            record=record, actor=actor or review.actor)
+
+    def list_lifecycle_reviews(self, project_id: str) -> list[LifecycleReview]:
+        rows = self.store.list_records(project_id=project_id, record_type="lifecycle_review")
+        return [LifecycleReview(
+            review_id=row["review_id"], project_id=row["project_id"], record_id=row["record_id"],
+            data_class=DataClass(row["data_class"]), project_active=bool(row["project_active"]),
+            disputed=bool(row["disputed"]),
+            legal_or_contractual_hold=bool(row["legal_or_contractual_hold"]),
+            ownership_known=bool(row["ownership_known"]), retention_expired=bool(row["retention_expired"]),
+            action=LifecycleAction(row["action"]), rationale=row["rationale"], actor=row["actor"],
+            reviewed_at=datetime.fromisoformat(row["reviewed_at"]),
+            approval_reference=row.get("approval_reference"),
         ) for row in rows]
 
     def save_report(self, bundle: ReportBundle, *, actor: str = "reporter") -> int:

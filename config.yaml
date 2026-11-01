@@ -54,6 +54,8 @@ mcp_servers:
         - vane_list_threat_intel
         - vane_save_remediation_action
         - vane_list_remediation_actions
+        - vane_review_data_lifecycle
+        - vane_list_lifecycle_reviews
         - vane_save_asset
         - vane_list_assets
         - vane_list_evidence
