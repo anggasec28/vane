@@ -89,7 +89,12 @@ class VaneEngine:
                         envelope: AuthorizationEnvelope, assets: dict[str, Asset]) -> WorkerAssignment:
         assignment = self.workers.delegate(task, mission, envelope, assets)
         if self.repository is not None:
-            self.repository.save_worker_task(mission.project_id, task)
+            try:
+                self.repository.save_worker_task(mission.project_id, task)
+            except Exception:
+                self.workers.revoke(task.task_id, actor="system",
+                                    reason="persistence failed; delegation revoked")
+                raise
         return assignment
 
     def complete_worker_task(self, task_id: str, result: dict) -> WorkerAssignment:
