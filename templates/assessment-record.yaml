@@ -1,0 +1,16 @@
+assessment_id: ""
+project_id: ""
+case_id: ""
+objective: ""
+authorization_id: ""
+scope_version: 1
+workflow_model: adaptive_hybrid
+state: INTAKE
+evidence_objectives: []
+tasks: []
+findings: []
+open_questions: []
+closure:
+  status: NOT_CLOSED
+  rationale: ""
+  validated_by: ""
