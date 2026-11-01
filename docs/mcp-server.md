@@ -1,6 +1,6 @@
 # VANE MCP Server
 
-VANE ships a local stdio MCP server for deterministic governance utilities. It exposes:
+VANE ships a local stdio MCP server for local governance and workflow operations. It exposes:
 - `vane_status`: reports version and safe capability flags.
 - `vane_scope_check`: checks scope coverage only; it does not grant execution authority.
 - `vane_verify_mission_approval`: verifies an Ed25519 approval bound to an authorization envelope.
@@ -33,4 +33,4 @@ The local server also exposes durable project/mission workflow tools: create/lis
 These tools operate on the profile-local SQLite database. They do not spawn workers or perform target requests. Project/mission creation and evidence/finding record writes are local state changes; target-facing actions remain subject to mission approval, exact scope, method allowlists, and separate high-risk action approval.
 
 ## Approval boundary
-The MCP server performs deterministic validation and planning only. Approval verification fails closed until a valid public-only keyring is configured. `vane_scope_check` reports scope coverage, not permission to execute. Its presence does not authorize an assessment. Every assessment action still requires an active envelope, explicit method allowlist, and any additional action-bound approval. The server receives only public verification keys; private signing authority remains external. Mission approval must be verified separately from any high-risk action approval. Neither verification tool grants execution permission by itself.
+The MCP server performs local state management, deterministic validation/planning, and integrity verification. It does not perform target requests, spawn worker sessions, or submit transactions. Approval verification fails closed until a valid public-only keyring is configured. `vane_scope_check` reports scope coverage, not permission to execute. Its presence does not authorize an assessment. Every assessment action still requires an active envelope, explicit method allowlist, and any additional action-bound approval. The server receives only public verification keys; private signing authority remains external. Mission approval must be verified separately from any high-risk action approval. Neither verification tool grants execution permission by itself.
