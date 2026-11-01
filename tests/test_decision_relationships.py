@@ -27,6 +27,10 @@ def test_relationship_index_rebuilds_dependencies_supersession_and_shared_eviden
                   dependency_decision_ids=("d1",), evidence_references=("ev-shared",))
     ledger.create(project_id="p1", decision_id="d3", title="Replacement", rationale="R",
                   actor="vane", authority_reference="master-3", trigger="intake")
+    ledger.transition(project_id="p1", decision_id="d2", expected_revision=1,
+                      target=DecisionStatus.SUSPENDED, actor="master",
+                      authority_reference="master-3a", trigger="dependency-change",
+                      rationale="Suspend dependent decision pending revalidation.")
     ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
                       target=DecisionStatus.SUPERSEDED, actor="master",
                       authority_reference="master-4", trigger="replace", rationale="R",
