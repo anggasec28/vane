@@ -24,3 +24,11 @@ def test_typed_repository_persists_domain_records_and_audit_chain(tmp_path):
     repository.save_finding(finding)
     assert repository.get_finding("p1", "f1").evidence_ids == ["e1"]
     assert store.verify_project_chain("p1")
+    assert store.verify_project_integrity("p1")
+    import sqlite3
+    db = sqlite3.connect(store.path)
+    db.execute("UPDATE domain_records SET record_json='{}' WHERE record_type='mission'")
+    db.commit()
+    db.close()
+    assert store.verify_project_chain("p1")
+    assert not store.verify_project_integrity("p1")
