@@ -14,7 +14,7 @@ Package version: 0.2.0 development baseline.
 - Adaptive recovery planner and hybrid lifecycle policy.
 - Project registry, typed SQLite repositories for projects/missions/evidence/findings/assets/approvals, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
-- Worker delegation contracts and independent mission closure validator.
+- Bounded worker delegation lifecycle, strict result validation, task persistence, and independent mission closure validator.
 - External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
 - Local stdio MCP server exposing policy, planning, evidence, and event-chain utilities only.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
@@ -24,7 +24,7 @@ Package version: 0.2.0 development baseline.
 - Add external anchoring and trusted-head publication for tamper evidence; L3/R-12 remains unimplemented.
 - Complete all JSON schemas and validation wiring.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
-- Add worker execution orchestration and independent verifier workflow.
+- Add Hermes worker-session spawning and a separately hosted independent verifier workflow.
 - Execute and review CI results, expand test coverage, and complete packaging/security review and release artifacts.
 - Map every Master decision and historical requirement to code-level acceptance tests.
 - Perform holistic consistency review and manifest reconciliation.
