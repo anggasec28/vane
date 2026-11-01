@@ -39,7 +39,7 @@ cd ~/.hermes/profiles/vane
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -e '.[mcp]'
 vane version
 vane check --config config/vane.example.json
 ```
