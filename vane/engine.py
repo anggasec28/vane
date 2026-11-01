@@ -123,8 +123,8 @@ class VaneEngine:
                             rationale: str, evidence_references: tuple[str, ...] | None = None,
                             policy_version: str | None = None,
                             uncertainty: str | None = None,
-                            supersedes_decision_id: str | None = None,
-                            supersedes_revision: int | None = None) -> DecisionSnapshot:
+                            superseded_by_decision_id: str | None = None,
+                            superseded_by_revision: int | None = None) -> DecisionSnapshot:
         """Append a governed decision transition using optimistic concurrency."""
         if self.decision_ledger is None:
             raise PolicyViolation("The durable Central Decision Ledger requires a configured repository.")
@@ -135,8 +135,8 @@ class VaneEngine:
             authority_reference=authority_reference, trigger=trigger,
             rationale=rationale, evidence_references=evidence_references,
             policy_version=policy_version, uncertainty=uncertainty,
-            supersedes_decision_id=supersedes_decision_id,
-            supersedes_revision=supersedes_revision,
+            superseded_by_decision_id=superseded_by_decision_id,
+            superseded_by_revision=superseded_by_revision,
         )
 
     def create_mission(self, project_id: str, objective: str,
