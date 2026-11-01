@@ -1,7 +1,7 @@
 """In-memory reference registry; persistence requires an explicit storage adapter."""
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from vane.models import EvidenceRecord, Finding, Mission
+from vane.models import Asset, EvidenceRecord, Finding, Mission
 
 @dataclass(slots=True)
 class Project:
@@ -9,6 +9,7 @@ class Project:
     name: str
     owner: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    assets: dict[str, Asset] = field(default_factory=dict)
     missions: dict[str, Mission] = field(default_factory=dict)
     findings: dict[str, Finding] = field(default_factory=dict)
     evidence: dict[str, EvidenceRecord] = field(default_factory=dict)
