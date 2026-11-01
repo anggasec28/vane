@@ -365,6 +365,11 @@ class TLSMetadataAdapter:
         if not decision.allowed:
             return ObservationResult(False, "Observation blocked.", blocked_reason=decision.reason)
         try:
+            parsed = urlsplit(request.locator)
+            if parsed.scheme != "https" or not parsed.hostname:
+                raise ValueError("TLS certificate observation requires an absolute HTTPS URL.")
+            if parsed.username or parsed.password or parsed.fragment:
+                raise ValueError("URL credentials and fragments are not accepted.")
             metadata = self._transport(request.locator, self._timeout)
             canonical = json.dumps(
                 metadata, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
