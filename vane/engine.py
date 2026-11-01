@@ -106,7 +106,7 @@ class VaneEngine:
         result = self.orchestrator.authorize_mission(mission, envelope, approval, actor=actor)
         if self.repository is not None:
             try:
-                self.repository.save_authorized_mission(result, approval, actor=actor)
+                self.repository.save_authorized_mission(result, envelope, approval, actor=actor)
             except Exception:
                 mission.status = previous_status
                 mission.authorization_id = previous_authorization_id
