@@ -43,8 +43,11 @@ def validate_intel(record: ThreatIntelRecord, *, now: datetime | None = None) ->
             raise PolicyViolation("Threat intelligence expiry must be timezone-aware.")
         if record.expires_at <= record.published_at:
             raise PolicyViolation("Threat intelligence expiry must follow publication.")
-    if record.published_at > (now or datetime.now(timezone.utc)):
+    current = now or datetime.now(timezone.utc)
+    if record.published_at > current or record.observed_at > current:
         raise PolicyViolation("Future-dated threat intelligence cannot be activated.")
+    if record.observed_at < record.published_at:
+        raise PolicyViolation("Threat intelligence cannot be observed before publication.")
     if not record.indicators and not record.affected_products and not record.tags:
         raise PolicyViolation("Threat intelligence requires at least one matching dimension.")
 

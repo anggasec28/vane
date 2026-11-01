@@ -51,3 +51,33 @@ def validate_remediation(action: RemediationAction, findings: dict[str, Finding]
         raise PolicyViolation("Verified remediation requires verification evidence references.")
     if action.status == RemediationStatus.READY_FOR_VERIFICATION and not action.verification_criteria:
         raise PolicyViolation("Verification readiness requires explicit criteria.")
+
+
+def validate_remediation_graph(actions: list[RemediationAction]) -> None:
+    """Reject dependency cycles across a complete remediation plan."""
+    by_id = {action.action_id: action for action in actions}
+    if len(by_id) != len(actions):
+        raise PolicyViolation("Remediation action IDs must be unique.")
+    graph = {action_id: set(action.dependencies) for action_id, action in by_id.items()}
+    for action_id, dependencies in graph.items():
+        missing = dependencies - by_id.keys()
+        if missing:
+            raise PolicyViolation("Unknown remediation dependencies: " + ", ".join(sorted(missing)))
+        if action_id in dependencies:
+            raise PolicyViolation("A remediation action cannot depend on itself.")
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(action_id: str) -> None:
+        if action_id in visiting:
+            raise PolicyViolation("Remediation dependency cycle detected.")
+        if action_id in visited:
+            return
+        visiting.add(action_id)
+        for dependency in graph[action_id]:
+            visit(dependency)
+        visiting.remove(action_id)
+        visited.add(action_id)
+
+    for action_id in graph:
+        visit(action_id)

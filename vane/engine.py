@@ -340,6 +340,19 @@ class VaneEngine:
             raise
         return mission
 
+    def validate_remediation_plan(self, project_id: str,
+                                  actions: list[RemediationAction]) -> None:
+        """Validate remediation dependencies and references to accepted findings."""
+        if self.repository is not None:
+            findings = {item.finding_id: item
+                        for item in self.repository.list_findings(project_id)}
+        else:
+            findings = dict(self.get_project(project_id).findings)
+        validate_remediation_graph(actions)
+        known_action_ids = {item.action_id for item in actions}
+        for action in actions:
+            validate_remediation(action, findings, known_action_ids)
+
     def close_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
                       closure_approval: Approval, *, actor: str = "master") -> Mission:
         if mission.status != MissionStatus.COMPLETED:
