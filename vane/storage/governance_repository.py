@@ -63,9 +63,17 @@ class GovernanceRepository:
 
     def save_threat_intel(self, record: ThreatIntelRecord, *, actor: str = "intel-ingest") -> int:
         validate_intel(record)
+        global_project = "__global_intelligence__"
+        if self.store.get_record(project_id=global_project, record_type="project",
+                                 record_id=global_project) is None:
+            self.store.save_record(project_id=global_project, record_type="project",
+                record_id=global_project, actor=actor, record={
+                    "project_id": global_project, "name": "Global Threat Intelligence",
+                    "owner": "VANE", "created_at": datetime.now().astimezone().isoformat(),
+                })
         item = asdict(record)
         item["confidence"] = record.confidence.value
-        return self.store.save_record(project_id="__global_intelligence__",
+        return self.store.save_record(project_id=global_project,
             record_type="threat_intel", record_id=record.intel_id, record=item, actor=actor)
 
     def list_threat_intel(self) -> list[ThreatIntelRecord]:
