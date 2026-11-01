@@ -18,14 +18,14 @@ class AssessmentOrchestrator:
             raise ValueError("Authorization envelope project does not match mission project.")
         if mission.status != MissionStatus.AWAITING_APPROVAL:
             raise ValueError("Mission must be awaiting approval before authorization.")
-        if not envelope.is_time_valid() or not envelope.approval_id:
-            raise ValueError("Authorization envelope is invalid or lacks an approval reference.")
-        if approval.approval_id != envelope.approval_id or not approval.is_valid_for(
-                authorization_digest(envelope)):
-            raise ValueError("Approval is invalid or not bound to this exact authorization envelope.")
+        if not envelope.is_time_valid():
+            raise ValueError("Authorization envelope is invalid or lacks a finite validity window.")
+        if not self.enforcer.validate_approval(approval, authorization_digest(envelope),
+                                               envelope.approval_id):
+            raise ValueError("Approval signature is invalid or not bound to this authorization envelope.")
         mission.authorization_id = envelope.envelope_id
         transition(mission, MissionStatus.AUTHORIZED, actor=actor,
-                   reason="Valid approval bound to authorization envelope.")
+                   reason="Trusted Ed25519 approval bound to authorization envelope.")
         return mission
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
                               locator: str, method: str):
