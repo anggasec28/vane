@@ -244,3 +244,33 @@ class SQLiteStore:
     def verify_project_chain(self, project_id: str) -> bool:
         from vane.evidence.chain import verify_event_chain
         return verify_event_chain(self.list_events(project_id, limit=None)).valid
+
+    def verify_domain_records(self, project_id: str) -> bool:
+        """Compare current domain rows to their latest event-record digests."""
+        events = self.list_events(project_id, limit=None)
+        latest: dict[tuple[str, str], tuple[int, str]] = {}
+        for event in events:
+            payload = event["payload"]
+            if not event["event_type"].endswith(".saved"):
+                continue
+            key = (str(payload.get("record_type", "")), str(payload.get("record_id", "")))
+            latest[key] = (int(payload.get("revision", 0)), str(payload.get("record_digest", "")))
+        db = self._connect()
+        try:
+            rows = db.execute(
+                "SELECT record_type,record_id,revision,record_json FROM domain_records WHERE project_id=?",
+                (project_id,),
+            ).fetchall()
+        finally:
+            db.close()
+        current: dict[tuple[str, str], tuple[int, str]] = {}
+        import hashlib
+        for row in rows:
+            key = (str(row["record_type"]), str(row["record_id"]))
+            digest = hashlib.sha256(str(row["record_json"]).encode("utf-8")).hexdigest()
+            current[key] = (int(row["revision"]), digest)
+        return current == latest
+
+    def verify_project_integrity(self, project_id: str) -> bool:
+        """Verify event chain continuity and current domain rows against recorded digests."""
+        return self.verify_project_chain(project_id) and self.verify_domain_records(project_id)
