@@ -1,6 +1,8 @@
-"""Mission orchestration facade with centralized authorization."""
+"""Mission orchestration facade with centrally verified authorization references."""
 from vane.core.state_machine import transition
 from vane.models import AuthorizationEnvelope, Mission, MissionStatus
+from vane.security.approval import Approval
+from vane.security.digests import authorization_digest
 from vane.security.enforcement import SecurityEnforcer
 
 class AssessmentOrchestrator:
@@ -11,16 +13,19 @@ class AssessmentOrchestrator:
                    reason="Submitted for explicit Master authorization.")
         return mission
     def authorize_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
-                          *, actor: str) -> Mission:
+                          approval: Approval, *, actor: str) -> Mission:
         if mission.project_id != envelope.project_id:
             raise ValueError("Authorization envelope project does not match mission project.")
         if mission.status != MissionStatus.AWAITING_APPROVAL:
             raise ValueError("Mission must be awaiting approval before authorization.")
-        if not envelope.is_time_valid():
-            raise ValueError("Authorization envelope is revoked, not yet valid, or expired.")
+        if not envelope.is_time_valid() or not envelope.approval_id:
+            raise ValueError("Authorization envelope is invalid or lacks an approval reference.")
+        if approval.approval_id != envelope.approval_id or not approval.is_valid_for(
+                authorization_digest(envelope)):
+            raise ValueError("Approval is invalid or not bound to this exact authorization envelope.")
         mission.authorization_id = envelope.envelope_id
         transition(mission, MissionStatus.AUTHORIZED, actor=actor,
-                   reason="Valid authorization envelope attached.")
+                   reason="Valid approval bound to authorization envelope.")
         return mission
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
                               locator: str, method: str):
