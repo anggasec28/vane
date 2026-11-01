@@ -5,10 +5,10 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 173 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 185 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 46 MCP tools defined in the server and exactly matched by the profile tool allowlist.
-- 10 JSON configuration/schema documents parsed successfully during structural checks.
+- 50 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 11 JSON configuration/schema documents parsed successfully during structural checks.
 - A GitHub Actions workflow is configured for push and pull-request CI; test execution/results have not yet been verified.
 
 ## Source implemented
@@ -31,11 +31,11 @@ Package version: 0.2.0 development baseline.
 - Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
 - JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
-- Append-only Central Decision Ledger foundation: immutable full decision snapshots in the project event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, and event-head compare-and-swap for concurrent append safety. Exposed through the VANE engine facade; unit tests authored but not executed.
+- Append-only Central Decision Ledger foundation: immutable full decision snapshots in the project event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, and event-head compare-and-swap for concurrent append safety. Exposed through the VANE engine facade and four allowlisted MCP tools; unit tests authored but not executed.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
-- Local stdio MCP server exposing project/mission lifecycle, asset/evidence/finding persistence, approval verification, planning, and integrity utilities; no live target execution.
+- Local stdio MCP server exposing project/mission lifecycle, Decision Ledger operations, asset/evidence/finding persistence, approval verification, planning, and integrity utilities; no live target execution.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
 
 ## Remaining implementation and verification
