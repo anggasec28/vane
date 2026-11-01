@@ -17,3 +17,7 @@ Use asymmetric Ed25519 signing. Private signing key material is confined to the 
 
 ## Open proof obligations
 UQ-5 atomic CAS over state/dedupe/head_receipt requires linearizability proof. Anchor regression fails closed using trusted evidence outside the anchor failure domain. These are design constraints, not claims of implementation.
+
+## Approval signatures
+
+Mission approvals sign the canonical authorization-envelope digest. Additional action approvals sign a canonical digest containing the envelope digest, exact locator, and exact method. The engine verifies Ed25519 signatures using a configured public-only keyring. The private signing key remains in the external signing service. If the keyring or verifier dependency is unavailable, approval verification fails closed.
