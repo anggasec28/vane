@@ -83,13 +83,14 @@ def _approval_from_dict(item: dict[str, Any]) -> Approval:
         str(item.get("rationale", "")))
 
 
-def _verify_approval(envelope_json: str, approval_json: str, expected_digest: str) -> dict[str, Any]:
+def _verify_approval(envelope_json: str, approval_json: str, expected_digest: str,
+                     expected_approval_id: str | None) -> dict[str, Any]:
     try:
         envelope = authorization_from_dict(json.loads(envelope_json))
         approval = _approval_from_dict(json.loads(approval_json))
         keyring_path = os.environ.get("VANE_APPROVAL_KEYRING", "config/approval-public-keys.json")
         verifier = Ed25519ApprovalVerifier(load_public_keyring(keyring_path))
-        valid = (approval.approval_id == envelope.approval_id
+        valid = ((expected_approval_id is None or approval.approval_id == expected_approval_id)
                  and approval.is_valid_for(expected_digest) and verifier.verify(approval))
         return {"verified": valid, "approval_id": approval.approval_id,
                 "key_id": approval.key_id, "execution_authorized": valid}
@@ -101,7 +102,8 @@ def _verify_approval(envelope_json: str, approval_json: str, expected_digest: st
 def vane_verify_mission_approval(envelope_json: str, approval_json: str) -> dict[str, Any]:
     """Verify the Ed25519 approval bound to the exact authorization envelope."""
     envelope = authorization_from_dict(json.loads(envelope_json))
-    return _verify_approval(envelope_json, approval_json, authorization_digest(envelope))
+    return _verify_approval(envelope_json, approval_json, authorization_digest(envelope),
+                            envelope.approval_id)
 
 
 @server.tool()
@@ -111,7 +113,7 @@ def vane_verify_action_approval(envelope_json: str, approval_json: str,
     envelope = authorization_from_dict(json.loads(envelope_json))
     require_authorized(envelope, locator, method)
     digest = capability_action_digest(envelope, locator, method)
-    result = _verify_approval(envelope_json, approval_json, digest)
+    result = _verify_approval(envelope_json, approval_json, digest, None)
     result.update({"locator": locator, "method": method})
     return result
 
