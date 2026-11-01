@@ -1,7 +1,7 @@
 version: 2
 identity:
   primary_agent: vane
-  primary_profile: hermes_profile_root
+  primary_profile: vane
   runtime: hermes
   interaction:
     master_channel: telegram
