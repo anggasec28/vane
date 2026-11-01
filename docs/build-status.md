@@ -9,7 +9,7 @@ Package version: 0.2.0 development baseline.
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
 - 57 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 18 JSON configuration/schema documents are present; schema meta-validation passed in CI.
-- GitHub Actions run #463 on commit `dd6ebfa` completed successfully: compileall passed, **107 tests passed**, and the CLI version/config check passed. A Ruff lint gate has since been added to CI and its result is pending.
+- GitHub Actions run #478 on commit `75ec83a` completed successfully: compileall passed, **110 tests passed**, and the CLI version/config check passed. The latest branch-head workflow is green.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
