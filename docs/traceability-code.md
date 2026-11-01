@@ -5,11 +5,11 @@ This is the initial code-level traceability map. A mapping means the requirement
 | Decision / requirement | Code or artifact | Current coverage |
 |---|---|---|
 | VANE hosted by Hermes, not replacement runtime | `SOUL.md`, `vane/integrations/hermes/adapter.py` | Boundary contract; Hermes compatibility unverified |
-| Autonomous with approval | `vane/security/approval.py`, `vane/security/policy_engine.py`, `vane/crypto/approval_verifier.py` | Ed25519 signed approval, action digest binding, public-only verification |
+| Autonomous with approval | `vane/security/approval.py`, `vane/security/policy_engine.py`, `vane/crypto/approval_verifier.py` | Every mission signed against envelope digest; high-risk actions separately signed against exact locator/method; public-only verification |
 | Central enforcement (Decision 59 A) | `vane/security/enforcement.py`, `policy_engine.py` | Central decision facade |
 | Hybrid finding governance (Decision 56 C) | `vane/findings/governance.py` | Evidence-linked validation; workflow incomplete |
 | Hybrid evidence management (Decision 57 C) | `vane/evidence/`, `vane/storage/sqlite_store.py` | Integrity, provenance, persistence foundation |
-| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/storage/repository.py`, `vane/engine.py` | In-memory registry plus durable SQLite project/mission/evidence/finding records |
+| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/storage/repository.py`, `vane/engine.py` | In-memory registry plus durable SQLite project/mission/evidence/finding/asset/approval records |
 | Independent hybrid validation (Decision 60 C) | `vane/validation/independent.py` | Deterministic closure checks |
 | Adaptive hybrid workflow | `vane/core/state_machine.py`, `vane/core/orchestrator.py` | Mission lifecycle foundation |
 | Deep root-cause within approved scope | `vane/assessment/root_cause.py` | In-scope graph traversal |
@@ -22,8 +22,8 @@ This is the initial code-level traceability map. A mapping means the requirement
 | L3/R-12 external anchor and reset ledger | `docs/master-decisions.md`, `policies/cryptographic-trust.md` | OPEN / NOT IMPLEMENTED |
 
 ## Gaps requiring implementation
-- Durable project/mission/evidence/finding repositories and migrations.
-- A complete transactional event writer integrating canonical hash-chain computation.
+- Durable worker-task repositories and forward schema migrations.
+- External anchor publication and trusted-head recovery beyond the local hash chain.
 - All historical L3/R-12 requirements and AUD findings translated into executable tests.
 - Full worker scheduler and verifier separation.
 - Hermes-native profile format and tool adapter compatibility verification.
