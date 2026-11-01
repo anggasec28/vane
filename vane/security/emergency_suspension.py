@@ -70,7 +70,7 @@ class MasterEmergencySuspension:
             raise RuntimeError("Emergency control event chain integrity failed; fail closed.")
         events = self.store.list_events(self.PROJECT_ID, limit=None)
         if any(item["event_type"] != self.EVENT_TYPE for item in events):
-            raise RuntimeError("Unexpected event in emergency control chain; fail closed.")
+            raise RuntimeError("Emergency control integrity failed: unexpected event type; fail closed.")
         return events
 
     def current(self) -> SuspensionSnapshot | None:
