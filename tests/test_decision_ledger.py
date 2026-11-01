@@ -92,3 +92,23 @@ def test_event_append_compare_and_swap_rejects_stale_chain_head(tmp_path):
         enforce_expected_head=True,
     )
     assert store.verify_project_chain("p1")
+
+def test_decisions_from_multiple_projects_share_one_authoritative_ledger(tmp_path):
+    store = SQLiteStore(tmp_path / "central-ledger.sqlite3")
+    _project(store)
+    store.save_record(
+        project_id="p2", record_type="project", record_id="p2", actor="master",
+        record={"project_id": "p2", "name": "Project 2", "owner": "master",
+                "created_at": datetime.now(timezone.utc).isoformat()},
+    )
+    ledger = DecisionLedger(store)
+    ledger.create(project_id="p1", decision_id="same-id", title="P1 decision",
+                  rationale="P1 rationale", actor="vane",
+                  authority_reference="master-p1", trigger="intake")
+    ledger.create(project_id="p2", decision_id="same-id", title="P2 decision",
+                  rationale="P2 rationale", actor="vane",
+                  authority_reference="master-p2", trigger="intake")
+    assert ledger.get("p1", "same-id").title == "P1 decision"
+    assert ledger.get("p2", "same-id").title == "P2 decision"
+    assert len(ledger.list_all_decisions()) == 2
+    assert store.verify_project_integrity(DecisionLedger.LEDGER_PROJECT_ID)
