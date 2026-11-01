@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 185,
+  "file_count": 186,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -17,6 +17,7 @@
     "config/vane.example.json",
     "distribution.yaml",
     "docs/approval-signing-format.md",
+    "docs/architecture-conflicts.md",
     "docs/architecture.md",
     "docs/build-status.md",
     "docs/data-lifecycle.md",
