@@ -15,6 +15,7 @@ Use when validating evidence digests, event history, signing boundaries, or cust
 ## Procedure
 1. Hash exact evidence bytes with SHA-256 and retain the digest with provenance.
 2. Verify exported event chains with `mcp__vane_engine__vane_verify_event_chain`.
+3. Verify the profile-local project database with `mcp__vane_engine__vane_verify_project_integrity`.
 3. Treat local hash chaining as tamper evidence, not as external anchoring.
 4. Keep signing authority in the external Ed25519 signing service.
 5. Keep verifier material public and independent of the signing private key.
