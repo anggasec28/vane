@@ -20,6 +20,6 @@ def validate_mission_closure(mission: Mission, evidence: dict[str, EvidenceRecor
     checks.append(ValidationFinding("FINDING_REFERENCES", not unknown,
         "All finding evidence references resolve." if not unknown else f"Unresolved evidence: {unknown}"))
     checks.append(ValidationFinding("MISSION_STATE", mission.status in
-        {MissionStatus.COMPLETED, MissionStatus.CLOSED},
-        f"Mission state is {mission.status.value}."))
+        {MissionStatus.EVIDENCE_REVIEW, MissionStatus.COMPLETED, MissionStatus.CLOSED},
+        f"Mission is at the independent evidence-review or closure gate: {mission.status.value}."))
     return tuple(checks)
