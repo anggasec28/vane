@@ -17,6 +17,7 @@ from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.assessment.web2 import plan_web2_surface_review
 from vane.assessment.web3 import plan_contract_review
 from vane.evidence.chain import verify_event_chain
+from vane.decisions.ledger import DecisionStatus
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import render_markdown
@@ -58,6 +59,22 @@ def _mission_payload(mission: Mission) -> dict[str, Any]:
         "required_evidence": sorted(mission.required_evidence),
         "completed_evidence": sorted(mission.completed_evidence),
         "blockers": list(mission.blockers), "history": list(mission.history)}
+
+
+def _decision_payload(snapshot) -> dict[str, Any]:
+    return {
+        "decision_id": snapshot.decision_id, "project_id": snapshot.project_id,
+        "revision": snapshot.revision, "status": snapshot.status.value,
+        "title": snapshot.title, "rationale": snapshot.rationale,
+        "actor": snapshot.actor, "authority_reference": snapshot.authority_reference,
+        "trigger": snapshot.trigger, "occurred_at": snapshot.occurred_at.isoformat(),
+        "evidence_references": list(snapshot.evidence_references),
+        "dependency_decision_ids": list(snapshot.dependency_decision_ids),
+        "policy_version": snapshot.policy_version,
+        "superseded_by_decision_id": snapshot.superseded_by_decision_id,
+        "superseded_by_revision": snapshot.superseded_by_revision,
+        "uncertainty": snapshot.uncertainty,
+    }
 
 
 
@@ -238,6 +255,73 @@ def vane_list_projects() -> list[dict[str, Any]]:
                 else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
     return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
              "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
+def vane_create_decision(project_id: str, title: str, rationale: str, actor: str,
+                         authority_reference: str, trigger: str,
+                         evidence_references_json: str = "[]",
+                         dependency_decision_ids_json: str = "[]",
+                         policy_version: str = "1", uncertainty: str = "",
+                         decision_id: str = "") -> dict[str, Any]:
+    """Create an UNRESOLVED decision snapshot in the authoritative append-only ledger."""
+    evidence_refs = json.loads(evidence_references_json)
+    dependencies = json.loads(dependency_decision_ids_json)
+    if not isinstance(evidence_refs, list) or not all(isinstance(x, str) and x for x in evidence_refs):
+        raise ValueError("evidence_references_json must be a JSON array of non-empty strings.")
+    if not isinstance(dependencies, list) or not all(isinstance(x, str) and x for x in dependencies):
+        raise ValueError("dependency_decision_ids_json must be a JSON array of non-empty strings.")
+    snapshot = _get_engine().create_decision(
+        project_id=project_id, title=title, rationale=rationale, actor=actor,
+        authority_reference=authority_reference, trigger=trigger,
+        evidence_references=tuple(evidence_refs), dependency_decision_ids=tuple(dependencies),
+        policy_version=policy_version, uncertainty=uncertainty, decision_id=decision_id or None,
+    )
+    return _decision_payload(snapshot)
+
+
+@server.tool()
+def vane_get_decision(project_id: str, decision_id: str) -> dict[str, Any]:
+    """Retrieve the latest immutable decision snapshot for a project decision ID."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    return _decision_payload(ledger.get(project_id, decision_id))
+
+
+@server.tool()
+def vane_list_decisions(project_id: str) -> list[dict[str, Any]]:
+    """List latest decision snapshots for a project; full history remains in the event chain."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    return [_decision_payload(item) for item in ledger.list_decisions(project_id)]
+
+
+@server.tool()
+def vane_transition_decision(project_id: str, decision_id: str, expected_revision: int,
+                             target_status: str, actor: str, authority_reference: str,
+                             trigger: str, rationale: str,
+                             evidence_references_json: str = "",
+                             policy_version: str = "", uncertainty: str = "",
+                             superseded_by_decision_id: str = "",
+                             superseded_by_revision: int = 0) -> dict[str, Any]:
+    """Append a governed decision-state transition with revision and event-head checks."""
+    evidence_refs = None
+    if evidence_references_json:
+        evidence_refs = json.loads(evidence_references_json)
+        if not isinstance(evidence_refs, list) or not all(isinstance(x, str) and x for x in evidence_refs):
+            raise ValueError("evidence_references_json must be a JSON array of non-empty strings.")
+    snapshot = _get_engine().transition_decision(
+        project_id=project_id, decision_id=decision_id, expected_revision=expected_revision,
+        target=DecisionStatus(target_status), actor=actor,
+        authority_reference=authority_reference, trigger=trigger, rationale=rationale,
+        evidence_references=tuple(evidence_refs) if evidence_refs is not None else None,
+        policy_version=policy_version or None, uncertainty=uncertainty if uncertainty else None,
+        superseded_by_decision_id=superseded_by_decision_id or None,
+        superseded_by_revision=superseded_by_revision or None,
+    )
+    return _decision_payload(snapshot)
 
 
 @server.tool()
