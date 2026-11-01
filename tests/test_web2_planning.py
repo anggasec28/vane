@@ -145,3 +145,55 @@ def test_tls_metadata_adapter_rejects_http_scheme():
     ))
     assert result.success is False
     assert called == []
+
+
+def test_dns_metadata_adapter_records_authorized_dns_answers():
+    from vane.assessment.base import DNSMetadataAdapter, ObservationRequest
+    from vane.security.policy_engine import PolicyDecision
+
+    class AllowEnforcer:
+        def authorize_action(self, *args, **kwargs):
+            assert args[2] == "dns_lookup"
+            return PolicyDecision(True, "ALLOW", "approved")
+
+    def fake_resolver(hostname, timeout):
+        assert hostname == "example.com"
+        assert timeout == 8.0
+        return {
+            "hostname": hostname,
+            "records": {"A": ["93.184.216.34"], "AAAA": [], "MX": ["10 mail.example.com."]},
+            "statuses": {"A": "ANSWER", "AAAA": "NO_DATA", "MX": "ANSWER"},
+        }
+
+    auth = envelope(methods=("dns_lookup",))
+    adapter = DNSMetadataAdapter(AllowEnforcer(), transport=fake_resolver)
+    result = adapter.observe(ObservationRequest(
+        "example.com", "dns_lookup", "dns", auth,
+        mission_id="mission-1", mission_approval=object(),
+    ))
+    assert result.success is True
+    assert result.evidence is not None
+    assert result.evidence.kind == "dns_records"
+    assert result.evidence.metadata["records"]["A"] == ["93.184.216.34"]
+    assert result.evidence.metadata["method"] == "dns_lookup"
+
+
+def test_dns_metadata_adapter_rejects_missing_hostname():
+    from vane.assessment.base import DNSMetadataAdapter, ObservationRequest
+    from vane.security.policy_engine import PolicyDecision
+
+    class AllowEnforcer:
+        def authorize_action(self, *args, **kwargs):
+            return PolicyDecision(True, "ALLOW", "approved")
+
+    called = []
+    adapter = DNSMetadataAdapter(
+        AllowEnforcer(), transport=lambda *args: called.append(args) or {}
+    )
+    auth = envelope(methods=("dns_lookup",))
+    result = adapter.observe(ObservationRequest(
+        "https:///missing-host", "dns_lookup", "dns", auth,
+        mission_id="mission-1", mission_approval=object(),
+    ))
+    assert result.success is False
+    assert called == []
