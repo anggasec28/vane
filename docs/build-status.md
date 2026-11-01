@@ -28,7 +28,7 @@ Package version: 0.2.0 development baseline.
 - Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks, including whole-plan cycle detection and engine-level plan validation.
 - Threat-intelligence record normalization, source provenance, expiry handling, confidence-weighted relevance scoring, and explicit distinction between relevance and exploitability.
 - Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation, now persisted in the project event store.
-- Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository.
+- Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
 - Optional JSON Schema document validation and repository-wide schema meta-validation using the declared development dependency.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
@@ -39,11 +39,11 @@ Package version: 0.2.0 development baseline.
 ## Remaining implementation and verification
 - Add forward SQLite schema migrations; current schema version 1 is implemented. Durable worker assignment/completion state is now persisted, but concurrent worker lifecycle and crash-recovery behavior still require isolated validation.
 - Add external anchoring and trusted-head publication for tamper evidence; L3/R-12 remains unimplemented.
-- Complete schema-to-model validation coverage and verify all serialized record types against their schemas.
+- Complete schema-to-model validation enforcement and verify all serialized record types against their schemas; current JSON Schema helpers are available but are not yet wired into every repository write.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
 - Add Hermes worker-session spawning and a separately hosted independent verifier workflow through the operator's Hermes agent; VANE repository role contracts are now present.
 - Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
-- Map every Master decision and historical requirement to code-level acceptance tests.
+- Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
 
 ## Authority status

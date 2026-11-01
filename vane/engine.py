@@ -390,6 +390,15 @@ class VaneEngine:
         if self.governance_repository is None or self.repository is None:
             raise PolicyViolation("Durable remediation storage requires a configured repository.")
         findings = {item.finding_id: item for item in self.repository.list_findings(project_id)}
+        for evidence_id in action.verification_evidence_ids:
+            try:
+                evidence = self.repository.get_evidence(project_id, evidence_id)
+            except KeyError as exc:
+                raise PolicyViolation(
+                    f"Remediation verification evidence does not exist: {evidence_id}") from exc
+            if evidence.status.value in {"DISPUTED", "INSUFFICIENT"}:
+                raise PolicyViolation(
+                    f"Remediation verification evidence is not usable: {evidence_id}")
         return self.governance_repository.save_remediation_action(
             project_id, action, findings, actor=actor)
 
