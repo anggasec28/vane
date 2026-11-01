@@ -32,6 +32,7 @@ These are logical responsibility domains, not a requirement to create seven sepa
 
 ## Python package map
 - `core`: orchestration and mission lifecycle.
+- `decisions`: append-only Central Decision Ledger snapshots and governed state transitions.
 - `security`: authorization, policy decisions, approval verification, and enforcement.
 - `assessment`: Web2/Web3 planning, asset mapping, dependency graph, and root-cause support.
 - `evidence`: integrity, provenance, and evidence handling.
