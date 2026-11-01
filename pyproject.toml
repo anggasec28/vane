@@ -13,7 +13,7 @@ authors = [{ name = "VANE Project" }]
 dependencies = ["jsonschema>=4.22"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.5", "mypy>=1.10", "jsonschema>=4.22"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "mypy>=1.10", "jsonschema>=4.22"]
 mcp = ["mcp>=1.9.0,<2.0.0"]
 crypto = ["cryptography>=42.0"]
 
