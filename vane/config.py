@@ -30,4 +30,7 @@ def load_config(path: str | Path) -> dict[str, Any]:
     signing = data.get("signing", {})
     if signing.get("private_key_in_engine") is not False:
         raise ConfigurationError("Private signing keys must remain outside the engine.")
+    approval = data.get("approval_verification", {})
+    if approval.get("algorithm") != "Ed25519" or approval.get("fail_closed_if_unavailable") is not True:
+        raise ConfigurationError("Ed25519 approval verification must fail closed.")
     return data
