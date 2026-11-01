@@ -7,7 +7,7 @@ Package version: 0.2.0 development baseline.
 ## Current repository inventory
 - 173 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 46 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 47 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 10 JSON configuration/schema documents parsed successfully during structural checks.
 - A GitHub Actions workflow is configured for push and pull-request CI; test execution/results have not yet been verified.
 
@@ -27,7 +27,7 @@ Package version: 0.2.0 development baseline.
 - Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers, with an engine-level mission report facade and cross-mission evidence rejection.
 - Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks, including whole-plan cycle detection and engine-level plan validation.
 - Threat-intelligence record normalization, source provenance, expiry handling, confidence-weighted relevance scoring, and explicit distinction between relevance and exploitability.
-- Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation, now persisted in the project event store.
+- Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation, now persisted in the project event store. Read-only SLA evaluation identifies due-soon, overdue, blocked, and complete work without auto-changing state.
 - Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
 - JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
