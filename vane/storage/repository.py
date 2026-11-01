@@ -125,3 +125,24 @@ class SQLiteRepository:
         record = asdict(approval)
         return self.store.save_record(project_id=project_id, record_type="approval",
             record_id=approval.approval_id, record=record, actor=actor)
+
+    def get_asset(self, project_id: str, asset_id: str) -> Asset:
+        result = self.store.get_record(project_id=project_id, record_type="asset",
+                                       record_id=asset_id)
+        if result is None:
+            raise KeyError(asset_id)
+        record, _ = result
+        from vane.models import AssetDisposition
+        record["disposition"] = AssetDisposition(record["disposition"])
+        return Asset(**record)
+
+    def get_approval(self, project_id: str, approval_id: str) -> Approval:
+        result = self.store.get_record(project_id=project_id, record_type="approval",
+                                       record_id=approval_id)
+        if result is None:
+            raise KeyError(approval_id)
+        record, _ = result
+        record["decided_at"] = datetime.fromisoformat(record["decided_at"])
+        if record.get("expires_at"):
+            record["expires_at"] = datetime.fromisoformat(record["expires_at"])
+        return Approval(**record)
