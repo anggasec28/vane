@@ -69,13 +69,13 @@ class AuthorizationEnvelope:
 
     def is_time_valid(self, now: datetime | None = None) -> bool:
         current = now or utc_now()
-        if self.revoked:
+        if self.revoked or not self.approval_id:
             return False
-        if self.starts_at and current < self.starts_at:
+        if self.starts_at is None or self.expires_at is None:
             return False
-        if self.expires_at and current >= self.expires_at:
+        if self.starts_at >= self.expires_at:
             return False
-        return True
+        return self.starts_at <= current < self.expires_at
 
 @dataclass(slots=True)
 class Asset:
