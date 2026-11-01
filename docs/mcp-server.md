@@ -26,5 +26,11 @@ python -m pip install -e '.[mcp,crypto]'
 
 Hermes connects to the local stdio server using the `mcp_servers.vane_engine` entry in the profile's `config.yaml`. The server is local to that profile. After changing MCP configuration, use `/reload-mcp` or restart the profile session and verify the discovered tools.
 
+## Project and mission operations
+
+The local server also exposes durable project/mission workflow tools: create project/mission, retrieve/list missions, submit for approval, verify and authorize a mission, start, attach evidence, add/clear blockers, request independent review, complete, and close with signed Master approval. Inventory tools persist assets and list assets/evidence/findings; finding tools persist drafts or evidence-validated findings.
+
+These tools operate on the profile-local SQLite database. They do not spawn workers or perform target requests. Project/mission creation and evidence/finding record writes are local state changes; target-facing actions remain subject to mission approval, exact scope, method allowlists, and separate high-risk action approval.
+
 ## Approval boundary
 The MCP server performs deterministic validation and planning only. Approval verification fails closed until a valid public-only keyring is configured. `vane_scope_check` reports scope coverage, not permission to execute. Its presence does not authorize an assessment. Every assessment action still requires an active envelope, explicit method allowlist, and any additional action-bound approval. The server receives only public verification keys; private signing authority remains external. Mission approval must be verified separately from any high-risk action approval. Neither verification tool grants execution permission by itself.
