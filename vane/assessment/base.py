@@ -292,3 +292,106 @@ def build_assessment_plan(authorization: AuthorizationEnvelope, assets: list, pl
         "target_requests_performed": False,
         "phases": phases,
     }
+
+
+def _flatten_certificate_name(name: tuple) -> list[str]:
+    return [f"{key}={value}" for relative_name in name for key, value in relative_name]
+
+
+def _pinned_certificate(locator: str, timeout: float) -> dict[str, object]:
+    parsed = urlsplit(locator)
+    if parsed.scheme != "https" or not parsed.hostname:
+        raise ValueError("TLS certificate observation requires an absolute HTTPS URL.")
+    if parsed.username or parsed.password or parsed.fragment:
+        raise ValueError("URL credentials and fragments are not accepted.")
+    port = parsed.port or 443
+    addresses = _public_addresses(parsed.hostname, port)
+    connection = _PinnedHTTPSConnection(parsed.hostname, port, addresses[0], timeout)
+    try:
+        connection.connect()
+        if connection.sock is None:
+            raise OSError("TLS socket was not established.")
+        certificate = connection.sock.getpeercert()
+        encoded = connection.sock.getpeercert(binary_form=True)
+        if not certificate or not encoded:
+            raise ValueError("Peer did not provide a verifiable TLS certificate.")
+        sans = [
+            f"{kind}:{value}" for kind, value in certificate.get("subjectAltName", [])
+            if kind in {"DNS", "IP Address"}
+        ][:256]
+        return {
+            "subject": _flatten_certificate_name(certificate.get("subject", ())),
+            "issuer": _flatten_certificate_name(certificate.get("issuer", ())),
+            "serial_number": certificate.get("serialNumber"),
+            "not_before": certificate.get("notBefore"),
+            "not_after": certificate.get("notAfter"),
+            "subject_alt_names": sans,
+            "version": certificate.get("version"),
+            "sha256_fingerprint": hashlib.sha256(encoded).hexdigest(),
+        }
+    finally:
+        connection.close()
+
+
+class TLSMetadataAdapter:
+    """Collect verified TLS certificate metadata from one explicitly authorized HTTPS asset."""
+
+    def __init__(
+        self,
+        enforcer: SecurityEnforcer,
+        *,
+        timeout: float = 8.0,
+        transport: Callable[[str, float], dict[str, object]] | None = None,
+    ) -> None:
+        if not 0.1 <= timeout <= 30:
+            raise ValueError("timeout must be between 0.1 and 30 seconds.")
+        self._enforcer = enforcer
+        self._timeout = timeout
+        self._transport = transport or _pinned_certificate
+
+    def observe(self, request: ObservationRequest) -> ObservationResult:
+        if request.method.casefold() != "tls_metadata":
+            return ObservationResult(False, "Observation blocked.", blocked_reason="Unsupported method.")
+        if not request.mission_id.strip() or request.mission_approval is None:
+            return ObservationResult(
+                False, "Observation blocked.",
+                blocked_reason="Mission ID and signed mission approval are required.",
+            )
+        decision = self._enforcer.authorize_action(
+            request.authorization, request.locator, request.method,
+            mission_approval=request.mission_approval,
+            action_approval=request.action_approval,
+        )
+        if not decision.allowed:
+            return ObservationResult(False, "Observation blocked.", blocked_reason=decision.reason)
+        try:
+            metadata = self._transport(request.locator, self._timeout)
+            canonical = json.dumps(
+                metadata, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            )
+            evidence = EvidenceRecord(
+                evidence_id=str(uuid4()),
+                project_id=request.authorization.project_id,
+                mission_id=request.mission_id,
+                kind="tls_certificate",
+                source=request.locator,
+                observed_at=datetime.now(timezone.utc),
+                content_digest=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+                authorization_id=request.authorization.envelope_id,
+                collection_method="tls_handshake",
+                limitations=[
+                    "TLS handshake and peer certificate metadata only.",
+                    "No HTTP request or application-layer content was collected.",
+                    "Certificate metadata is an observation, not proof of a vulnerability.",
+                ],
+                metadata={
+                    **metadata, "locator": request.locator, "method": request.method,
+                },
+            )
+            return ObservationResult(
+                True, "TLS certificate metadata collected.", evidence=evidence
+            )
+        except Exception as exc:
+            return ObservationResult(
+                False, "TLS certificate collection failed.", blocked_reason=str(exc)
+            )
