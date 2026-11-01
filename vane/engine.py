@@ -11,8 +11,9 @@ from vane.models import (
 )
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
-from vane.security.digests import mission_closure_digest
+from vane.security.digests import (authorization_digest, capability_action_digest, mission_closure_digest)
 from vane.security.enforcement import SecurityEnforcer
+from vane.security.authorization import asset_is_in_scope
 from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.storage.repository import SQLiteRepository
 from vane.validation.independent import validate_mission_closure
@@ -31,6 +32,8 @@ class VaneEngine:
         self.repository = repository
         self.orchestrator = AssessmentOrchestrator(self.enforcer)
         self.workers = WorkerOrchestrator()
+        self._authorization_cache: dict[str, AuthorizationEnvelope] = {}
+        self._approval_cache: dict[str, Approval] = {}
 
     def register_project(self, project_id: str, name: str, owner: str) -> Project:
         if not all(value.strip() for value in (project_id, name, owner)):
@@ -112,6 +115,8 @@ class VaneEngine:
                 mission.authorization_id = previous_authorization_id
                 mission.history = previous_history
                 raise
+        self._authorization_cache[envelope.envelope_id] = envelope
+        self._approval_cache[approval.approval_id] = approval
         return result
 
     def start_mission(self, mission: Mission, *, actor: str = "master") -> Mission:
@@ -183,9 +188,49 @@ class VaneEngine:
                         *, actor: str = "collector") -> Mission:
         if evidence.project_id != mission.project_id or evidence.mission_id != mission.mission_id:
             raise PolicyViolation("Evidence project/mission reference does not match.")
+        if mission.status not in {MissionStatus.AUTHORIZED, MissionStatus.RUNNING,
+                                  MissionStatus.BLOCKED, MissionStatus.EVIDENCE_REVIEW}:
+            raise PolicyViolation("Evidence cannot be attached to a mission outside its active review lifecycle.")
         if not mission.authorization_id or evidence.authorization_id != mission.authorization_id:
             raise PolicyViolation("Evidence is not bound to the mission authorization envelope.")
         validate_evidence(evidence)
+        if self.repository is not None:
+            envelope = self.repository.get_authorization(mission.project_id, mission.authorization_id)
+            mission_approval = self.repository.get_approval(mission.project_id, envelope.approval_id)
+        else:
+            envelope = self._authorization_cache.get(mission.authorization_id)
+            mission_approval = self._approval_cache.get(envelope.approval_id) if envelope else None
+        if (envelope is None or mission_approval is None
+                or not envelope.is_time_valid(evidence.observed_at)
+                or not self.enforcer.validate_approval(mission_approval,
+                    authorization_digest(envelope), envelope.approval_id, now=evidence.observed_at)
+                or mission_approval.expires_at is None
+                or mission_approval.expires_at > envelope.expires_at):
+            raise PolicyViolation("Evidence observation is not covered by a valid signed mission approval.")
+        locator = evidence.metadata.get("locator")
+        method = str(evidence.metadata.get("method", evidence.collection_method)).strip().lower()
+        if locator is not None:
+            allowed = {item.lower() for item in envelope.allowed_methods}
+            prohibited = {item.lower() for item in envelope.prohibited_methods}
+            if (not method or method in prohibited or method not in allowed
+                    or not asset_is_in_scope(str(locator), envelope.rules)):
+                raise PolicyViolation("Evidence locator/method is outside the signed authorization envelope.")
+            action_approval_id = evidence.metadata.get("action_approval_id")
+            if method in HIGH_RISK_METHODS and not action_approval_id:
+                raise PolicyViolation("High-risk evidence requires its action_approval_id.")
+            if action_approval_id:
+                if self.repository is not None:
+                    action_approval = self.repository.get_approval(mission.project_id, str(action_approval_id))
+                else:
+                    action_approval = self._approval_cache.get(str(action_approval_id))
+                expected_action = capability_action_digest(envelope, str(locator), method)
+                if (not self.enforcer.validate_approval(action_approval, expected_action, None,
+                        now=evidence.observed_at)
+                        or action_approval is None or action_approval.expires_at is None
+                        or action_approval.expires_at > envelope.expires_at):
+                    raise PolicyViolation("Evidence action approval is invalid for the exact locator/method.")
+        elif "method" in evidence.metadata:
+            raise PolicyViolation("Evidence method metadata requires a locator.")
         project = self.get_project(mission.project_id)
         satisfies = evidence.metadata.get("satisfies", [evidence.kind])
         if not isinstance(satisfies, list) or not all(isinstance(item, str) for item in satisfies):
