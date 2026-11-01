@@ -37,7 +37,7 @@ Package version: 0.2.0 development baseline.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
 
 ## Remaining implementation and verification
-- Add forward SQLite schema migrations; current schema version 1 is implemented. Durable worker assignment/completion state is now persisted, but concurrent worker lifecycle and crash-recovery behavior still require isolated validation.
+- Add forward SQLite schema migrations; forward-only transactional SQLite migrations are implemented through schema version 2. Durable worker assignment/completion state is now persisted, but concurrent worker lifecycle and crash-recovery behavior still require isolated validation.
 - Add external anchoring and trusted-head publication for tamper evidence; L3/R-12 remains unimplemented.
 - Extend schema-to-model coverage to case, remediation, threat-intelligence, report, worker-assignment, and event records; current enforcement covers the eight core typed record families.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
