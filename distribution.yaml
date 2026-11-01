@@ -1,30 +1,21 @@
-package:
-  name: vane-agent
-  version: 0.2.0
-  artifact_type: hermes_hosted_agent_and_python_engine
-  runtime_dependency: hermes-agent
-  python_requirement: ">=3.11"
-  standalone: false
-  source_of_truth: https://github.com/anggasec28/vane
-included:
+name: vane
+version: 0.2.0
+description: "VANE modular security assessment agent and Python engine for Hermes Agent"
+hermes_requires: ">=0.22.0"
+author: "VANE Project"
+
+env_requires: []
+
+distribution_owned:
   - SOUL.md
   - config.yaml
-  - pyproject.toml
-  - vane/
-  - policies/
+  - distribution.yaml
   - skills/
+  - vane/
+  - pyproject.toml
   - schemas/
+  - policies/
   - templates/
+  - config/
   - docs/
   - tests/
-excluded:
-  - Hermes runtime source
-  - runtime secrets and credentials
-  - private signing keys
-  - live target data
-  - deployment manifests that mutate an environment
-release_gate:
-  requires_master_approval: true
-  requires_manifest_verification: true
-  requires_validation_report: true
-  requires_hermes_compatibility_review: true
