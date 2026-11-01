@@ -10,7 +10,8 @@
     "decision",
     "decided_at",
     "key_id",
-    "signature"
+    "signature",
+    "expires_at"
   ],
   "properties": {
     "approval_id": {
@@ -36,10 +37,7 @@
       "format": "date-time"
     },
     "expires_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "format": "date-time"
     },
     "rationale": {
