@@ -24,6 +24,9 @@ Use when creating, triaging, validating, disputing, or closing a security findin
 
 Use `vane_validate_finding` with the finding JSON and its evidence records before marking a finding VALIDATED.
 
+## Persistence Tools
+Use `vane_save_finding` to persist a draft or evidence-validated finding and `vane_list_findings` to review project findings. VALIDATED/ACCEPTED records must resolve to valid, same-project evidence.
+
 ## Pitfalls
 - Do not promote an unverified hypothesis to a confirmed finding.
 - Do not infer severity from a scanner label alone.
