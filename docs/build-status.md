@@ -5,11 +5,11 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 195 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 202 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 53 MCP tools defined in the server and exactly matched by the profile tool allowlist.
-- 11 JSON configuration/schema documents are present; schema meta-validation passed in CI.
-- GitHub Actions run #443 on code commit `a1201ce` completed successfully: compileall passed, **93 tests passed**, and the CLI version/config check passed. Run #442 also passed all 93 tests after the bootstrap tests were added.
+- 57 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 18 JSON configuration/schema documents are present; schema meta-validation passed in CI.
+- GitHub Actions run #463 on commit `dd6ebfa` completed successfully: compileall passed, **107 tests passed**, and the CLI version/config check passed. A Ruff lint gate has since been added to CI and its result is pending.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
@@ -21,7 +21,7 @@ Package version: 0.2.0 development baseline.
 - Adaptive recovery planner and hybrid lifecycle policy.
 - Project registry, typed SQLite repositories for projects/authorization envelopes/missions/evidence/findings/assets/approvals/worker tasks, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
-- Bounded worker delegation lifecycle, strict result validation, durable task-contract and assignment-state persistence, restore-on-demand for delegated assignments, and completion/revocation audit history. Hermes worker-session spawning remains outside this repository runtime boundary.
+- Bounded worker delegation lifecycle, strict task/result validation, durable task-contract and assignment-state persistence, restore-on-demand, and completion/revocation audit history. Four MCP tools now expose specialist handoff, completion, revocation, and listing; they return structured handoff contracts while actual Hermes worker-session spawning remains outside this repository runtime boundary.
 - One primary VANE Hermes profile with eight subordinate specialist role contracts. Master is the human authority principal, not an agent/profile/runtime. The specialist registry defines explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions; Hermes profile loading is not yet verified.
 - Evidence-aware dependency graph primitives with bounded traversal, evidence-link checks, and explicit separation between graph relationships and authorization scope.
 - Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers, with an engine-level mission report facade and cross-mission evidence rejection.
@@ -29,7 +29,7 @@ Package version: 0.2.0 development baseline.
 - Threat-intelligence record normalization, source provenance, expiry handling, confidence-weighted relevance scoring, and explicit distinction between relevance and exploitability.
 - Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation, now persisted in the project event store.
 - Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
-- JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
+- JSON Schema enforcement on all 15 persisted domain record types plus every hash-linked event record; canonical schemas now cover case operations, threat intelligence, remediation, report bundles, worker assignments, and lifecycle reviews as well as core records.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
 - Append-only Central Decision Ledger foundation: immutable full decision snapshots in the central ledger event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, event-head compare-and-swap for concurrent append safety, and JSON Schema validation on every append. Exposed through the VANE engine facade and four allowlisted MCP tools.
 - Conservative hierarchical evidence-weighted arbitration: six evidence-quality dimensions, strict Pareto dominance without arbitrary weights, hard scope/policy/authority gates, and explicit UNRESOLVED outcomes for ties, incomparable evidence, or material contradictions. Exposed through an allowlisted MCP tool.
@@ -45,9 +45,9 @@ Package version: 0.2.0 development baseline.
 ## Remaining implementation and verification
 - Add forward SQLite schema migrations; forward-only transactional SQLite migrations are implemented through schema version 2. Durable worker assignment/completion state is now persisted, but concurrent worker lifecycle and crash-recovery behavior still require isolated validation.
 - Add external anchoring and trusted-head publication for tamper evidence; L3/R-12 remains unimplemented.
-- Extend schema-to-model coverage to case, remediation, threat-intelligence, report, worker-assignment, and event records; current enforcement covers the eight core typed record families.
+- Expand schema round-trip and adversarial tests across all 15 persisted record types, including migration/restart compatibility and invalid-record rejection.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
-- Add Hermes worker-session spawning and a separately hosted independent verifier workflow through the operator's Hermes agent; VANE repository role contracts are now present.
+- Hermes worker-session spawning and separately hosted independent-verifier orchestration remain host-runtime responsibilities; the repository now supplies typed, bounded handoff/result contracts.
 - Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
 - Add and execute concurrency/failure-injection tests for Decision Ledger append races, stale revisions, replay, and recovery.
 - Align all seven logical domains and cross-domain dependency/acceptance criteria in a source-decision-to-code traceability matrix.
