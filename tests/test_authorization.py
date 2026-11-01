@@ -33,3 +33,14 @@ def test_denies_missing_approval_reference():
         expires_at=item.expires_at)
     with pytest.raises(AuthorizationError):
         require_authorized(invalid, "https://example.com", "http_metadata")
+
+def test_url_scope_enforces_scheme_and_path_boundary():
+    rule = (ScopeRule("url", "https://example.com/api"),)
+    assert asset_is_in_scope("https://example.com/api/v1", rule)
+    assert not asset_is_in_scope("https://example.com/apix", rule)
+    assert not asset_is_in_scope("http://example.com/api/v1", rule)
+
+def test_ip_and_cidr_rules_are_supported():
+    assert asset_is_in_scope("https://192.0.2.10", (ScopeRule("ip", "192.0.2.10"),))
+    assert asset_is_in_scope("https://192.0.2.10", (ScopeRule("cidr", "192.0.2.0/24"),))
+    assert not asset_is_in_scope("https://192.0.3.10", (ScopeRule("cidr", "192.0.2.0/24"),))
