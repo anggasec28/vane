@@ -85,7 +85,8 @@ def _approval_from_dict(item: dict[str, Any]) -> Approval:
 
 
 def _verify_approval(envelope_json: str, approval_json: str, expected_digest: str,
-                     expected_approval_id: str | None) -> dict[str, Any]:
+                     expected_approval_id: str | None,
+                     enforce_envelope_expiry: bool = True) -> dict[str, Any]:
     try:
         envelope = authorization_from_dict(json.loads(envelope_json))
         approval = _approval_from_dict(json.loads(approval_json))
@@ -93,7 +94,7 @@ def _verify_approval(envelope_json: str, approval_json: str, expected_digest: st
         verifier = Ed25519ApprovalVerifier(load_public_keyring(keyring_path))
         valid = ((expected_approval_id is None or approval.approval_id == expected_approval_id)
                  and approval.expires_at is not None
-                 and approval.expires_at <= envelope.expires_at
+                 and (not enforce_envelope_expiry or approval.expires_at <= envelope.expires_at)
                  and approval.is_valid_for(expected_digest) and verifier.verify(approval))
         return {"signature_valid": valid, "approval_id": approval.approval_id,
                 "key_id": approval.key_id}
@@ -248,7 +249,8 @@ def vane_verify_closure_approval(envelope_json: str, mission_json: str,
     if mission.status != MissionStatus.COMPLETED:
         return {"closure_approval_verified": False, "execution_authorized": False,
                 "reason": "mission_not_completed"}
-    result = _verify_approval(envelope_json, approval_json, mission_closure_digest(mission), None)
+    result = _verify_approval(envelope_json, approval_json, mission_closure_digest(mission), None,
+                              enforce_envelope_expiry=False)
     result["closure_approval_verified"] = result.pop("signature_valid", False)
     result["execution_authorized"] = False
     return result
