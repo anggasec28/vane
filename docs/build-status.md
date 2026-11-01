@@ -5,7 +5,7 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 185 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 186 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
 - 50 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 11 JSON configuration/schema documents are present; the new decision schema is awaiting a clean CI rerun.
@@ -47,6 +47,7 @@ Package version: 0.2.0 development baseline.
 - Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
 - Add and execute concurrency/failure-injection tests for Decision Ledger append races, stale revisions, replay, and recovery.
 - Align all seven logical domains and cross-domain dependency/acceptance criteria in a source-decision-to-code traceability matrix.
+- Adjudicate CF-01 through CF-07 in `docs/architecture-conflicts.md` without silently changing recorded Master choices.
 - Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
 - Complete Decision Ledger arbitration, appeals/reversals, supersession linkage across decision IDs, authoritative projections, continuity caches, and causal reconciliation.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
