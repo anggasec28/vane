@@ -68,7 +68,10 @@ class MasterEmergencySuspension:
     def _events(self) -> list[dict[str, Any]]:
         if not self.store.verify_project_chain(self.PROJECT_ID):
             raise RuntimeError("Emergency control event chain integrity failed; fail closed.")
-        return self.store.list_events(self.PROJECT_ID, limit=None)
+        events = self.store.list_events(self.PROJECT_ID, limit=None)
+        if any(item["event_type"] != self.EVENT_TYPE for item in events):
+            raise RuntimeError("Unexpected event in emergency control chain; fail closed.")
+        return events
 
     def current(self) -> SuspensionSnapshot | None:
         events = self._events()
