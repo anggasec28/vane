@@ -60,14 +60,15 @@ class _PinnedHTTPConnection(http.client.HTTPConnection):
 
 class _PinnedHTTPSConnection(http.client.HTTPSConnection):
     def __init__(self, host: str, port: int, address: str, timeout: float) -> None:
-        super().__init__(host, port, timeout=timeout, context=ssl.create_default_context())
+        self._ssl_context = ssl.create_default_context()
+        super().__init__(host, port, timeout=timeout, context=self._ssl_context)
         self._address = address
 
     def connect(self) -> None:
         raw = socket.create_connection(
             (self._address, self.port), self.timeout, self.source_address
         )
-        self.sock = self._context.wrap_socket(raw, server_hostname=self.host)
+        self.sock = self._ssl_context.wrap_socket(raw, server_hostname=self.host)
 
 
 def _public_addresses(host: str, port: int) -> tuple[str, ...]:
@@ -126,7 +127,10 @@ def _pinned_head(
             for key, value in response.getheaders()
             if key.lower() in safe_names
         }
-        return response.status, safe_headers, response.version
+        protocol = {9: "HTTP/0.9", 10: "HTTP/1.0", 11: "HTTP/1.1"}.get(
+            response.version, f"HTTP/version-{response.version}"
+        )
+        return response.status, safe_headers, protocol
     finally:
         connection.close()
 
