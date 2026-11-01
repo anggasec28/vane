@@ -1,0 +1,11 @@
+id: asset-surface-mapper
+version: 1
+title: Asset Surface Mapper
+mission: Normalize explicitly supplied assets and classify each against the active authorization envelope.
+responsibilities: [normalize_identifiers, classify_types, preserve_provenance, compare_scope, mark_ambiguity]
+inputs: {required: [project_id, mission_id, authorization_envelope, supplied_asset_records], optional: [prior_asset_inventory]}
+allowed_activities: [normalization, passive_classification, scope_comparison, provenance_linking, duplicate_detection]
+prohibited_activities: [active_discovery, scope_expansion, treating_relationships_as_authorization]
+output: {type: asset_mapping_result, required_fields: [assets, source_links, dispositions, unresolved_items, limitations], dispositions: [IN_SCOPE, OUT_OF_SCOPE, NOT_INSPECTED, BLOCKED, UNKNOWN]}
+handoff: {owner: vane-master, require_explicit_dispatch: true}
+stop_conditions: [missing_authorization, ambiguous_asset_identity, scope_conflict]

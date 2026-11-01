@@ -11,6 +11,7 @@ from vane.models import (
 from vane.security.approval import Approval
 from vane.security.serialization import authorization_from_dict
 from vane.workers.contracts import WorkerTask
+from vane.workers.orchestrator import WorkerAssignment, WorkerTaskStatus
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
 from vane.evidence.manager import validate_evidence
@@ -218,6 +219,50 @@ class SQLiteRepository:
         record["allowed_methods"] = tuple(record["allowed_methods"])
         record["allowed_asset_ids"] = tuple(record["allowed_asset_ids"])
         return WorkerTask(**record)
+
+    def save_worker_assignment(self, project_id: str, assignment: WorkerAssignment,
+                               *, actor: str = "master") -> int:
+        record = {
+            "task": asdict(assignment.task),
+            "status": assignment.status.value,
+            "result": assignment.result,
+            "history": list(assignment.history),
+        }
+        return self.store.save_record(project_id=project_id, record_type="worker_assignment",
+            record_id=assignment.task.task_id, record=record, actor=actor)
+
+    def get_worker_assignment(self, project_id: str, task_id: str) -> WorkerAssignment:
+        result = self.store.get_record(project_id=project_id, record_type="worker_assignment",
+                                       record_id=task_id)
+        if result is None:
+            raise KeyError(task_id)
+        record, _ = result
+        task_data = record["task"]
+        task_data["deadline"] = datetime.fromisoformat(task_data["deadline"])
+        task_data["allowed_methods"] = tuple(task_data["allowed_methods"])
+        task_data["allowed_asset_ids"] = tuple(task_data["allowed_asset_ids"])
+        return WorkerAssignment(
+            task=WorkerTask(**task_data),
+            status=WorkerTaskStatus(record["status"]),
+            result=record.get("result"),
+            history=list(record.get("history", [])),
+        )
+
+    def list_worker_assignments(self, project_id: str) -> list[WorkerAssignment]:
+        records = self.store.list_records(project_id=project_id, record_type="worker_assignment")
+        result: list[WorkerAssignment] = []
+        for record in records:
+            task_data = record["task"]
+            task_data["deadline"] = datetime.fromisoformat(task_data["deadline"])
+            task_data["allowed_methods"] = tuple(task_data["allowed_methods"])
+            task_data["allowed_asset_ids"] = tuple(task_data["allowed_asset_ids"])
+            result.append(WorkerAssignment(
+                task=WorkerTask(**task_data),
+                status=WorkerTaskStatus(record["status"]),
+                result=record.get("result"),
+                history=list(record.get("history", [])),
+            ))
+        return result
 
     def list_assets(self, project_id: str) -> list[Asset]:
         records = self.store.list_records(project_id=project_id, record_type="asset")

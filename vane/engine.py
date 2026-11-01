@@ -20,6 +20,7 @@ from vane.storage.repository import SQLiteRepository
 from vane.validation.independent import validate_mission_closure
 from vane.workers.contracts import WorkerTask
 from vane.workers.orchestrator import WorkerAssignment, WorkerOrchestrator
+from vane.workers.catalog import default_specialist_registry
 
 
 class VaneEngine:
@@ -32,7 +33,9 @@ class VaneEngine:
         self.projects = projects or ProjectRegistry()
         self.repository = repository
         self.orchestrator = AssessmentOrchestrator(self.enforcer)
-        self.workers = WorkerOrchestrator()
+        self.specialists = default_specialist_registry()
+        self.workers = WorkerOrchestrator(self.specialists)
+        self._worker_project_ids: dict[str, str] = {}
         self._authorization_cache: dict[str, AuthorizationEnvelope] = {}
         self._approval_cache: dict[str, Approval] = {}
 
@@ -382,14 +385,42 @@ class VaneEngine:
         if self.repository is not None:
             try:
                 self.repository.save_worker_task(mission.project_id, task)
+                self.repository.save_worker_assignment(mission.project_id, assignment)
+                self._worker_project_ids[task.task_id] = mission.project_id
             except Exception:
                 self.workers.revoke(task.task_id, actor="system",
                                     reason="persistence failed; delegation revoked")
                 raise
         return assignment
 
+    def _restore_worker_assignment(self, task_id: str) -> tuple[str, WorkerAssignment]:
+        if task_id in self._worker_project_ids:
+            return self._worker_project_ids[task_id], self.workers.get(task_id)
+        if self.repository is None:
+            return "", self.workers.get(task_id)
+        for project in self.repository.list_projects():
+            try:
+                assignment = self.repository.get_worker_assignment(project.project_id, task_id)
+            except KeyError:
+                continue
+            self.workers.restore(assignment)
+            self._worker_project_ids[task_id] = project.project_id
+            return project.project_id, assignment
+        raise KeyError(task_id)
+
     def complete_worker_task(self, task_id: str, result: dict) -> WorkerAssignment:
-        return self.workers.complete(task_id, result)
+        project_id, _ = self._restore_worker_assignment(task_id)
+        assignment = self.workers.complete(task_id, result)
+        if self.repository is not None:
+            self.repository.save_worker_assignment(project_id, assignment, actor="worker")
+        return assignment
+
+    def revoke_worker_task(self, task_id: str, *, actor: str, reason: str) -> WorkerAssignment:
+        project_id, _ = self._restore_worker_assignment(task_id)
+        assignment = self.workers.revoke(task_id, actor=actor, reason=reason)
+        if self.repository is not None:
+            self.repository.save_worker_assignment(project_id, assignment, actor=actor)
+        return assignment
 
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
                               locator: str, method: str, *, mission_approval: Approval,

@@ -1,4 +1,4 @@
-"""Bounded worker delegation lifecycle; no process or Hermes session is spawned."""
+"""Bounded worker delegation lifecycle; Hermes sessions are managed externally."""
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -7,6 +7,7 @@ from vane.models import Asset, AssetDisposition, AuthorizationEnvelope, Mission,
 from vane.security.authorization import asset_is_in_scope
 from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.workers.contracts import WorkerTask, validate_worker_result
+from vane.workers.registry import SpecialistRegistry
 
 
 class WorkerTaskStatus(StrEnum):
@@ -25,8 +26,9 @@ class WorkerAssignment:
 
 
 class WorkerOrchestrator:
-    def __init__(self) -> None:
+    def __init__(self, registry: SpecialistRegistry | None = None) -> None:
         self._assignments: dict[str, WorkerAssignment] = {}
+        self.registry = registry
 
     def delegate(self, task: WorkerTask, mission: Mission,
                  envelope: AuthorizationEnvelope, assets: dict[str, Asset]) -> WorkerAssignment:
@@ -38,6 +40,8 @@ class WorkerOrchestrator:
             raise PermissionError("Worker task parent or approval reference mismatch.")
         if not task.is_valid() or task.deadline > envelope.expires_at:
             raise PermissionError("Worker task is expired or outlives the parent authorization.")
+        if self.registry is not None:
+            self.registry.get(task.worker_profile)
         allowed_methods = {method.lower() for method in envelope.allowed_methods}
         if not {method.lower() for method in task.allowed_methods}.issubset(allowed_methods):
             raise PermissionError("Worker task methods exceed parent authorization.")
@@ -57,6 +61,17 @@ class WorkerOrchestrator:
         self._assignments[task.task_id] = assignment
         return assignment
 
+    def restore(self, assignment: WorkerAssignment) -> WorkerAssignment:
+        task_id = assignment.task.task_id
+        existing = self._assignments.get(task_id)
+        if existing is not None and existing != assignment:
+            raise ValueError(f"Conflicting worker assignment already loaded: {task_id}")
+        self._assignments[task_id] = assignment
+        return assignment
+
+    def get(self, task_id: str) -> WorkerAssignment:
+        return self._assignments[task_id]
+
     def complete(self, task_id: str, result: dict[str, Any]) -> WorkerAssignment:
         assignment = self._assignments[task_id]
         if assignment.status != WorkerTaskStatus.DELEGATED:
@@ -64,6 +79,8 @@ class WorkerOrchestrator:
         validate_worker_result(result, assignment.task)
         if set(result.get("methods", [])) - set(assignment.task.allowed_methods):
             raise PermissionError("Worker result reports methods outside delegated authority.")
+        if self.registry is not None and "output" in result:
+            self.registry.validate_output(assignment.task.worker_profile, result["output"])
         assignment.result = dict(result)
         assignment.status = WorkerTaskStatus.COMPLETED
         assignment.history.append({"event": "COMPLETED", "worker": assignment.task.worker_profile})
