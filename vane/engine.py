@@ -6,7 +6,7 @@ from vane.errors import PolicyViolation
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.models import (
-    Asset, AuthorizationEnvelope, EvidenceRecord, Finding, Mission, MissionStatus,
+    Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus,
 )
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
@@ -191,7 +191,7 @@ class VaneEngine:
 
     def save_finding(self, finding: Finding, *, actor: str = "analyst") -> None:
         project = self.get_project(finding.project_id)
-        if finding.status in {finding.status.VALIDATED, finding.status.ACCEPTED}:
+        if finding.status in {FindingStatus.VALIDATED, FindingStatus.ACCEPTED}:
             linked = {eid: project.evidence[eid] for eid in finding.evidence_ids
                       if eid in project.evidence}
             validate_finding(deepcopy(finding), linked)
