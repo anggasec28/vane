@@ -44,6 +44,10 @@ mcp_servers:
         - vane_verify_event_chain
         - vane_verify_project_integrity
         - vane_list_specialists
+        - vane_delegate_worker_task
+        - vane_complete_worker_task
+        - vane_revoke_worker_task
+        - vane_list_worker_tasks
         - vane_build_mission_report
         - vane_validate_remediation_plan
         - vane_save_case_work_item
