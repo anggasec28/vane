@@ -206,3 +206,13 @@ class SQLiteRepository:
         record["allowed_methods"] = tuple(record["allowed_methods"])
         record["allowed_asset_ids"] = tuple(record["allowed_asset_ids"])
         return WorkerTask(**record)
+
+    def list_assets(self, project_id: str) -> list[Asset]:
+        records = self.store.list_records(project_id=project_id, record_type="asset")
+        from vane.models import AssetDisposition
+        return [Asset(
+            asset_id=record["asset_id"], locator=record["locator"],
+            asset_type=record["asset_type"],
+            disposition=AssetDisposition(record["disposition"]),
+            discovered_from=record.get("discovered_from"), notes=record.get("notes", ""),
+        ) for record in records]
