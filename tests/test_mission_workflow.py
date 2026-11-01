@@ -25,9 +25,19 @@ def test_evidence_drives_mission_completion():
         "APPROVE", now, "master-key", "ok", envelope.expires_at)
     engine.authorize_mission(mission, envelope, approval)
     engine.start_mission(mission)
+    import pytest
+    from vane.errors import PolicyViolation
+    outside = EvidenceRecord("e-out", "p1", mission.mission_id, "http_observation",
+        "operator", now, "b" * 64, authorization_id="auth1",
+        collection_method="http_metadata",
+        metadata={"locator":"https://outside.test","method":"http_metadata"})
+    with pytest.raises(PolicyViolation):
+        engine.attach_evidence(mission, outside)
     evidence = EvidenceRecord("e1", "p1", mission.mission_id, "http_observation",
         "operator", now, "a" * 64, authorization_id="auth1",
-        metadata={"satisfies":["surface_map"]})
+        collection_method="http_metadata",
+        metadata={"satisfies":["surface_map"],"locator":"https://example.com",
+                  "method":"http_metadata"})
     engine.attach_evidence(mission, evidence)
     engine.request_evidence_review(mission)
     engine.complete_mission(mission)
