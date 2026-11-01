@@ -19,6 +19,7 @@ VANE ships a local stdio MCP server for local governance and workflow operations
 - `vane_transition_decision`: append an allowed decision-state transition with authority references, evidence references, optimistic revision checking, and event-head compare-and-swap.
 - `vane_arbitrate_claims`: compare competing claims through provenance, integrity, independence, reproducibility, freshness, relevance, and hard scope/policy/authority gates. It uses strict Pareto dominance, not numeric weighted scores or majority voting; ties and incomparable evidence remain UNRESOLVED.
 - `vane_get_decision_relationships`: rebuild a bounded project-scoped relationship view from the authoritative ledger, including dependencies, supersession, and shared evidence. The projection is disposable and is not persisted as an authority source.
+- `vane_evaluate_knowledge_reuse`: evaluate classification, provenance, ownership, quality, reuse authorization, sanitization, expiry/revocation, and target applicability before cross-project reuse. Allowed results are contextual leads only, never target-specific evidence or authorization.
 
 It does not expose live scanners, exploit execution, credential attacks, transaction submission, private-key operations, or target mutation.
 
