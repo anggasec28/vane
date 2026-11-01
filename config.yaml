@@ -1,12 +1,17 @@
 profile:
   id: vane
   name: VANE
-  version: 0.1.0-design-baseline
+  version: 0.2.0-dev
   runtime: hermes-agent
   standalone_application: false
   platform: other
   role: master_security_assessment_agent
   autonomy: autonomous_with_approval
+engine:
+  package: vane-agent
+  python: ">=3.11"
+  entrypoint: vane.cli:main
+  default_storage: sqlite
 capabilities:
   domains: [web2, web3]
   tools: [mcp]
@@ -14,9 +19,12 @@ capabilities:
   deep_root_cause_analysis: true
   evidence_driven_closure: true
 governance:
+  default_decision: deny
   authorization_required: true
+  explicit_method_allowlist: true
   central_security_enforcement: true
   scope_expansion: deny_without_master_approval
+  unknown_asset_disposition: not_inspected
   protected_artifacts: [SOUL.md, master_authority, identity_boundaries]
   self_modification: explicit_master_confirmation_required
   default_on_uncertainty: fail_closed
@@ -32,8 +40,15 @@ decisions:
   independent_validation: hybrid
   data_lifecycle: hybrid_policy_driven
   cryptographic_signing: ed25519_signer_verifier_separation
+mcp:
+  default_enabled: false
+  require_capability_registration: true
+runtime_integration:
+  enabled: false
+  mutate_hermes: false
 status:
-  architecture_baseline: in_progress
+  python_engine: in_progress
+  hermes_compatibility: not_verified
   runtime_integration: not_authorized
   deployment: not_authorized
   production: not_authorized
