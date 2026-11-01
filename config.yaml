@@ -14,6 +14,7 @@ mcp_servers:
     args: ["-m", "vane.mcp.server"]
     env:
       VANE_APPROVAL_KEYRING: "${HERMES_HOME}/config/approval-public-keys.json"
+      VANE_DB_PATH: "${HERMES_HOME}/data/vane.sqlite3"
     enabled: true
     timeout: 30
     connect_timeout: 15
@@ -31,5 +32,6 @@ mcp_servers:
         - vane_plan_recovery
         - vane_lifecycle_decision
         - vane_verify_event_chain
+        - vane_verify_project_integrity
       resources: false
       prompts: false
