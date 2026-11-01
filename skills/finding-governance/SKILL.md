@@ -22,7 +22,7 @@ Use when creating, triaging, validating, disputing, or closing a security findin
 
 ## Engine Tool
 
-Use `mcp__vane_engine__vane_validate_finding` with the finding JSON and its evidence records before marking a finding VALIDATED.
+Use `vane_validate_finding` with the finding JSON and its evidence records before marking a finding VALIDATED.
 
 ## Pitfalls
 - Do not promote an unverified hypothesis to a confirmed finding.
