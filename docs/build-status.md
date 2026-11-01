@@ -5,11 +5,11 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 202 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 205 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 57 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 58 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 18 JSON configuration/schema documents are present; schema meta-validation passed in CI.
-- GitHub Actions run #478 on commit `75ec83a` completed successfully: compileall passed, **110 tests passed**, and the CLI version/config check passed. The latest branch-head workflow is green.
+- GitHub Actions run #478 on commit `75ec83a` completed successfully: compileall passed, **110 tests passed**, and the CLI version/config check passed. The latest branch-head workflow #484 on commit `109d9d1` completed successfully: compileall passed, **118 tests passed**, and CLI version/config validation passed.
 
 ## Assessment workflow planner
 - Added an eleven-phase adaptive assessment plan builder and `vane_build_assessment_plan` MCP tool. It requires a current approved authorization envelope and explicitly IN_SCOPE assets, rejects out-of-scope assets, and labels every phase PLANNED. The planner performs no network requests, invokes no scanner, and does not spawn Hermes sessions.
