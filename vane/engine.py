@@ -8,6 +8,7 @@ from vane.models import (
 )
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
+from vane.security.digests import mission_closure_digest
 from vane.security.enforcement import SecurityEnforcer
 from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.storage.repository import SQLiteRepository
@@ -228,6 +229,29 @@ class VaneEngine:
         try:
             if self.repository is not None:
                 self.repository.save_mission(mission, actor=actor)
+        except Exception:
+            mission.status = previous_status
+            mission.history = previous_history
+            raise
+        return mission
+
+    def close_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
+                      closure_approval: Approval, *, actor: str = "master") -> Mission:
+        if mission.status != MissionStatus.COMPLETED:
+            raise PolicyViolation("Only independently validated COMPLETED missions can be closed.")
+        if envelope.envelope_id != mission.authorization_id or envelope.project_id != mission.project_id:
+            raise PolicyViolation("Closure envelope does not match the mission authorization.")
+        digest = mission_closure_digest(mission)
+        if (not self.enforcer.validate_approval(closure_approval, digest, None)
+                or closure_approval.expires_at is None
+                or closure_approval.expires_at > envelope.expires_at):
+            raise PolicyViolation("A valid Ed25519 closure approval bound to this mission is required.")
+        previous_status, previous_history = mission.status, list(mission.history)
+        transition(mission, MissionStatus.CLOSED, actor=actor,
+                   reason="Independent validation passed and Master closure approval verified.")
+        try:
+            if self.repository is not None:
+                self.repository.save_closed_mission(mission, closure_approval, actor=actor)
         except Exception:
             mission.status = previous_status
             mission.history = previous_history
