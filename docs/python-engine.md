@@ -1,7 +1,7 @@
 # Python Engine
 
 ## Package boundary
-The `vane/` package is the domain engine. Hermes remains the runtime and host for profiles, sessions, tools, and skills. The default Hermes adapter is descriptive/inert: it does not load profiles, call tools, or modify Hermes state.
+The `vane/` package is the domain engine. Hermes remains the runtime and host for profiles, sessions, tools, and skills. The default Hermes adapter is descriptive/inert: it does not load profiles, call tools, or modify Hermes state. The separate local MCP server exposes deterministic planning and validation tools.
 
 ## Core modules
 - `models.py`: authorization, mission, asset, evidence, and finding domain types.
@@ -35,5 +35,7 @@ pytest
 vane version
 vane check --config config/vane.example.json
 ```
+
+For a profile-backed engine instance, compose the configured public-key verifier and SQLite repository with `from vane.bootstrap import create_engine; engine = create_engine()`. The profile environment variables select the public keyring and database paths. Empty or missing public keys cause approval verification to fail closed.
 
 These steps install the Python package in an isolated environment. They do not install or modify Hermes, deploy services, authorize a target assessment, or enable MCP tools.
