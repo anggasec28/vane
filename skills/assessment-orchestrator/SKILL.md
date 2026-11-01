@@ -16,11 +16,12 @@ Use for a new assessment, a changed objective, a recovery decision, or a mission
 1. Identify the project, objective, and current mission state.
 2. Obtain the exact, current authorization envelope and approval reference from the Master.
 3. Use `mcp__vane_engine__vane_status` to confirm the local engine is available.
-4. Use `mcp__vane_engine__vane_scope_check` for every proposed asset and method before planning.
-5. Use `mcp__vane_engine__vane_plan_web2` for passive Web2 work planning. It does not make network requests.
-6. Keep Web2 and Web3 work items, tasks, evidence objectives, blockers, and findings separate.
-7. Adapt the plan when evidence is incomplete. Never treat a task result as mission closure.
-8. Request independent validation before recommending closure.
+4. Verify the signed mission approval with `mcp__vane_engine__vane_verify_mission_approval`.
+5. Use `mcp__vane_engine__vane_scope_check` for every proposed asset and method before planning.
+6. Use `mcp__vane_engine__vane_plan_web2` for passive Web2 work planning. It does not make network requests.
+7. Keep Web2 and Web3 work items, tasks, evidence objectives, blockers, and findings separate.
+8. Adapt the plan when evidence is incomplete. Never treat a task result as mission closure.
+9. Request independent validation before recommending closure.
 
 ## Pitfalls
 - Discovery is not authorization.
