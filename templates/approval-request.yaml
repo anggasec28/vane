@@ -1,0 +1,16 @@
+approval_id: ""
+requested_by: ""
+action: ""
+target: ""
+parameters: {}
+purpose: ""
+authorization_id: ""
+scope_version: 1
+requested_at: ""
+expires_at: ""
+impact: ""
+risks: []
+rollback: ""
+decision: PENDING
+approved_by: ""
+decided_at: ""
