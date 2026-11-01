@@ -91,6 +91,8 @@ def _verify_approval(envelope_json: str, approval_json: str, expected_digest: st
         keyring_path = os.environ.get("VANE_APPROVAL_KEYRING", "config/approval-public-keys.json")
         verifier = Ed25519ApprovalVerifier(load_public_keyring(keyring_path))
         valid = ((expected_approval_id is None or approval.approval_id == expected_approval_id)
+                 and approval.expires_at is not None
+                 and approval.expires_at <= envelope.expires_at
                  and approval.is_valid_for(expected_digest) and verifier.verify(approval))
         return {"verified": valid, "approval_id": approval.approval_id,
                 "key_id": approval.key_id, "execution_authorized": valid}
