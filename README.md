@@ -25,7 +25,7 @@ pytest
 vane version
 ```
 
-Python 3.11 or newer is required. The package has no mandatory third-party runtime dependencies. Development tools are installed with the `dev` extra.
+Python 3.11 or newer is required. JSON Schema validation uses `jsonschema` as a runtime dependency. Development tools are installed with the `dev` extra.
 
 ## Install as a Hermes profile
 
