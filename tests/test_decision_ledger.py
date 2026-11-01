@@ -112,3 +112,55 @@ def test_decisions_from_multiple_projects_share_one_authoritative_ledger(tmp_pat
     assert ledger.get("p2", "same-id").title == "P2 decision"
     assert len(ledger.list_all_decisions()) == 2
     assert store.verify_project_integrity(DecisionLedger.LEDGER_PROJECT_ID)
+
+
+def test_decision_dependencies_must_exist_and_cannot_be_superseded(tmp_path):
+    store = SQLiteStore(tmp_path / "dependencies.sqlite3")
+    _project(store)
+    ledger = DecisionLedger(store)
+    with pytest.raises(ValueError, match="does not exist"):
+        ledger.create(project_id="p1", decision_id="d1", title="D1", rationale="R",
+                      actor="vane", authority_reference="master-1", trigger="intake",
+                      dependency_decision_ids=("missing",))
+    ledger.create(project_id="p1", decision_id="d1", title="D1", rationale="R",
+                  actor="vane", authority_reference="master-1", trigger="intake")
+    ledger.create(project_id="p1", decision_id="d2", title="D2", rationale="R",
+                  actor="vane", authority_reference="master-2", trigger="intake",
+                  dependency_decision_ids=("d1",))
+    ledger.create(project_id="p1", decision_id="d3", title="D3", rationale="R",
+                  actor="vane", authority_reference="master-3", trigger="intake")
+    ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
+                      target=DecisionStatus.SUPERSEDED, actor="master",
+                      authority_reference="master-4", trigger="replace", rationale="R",
+                      superseded_by_decision_id="d3", superseded_by_revision=1)
+    with pytest.raises(ValueError, match="superseded"):
+        ledger.create(project_id="p1", decision_id="d4", title="D4", rationale="R",
+                      actor="vane", authority_reference="master-5", trigger="intake",
+                      dependency_decision_ids=("d1",))
+
+
+def test_decision_supersession_requires_existing_current_same_project_target(tmp_path):
+    store = SQLiteStore(tmp_path / "supersession.sqlite3")
+    _project(store)
+    ledger = DecisionLedger(store)
+    ledger.create(project_id="p1", decision_id="d1", title="D1", rationale="R",
+                  actor="vane", authority_reference="master-1", trigger="intake")
+    with pytest.raises(ValueError, match="must exist"):
+        ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
+                          target=DecisionStatus.SUPERSEDED, actor="master",
+                          authority_reference="master-2", trigger="replace", rationale="R",
+                          superseded_by_decision_id="missing", superseded_by_revision=1)
+    ledger.create(project_id="p1", decision_id="d2", title="D2", rationale="R",
+                  actor="vane", authority_reference="master-3", trigger="intake")
+    with pytest.raises(ValueError, match="revision"):
+        ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
+                          target=DecisionStatus.SUPERSEDED, actor="master",
+                          authority_reference="master-4", trigger="replace", rationale="R",
+                          superseded_by_decision_id="d2", superseded_by_revision=9)
+    result = ledger.transition(
+        project_id="p1", decision_id="d1", expected_revision=1,
+        target=DecisionStatus.SUPERSEDED, actor="master",
+        authority_reference="master-5", trigger="replace", rationale="R",
+        superseded_by_decision_id="d2", superseded_by_revision=1,
+    )
+    assert result.status == DecisionStatus.SUPERSEDED
