@@ -55,9 +55,10 @@ def asset_is_in_scope(locator: str, rules: tuple[ScopeRule, ...]) -> bool:
                 expected = urlsplit(rule.value)
                 if expected.port is not None and _effective_port(parsed) != expected.port:
                     continue
-                if expected.path not in ("", "/") and not parsed.path.startswith(expected.path):
+                base_path = expected.path.rstrip("/")
+                if base_path and parsed.path != base_path and not parsed.path.startswith(base_path + "/"):
                     continue
-                if expected.scheme and parsed.scheme and expected.scheme.lower() != parsed.scheme.lower():
+                if expected.scheme and expected.scheme.lower() != parsed.scheme.lower():
                     continue
             return True
         except ValueError:
