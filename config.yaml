@@ -62,6 +62,7 @@ mcp_servers:
         - vane_save_finding
         - vane_list_findings
         - vane_list_projects
+        - vane_arbitrate_claims
         - vane_create_decision
         - vane_get_decision
         - vane_list_decisions
