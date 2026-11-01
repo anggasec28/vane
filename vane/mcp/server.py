@@ -19,6 +19,7 @@ from vane.assessment.web3 import plan_contract_review
 from vane.evidence.chain import verify_event_chain
 from vane.decisions.ledger import DecisionStatus
 from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
+from vane.decisions.relationships import DecisionRelationshipIndex
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import render_markdown
@@ -256,6 +257,35 @@ def vane_list_projects() -> list[dict[str, Any]]:
                 else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
     return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
              "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
+def vane_get_decision_relationships(project_id: str, decision_id: str,
+                                    depth: int = 1) -> dict[str, Any]:
+    """Rebuild a project-scoped relationship view from the authoritative Decision Ledger."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    index = DecisionRelationshipIndex.rebuild(ledger, project_id)
+    related_ids = index.related(decision_id, depth=depth)
+    relations = [
+        {
+            "source_decision_id": item.source_decision_id,
+            "target_decision_id": item.target_decision_id,
+            "relationship": item.relationship.value,
+            "evidence_reference": item.evidence_reference,
+        }
+        for item in index.relationships
+        if item.source_decision_id == decision_id or item.target_decision_id == decision_id
+    ]
+    return {
+        "project_id": project_id,
+        "decision_id": decision_id,
+        "related_decision_ids": list(related_ids),
+        "relationships": relations,
+        "source": "authoritative_decision_ledger_rebuild",
+        "projection_persisted": False,
+    }
 
 
 @server.tool()
