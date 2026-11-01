@@ -11,6 +11,9 @@ from vane.models import (
 from vane.security.approval import Approval
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
+from vane.evidence.manager import validate_evidence
+from vane.findings.governance import validate_finding
+from copy import deepcopy
 
 
 class SQLiteRepository:
@@ -66,12 +69,17 @@ class SQLiteRepository:
         ) for r in records]
 
     def save_evidence(self, evidence: EvidenceRecord, *, actor: str = "collector") -> int:
+        validate_evidence(evidence)
         record = asdict(evidence)
         record["status"] = evidence.status.value
         return self.store.save_record(project_id=evidence.project_id, record_type="evidence",
             record_id=evidence.evidence_id, record=record, actor=actor)
 
     def save_finding(self, finding: Finding, *, actor: str = "analyst") -> int:
+        if finding.status in {FindingStatus.VALIDATED, FindingStatus.ACCEPTED}:
+            evidence = {eid: self.get_evidence(finding.project_id, eid)
+                        for eid in finding.evidence_ids}
+            validate_finding(deepcopy(finding), evidence)
         record = asdict(finding)
         record["status"] = finding.status.value
         return self.store.save_record(project_id=finding.project_id, record_type="finding",
