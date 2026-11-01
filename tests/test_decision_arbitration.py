@@ -58,3 +58,10 @@ def test_evidence_quality_rejects_out_of_range_values_and_duplicate_claim_ids():
             ClaimAssessment("same", (evidence,)),
             ClaimAssessment("same", (quality("e2", "s2", (2, 2, 2, 2, 2, 2)),)),
         ))
+
+def test_arbitration_rejects_boolean_quality_and_priority_values():
+    with pytest.raises(ValueError, match="integer"):
+        quality("e1", "s1", (True, 3, 3, 3, 3, 3))
+    evidence = quality("e1", "s1", (3, 3, 3, 3, 3, 3))
+    with pytest.raises(ValueError, match="integer"):
+        ClaimAssessment("claim-a", (evidence,), mission_priority=True)
