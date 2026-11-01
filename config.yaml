@@ -34,5 +34,23 @@ mcp_servers:
         - vane_lifecycle_decision
         - vane_verify_event_chain
         - vane_verify_project_integrity
+        - vane_save_asset
+        - vane_list_assets
+        - vane_list_evidence
+        - vane_save_finding
+        - vane_list_findings
+        - vane_create_project
+        - vane_create_mission
+        - vane_get_mission
+        - vane_list_missions
+        - vane_submit_mission
+        - vane_authorize_mission
+        - vane_start_mission
+        - vane_attach_evidence
+        - vane_add_blocker
+        - vane_clear_blocker
+        - vane_request_evidence_review
+        - vane_complete_mission
+        - vane_close_mission
       resources: false
       prompts: false
