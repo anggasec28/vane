@@ -1,12 +1,19 @@
-"""Stable digests used to bind approvals to exact authorization and action content."""
+"""Stable canonical digests used for authorization and approval signatures."""
 import hashlib
 import json
 from dataclasses import asdict
+from datetime import datetime
 from vane.models import AuthorizationEnvelope
+from vane.security.approval import Approval
+
+def _json_default(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    raise TypeError(f"Unsupported canonical JSON value: {type(value).__name__}")
 
 def _digest(payload: dict) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"),
-                           ensure_ascii=False, default=str).encode("utf-8")
+                           ensure_ascii=False, default=_json_default).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
 
 def authorization_digest(envelope: AuthorizationEnvelope) -> str:
@@ -15,8 +22,6 @@ def authorization_digest(envelope: AuthorizationEnvelope) -> str:
 def capability_action_digest(envelope: AuthorizationEnvelope, locator: str, method: str) -> str:
     return _digest({"authorization_digest": authorization_digest(envelope),
                     "locator": locator, "method": method.strip().lower()})
-
-from vane.security.approval import Approval
 
 def approval_signing_payload(approval: Approval) -> bytes:
     payload = {
@@ -30,4 +35,4 @@ def approval_signing_payload(approval: Approval) -> bytes:
         "rationale": approval.rationale,
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False, default=str).encode("utf-8")
+                      ensure_ascii=False, default=_json_default).encode("utf-8")
