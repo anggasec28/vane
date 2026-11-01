@@ -28,7 +28,7 @@ git clone https://github.com/anggasec28/vane.git
 cd vane
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[dev,mcp]'
+python -m pip install -e '.[dev,mcp,crypto]'
 pytest
 vane version
 vane check --config config/vane.example.json
