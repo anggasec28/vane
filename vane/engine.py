@@ -72,8 +72,7 @@ class VaneEngine:
                           approval: Approval, *, actor: str = "master") -> Mission:
         result = self.orchestrator.authorize_mission(mission, envelope, approval, actor=actor)
         if self.repository is not None:
-            self.repository.save_approval(envelope.project_id, approval, actor=actor)
-            self.repository.save_mission(result, actor=actor)
+            self.repository.save_authorized_mission(result, approval, actor=actor)
         return result
 
     def save_evidence(self, evidence: EvidenceRecord, *, actor: str = "collector") -> None:
