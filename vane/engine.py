@@ -7,6 +7,8 @@ from vane.core.state_machine import transition
 from vane.errors import PolicyViolation
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
+from vane.findings.reporting import ReportBundle, build_report
+from vane.findings.remediation import RemediationAction, validate_remediation, validate_remediation_graph
 from vane.models import (
     Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus, utc_now,
 )
@@ -353,6 +355,13 @@ class VaneEngine:
         for action in actions:
             validate_remediation(action, findings, known_action_ids)
 
+    def build_mission_report(self, mission: Mission, *, report_id: str,
+                             limitations: tuple[str, ...] = ()) -> ReportBundle:
+        """Assemble a report from the mission's stored evidence and finding records."""
+        evidence, findings = self._load_validation_inputs(mission)
+        return build_report(mission, findings, evidence,
+                            report_id=report_id, limitations=limitations)
+
     def close_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
                       closure_approval: Approval, *, actor: str = "master") -> Mission:
         if mission.status != MissionStatus.COMPLETED:
@@ -422,16 +431,26 @@ class VaneEngine:
 
     def complete_worker_task(self, task_id: str, result: dict) -> WorkerAssignment:
         project_id, _ = self._restore_worker_assignment(task_id)
+        previous = deepcopy(self.workers.get(task_id))
         assignment = self.workers.complete(task_id, result)
         if self.repository is not None:
-            self.repository.save_worker_assignment(project_id, assignment, actor="worker")
+            try:
+                self.repository.save_worker_assignment(project_id, assignment, actor="worker")
+            except Exception:
+                self.workers.restore(previous, replace=True)
+                raise
         return assignment
 
     def revoke_worker_task(self, task_id: str, *, actor: str, reason: str) -> WorkerAssignment:
         project_id, _ = self._restore_worker_assignment(task_id)
+        previous = deepcopy(self.workers.get(task_id))
         assignment = self.workers.revoke(task_id, actor=actor, reason=reason)
         if self.repository is not None:
-            self.repository.save_worker_assignment(project_id, assignment, actor=actor)
+            try:
+                self.repository.save_worker_assignment(project_id, assignment, actor=actor)
+            except Exception:
+                self.workers.restore(previous, replace=True)
+                raise
         return assignment
 
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
