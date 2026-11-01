@@ -269,24 +269,44 @@ def vane_arbitrate_claims(claims_json: str) -> dict[str, Any]:
         if not isinstance(item, dict):
             raise ValueError("Each claim must be a JSON object.")
         def parse_quality(value: dict[str, Any]) -> EvidenceQuality:
-            return EvidenceQuality(
-                evidence_id=str(value["evidence_id"]),
-                independence_group=str(value["independence_group"]),
-                provenance=int(value["provenance"]), integrity=int(value["integrity"]),
-                independence=int(value["independence"]),
-                reproducibility=int(value["reproducibility"]),
-                freshness=int(value["freshness"]), relevance=int(value["relevance"]),
-            )
+            if not isinstance(value, dict):
+                raise ValueError("Evidence quality entries must be JSON objects.")
+            evidence_id = value.get("evidence_id")
+            independence_group = value.get("independence_group")
+            if not isinstance(evidence_id, str) or not evidence_id.strip():
+                raise ValueError("Evidence quality requires a non-empty evidence_id.")
+            if not isinstance(independence_group, str) or not independence_group.strip():
+                raise ValueError("Evidence quality requires an independence_group.")
+            dimensions = ("provenance", "integrity", "independence",
+                          "reproducibility", "freshness", "relevance")
+            scores = [value.get(name) for name in dimensions]
+            if any(type(score) is not int or not 0 <= score <= 3 for score in scores):
+                raise ValueError("Evidence quality dimensions must be integer values from 0 to 3.")
+            return EvidenceQuality(evidence_id, independence_group, *scores)
+
+        def parse_flag(name: str) -> bool:
+            value = item.get(name, True)
+            if type(value) is not bool:
+                raise ValueError(f"{name} must be a JSON boolean.")
+            return value
+
+        claim_id = item.get("claim_id")
+        if not isinstance(claim_id, str) or not claim_id.strip():
+            raise ValueError("Each claim requires a non-empty claim_id.")
+        supporting = item.get("supporting_evidence", [])
+        contradicting = item.get("contradicting_evidence", [])
+        if not isinstance(supporting, list) or not isinstance(contradicting, list):
+            raise ValueError("Supporting and contradicting evidence must be JSON arrays.")
         claims.append(ClaimAssessment(
-            claim_id=str(item["claim_id"]),
-            supporting_evidence=tuple(parse_quality(x) for x in item.get("supporting_evidence", [])),
-            contradicting_evidence=tuple(parse_quality(x) for x in item.get("contradicting_evidence", [])),
-            scope_valid=bool(item.get("scope_valid", True)),
-            policy_valid=bool(item.get("policy_valid", True)),
-            authority_valid=bool(item.get("authority_valid", True)),
-            mission_priority=int(item.get("mission_priority", 0)),
-            impact=int(item.get("impact", 0)),
-            specialist_competence=int(item.get("specialist_competence", 0)),
+            claim_id=claim_id,
+            supporting_evidence=tuple(parse_quality(x) for x in supporting),
+            contradicting_evidence=tuple(parse_quality(x) for x in contradicting),
+            scope_valid=parse_flag("scope_valid"),
+            policy_valid=parse_flag("policy_valid"),
+            authority_valid=parse_flag("authority_valid"),
+            mission_priority=item.get("mission_priority", 0),
+            impact=item.get("impact", 0),
+            specialist_competence=item.get("specialist_competence", 0),
         ))
     result = arbitrate_claims(claims)
     return {
