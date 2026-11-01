@@ -1,0 +1,20 @@
+authorization_id: ""
+owner_authority: ""
+project_id: ""
+case_id: ""
+valid_from: ""
+valid_until: ""
+targets:
+  include: []
+  exclude: []
+allowed_actions: []
+allowed_methods: []
+limits:
+  requests_per_second: null
+  concurrency: null
+data_handling:
+  allowed_classes: []
+  prohibited_classes: []
+approvals_required: []
+stop_conditions: []
+scope_version: 1
