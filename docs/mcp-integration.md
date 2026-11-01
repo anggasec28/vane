@@ -1,6 +1,6 @@
 # MCP and Skill Integration
 
-MCP servers expose tools; skills describe when and how VANE uses capabilities. Neither tool discovery nor successful connection grants authorization.
+MCP servers expose tools; skills describe when and how VANE uses capabilities. Neither tool discovery nor successful connection grants authorization. The local VANE stdio server manages project/mission records, assets, evidence, findings, approvals, planning, and integrity checks; it performs no target requests or worker-session spawning.
 
 For each tool register stable id, provider/server, operations, input/output schema, side effects, data sensitivity, approval requirements, scope semantics, timeout/retry behavior, audit fields, and failure modes.
 
