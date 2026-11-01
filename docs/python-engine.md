@@ -13,7 +13,7 @@ The `vane/` package is the domain engine. Hermes remains the runtime and host fo
 - `projects/`: project registry.
 - `recovery/`: bounded evidence-driven recovery planning.
 - `lifecycle/`: data retention/disposition decisions.
-- `mcp/`: capability allowlist.
+- `mcp/`: capability allowlist and local stdio MCP server.
 - `storage/`: SQLite event persistence.
 - `crypto/`: external Ed25519 signing contract.
 - `integrations/hermes/`: host adapter contract.
@@ -31,7 +31,7 @@ python -m venv .venv
 python -m pip install -e '.[dev,mcp]'
 pytest
 vane version
-vane check --config config.yaml
+vane check --config config/vane.example.json
 ```
 
 These steps install the Python package in an isolated environment. They do not install or modify Hermes, deploy services, authorize a target assessment, or enable MCP tools.
