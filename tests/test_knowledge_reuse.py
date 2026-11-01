@@ -69,3 +69,10 @@ def test_revoked_expired_and_same_project_knowledge_is_denied():
     assert evaluate_knowledge_reuse(candidate(revoked=True), now=now).status == KnowledgeReuseStatus.DENY
     assert evaluate_knowledge_reuse(candidate(expires_at=now - timedelta(seconds=1)), now=now).status == KnowledgeReuseStatus.DENY
     assert evaluate_knowledge_reuse(candidate(target_project_id="project-a"), now=now).status == KnowledgeReuseStatus.DENY
+
+
+def test_knowledge_candidate_rejects_malformed_identity_and_naive_expiry():
+    with pytest.raises(ValueError, match="knowledge_id"):
+        candidate(knowledge_id=7)
+    with pytest.raises(ValueError, match="timezone-aware"):
+        candidate(expires_at=datetime(2030, 1, 1))
