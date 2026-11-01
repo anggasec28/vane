@@ -368,7 +368,9 @@ class VaneEngine:
         decision = self.orchestrator.authorize_observation(envelope, locator, method,
             mission_approval=mission_approval, action_approval=action_approval,
             requires_human_approval=requires_human_approval)
-        if (decision.allowed and action_approval is not None and self.repository is not None
-                and envelope is not None and (requires_human_approval or method.strip().lower() in HIGH_RISK_METHODS)):
-            self.repository.save_approval(envelope.project_id, action_approval, actor="master")
+        if (decision.allowed and action_approval is not None and envelope is not None
+                and (requires_human_approval or method.strip().lower() in HIGH_RISK_METHODS)):
+            self._approval_cache[action_approval.approval_id] = action_approval
+            if self.repository is not None:
+                self.repository.save_approval(envelope.project_id, action_approval, actor="master")
         return decision
