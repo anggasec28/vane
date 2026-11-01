@@ -77,9 +77,11 @@ class WorkerOrchestrator:
         if assignment.status != WorkerTaskStatus.DELEGATED:
             raise ValueError("Only a delegated task can be completed.")
         validate_worker_result(result, assignment.task)
-        if set(result.get("methods", [])) - set(assignment.task.allowed_methods):
+        reported_methods = {item.casefold() for item in result["methods"]}
+        allowed_methods = {item.casefold() for item in assignment.task.allowed_methods}
+        if reported_methods - allowed_methods:
             raise PermissionError("Worker result reports methods outside delegated authority.")
-        if self.registry is not None and "output" in result:
+        if self.registry is not None:
             self.registry.validate_output(assignment.task.worker_profile, result["output"])
         assignment.result = dict(result)
         assignment.status = WorkerTaskStatus.COMPLETED
