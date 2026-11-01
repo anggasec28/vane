@@ -8,8 +8,8 @@ Package version: 0.2.0 development baseline.
 - 188 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
 - 51 MCP tools defined in the server and exactly matched by the profile tool allowlist.
-- 11 JSON configuration/schema documents are present; the new decision schema is awaiting a clean CI rerun.
-- GitHub Actions run #392 on code commit `f202af6` completed successfully: compileall passed, all 72 tests passed, and the CLI version/config check passed. Later commits on this branch are documentation/manifest-only; no source-code changes were made after the tested code commit.
+- 11 JSON configuration/schema documents are present; all schema meta-validation passed in GitHub Actions run #406.
+- GitHub Actions run #406 on code commit `8a7d16f` completed successfully: compileall passed, all 77 tests passed, and the CLI version/config check passed. Subsequent source commits add stricter arbitration input validation and one additional test; those latest changes still need a CI rerun.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
@@ -31,7 +31,8 @@ Package version: 0.2.0 development baseline.
 - Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
 - JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
-- Append-only Central Decision Ledger foundation: immutable full decision snapshots in the project event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, and event-head compare-and-swap for concurrent append safety. Exposed through the VANE engine facade and four allowlisted MCP tools; unit tests: 72 passed in GitHub Actions run #392; compileall and CLI checks also passed.
+- Append-only Central Decision Ledger foundation: immutable full decision snapshots in the project event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, event-head compare-and-swap for concurrent append safety, and JSON Schema validation on every append. Exposed through the VANE engine facade and four allowlisted MCP tools.
+- Conservative hierarchical evidence-weighted arbitration: six evidence-quality dimensions, strict Pareto dominance without arbitrary weights, hard scope/policy/authority gates, and explicit UNRESOLVED outcomes for ties, incomparable evidence, or material contradictions. Exposed through a fifth decision-related MCP tool. Initial implementation passed the 77-test CI run; later strict input-type hardening and one extra test await rerun.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
