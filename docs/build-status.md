@@ -5,9 +5,9 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 186 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 188 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 50 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 51 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 11 JSON configuration/schema documents are present; the new decision schema is awaiting a clean CI rerun.
 - GitHub Actions run #392 on code commit `f202af6` completed successfully: compileall passed, all 72 tests passed, and the CLI version/config check passed. Later commits on this branch are documentation/manifest-only; no source-code changes were made after the tested code commit.
 
