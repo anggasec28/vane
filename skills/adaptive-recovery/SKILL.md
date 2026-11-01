@@ -25,6 +25,9 @@ Use when an observation is blocked, incomplete, inconsistent, or unavailable.
 
 Use `vane_plan_recovery` to classify a recovery option. Follow its approval requirement; never convert a recommendation into permission.
 
+## Blocker Tools
+Use `vane_add_blocker` to persist a blocker and `vane_clear_blocker` only when the exact cause is resolved. A blocked mission resumes only after its blocker list is empty.
+
 ## Pitfalls
 - Never bypass a block page, rate limit, authentication gate, or scope denial.
 - Never silently expand to related assets.
