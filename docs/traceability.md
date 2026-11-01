@@ -52,6 +52,8 @@ Decision Ledger source: `vane/decisions/ledger.py`; storage CAS: `vane/storage/s
 | MK-4 A | cryptographic policy and verifier | signer/verifier separation and custody review | PARTIAL |
 | L3/R-12 unresolved | decision register and cryptographic trust policy | no false implementation claim | OPEN / NOT IMPLEMENTED |
 
+Conflict and adjudication register: `docs/architecture-conflicts.md`. CF-01 through CF-07 remain OPEN; Operational Intelligence architecture remains unresolved; L3/R-12 and the listed audit dependencies retain their existing OPEN/NOT_READY states.
+
 ## Mandatory traceability rules
 
 1. Every blueprint requirement must map to a code artifact, policy/documentation artifact, or an explicit NOT_IMPLEMENTED / NOT_VERIFIED gap.
