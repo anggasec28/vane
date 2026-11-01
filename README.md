@@ -1,25 +1,46 @@
 # VANE
 
-VANE is the master security-assessment agent profile designed to operate inside the Hermes Agent runtime. Hermes is the runtime; VANE is the identity, policy, skills, orchestration, and tool-governance layer. VANE is not a standalone replacement for Hermes.
+**VANE is a modular security-assessment agent designed to run inside Hermes Agent.** Hermes remains the runtime; VANE supplies the identity, Python domain engine, policies, skills, orchestration, schemas, and governed capability adapters.
 
-## Mission
-Deliver deep, evidence-led Web2 and Web3 security assessments within an explicitly approved authorization envelope. Trace relevant dependencies and root causes without expanding scope or bypassing target restrictions.
+## What is in this repository
+- Protected agent identity and Master authority contract: `SOUL.md`.
+- Python 3.11+ engine under `vane/`.
+- Central authorization, method allowlisting, approval records, and policy enforcement.
+- Web2/Web3 assessment planning, asset disposition, and in-scope root-cause graph.
+- Evidence provenance, SHA-256 integrity, evidence-gated mission closure, and finding governance.
+- Adaptive recovery, data lifecycle policy, project registry, SQLite event persistence.
+- Worker delegation contracts, independent validation, MCP capability registry.
+- External Ed25519 signing interface with private-key custody outside the engine.
+- Hermes adapter contract, skills, policies, schemas, templates, and tests.
 
-## Operating contract
-- Platform: Other / Hermes Agent runtime.
-- Tools: MCP tools + skills.
-- Autonomy: autonomous with approval, bounded by the authorization envelope.
-- Workflow: adaptive hybrid and evidence-driven.
-- Finding governance: hybrid.
-- Evidence management: hybrid.
-- Project/case operations: hybrid.
-- Security enforcement: central.
-- Independent validation: hybrid.
+## Quick start
+```bash
+git clone https://github.com/anggasec28/vane.git
+cd vane
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e '.[dev]'
+pytest
+vane version
+```
 
-## Protected authority
-`SOUL.md`, Master authority, and identity boundaries are protected. Self-modification requires explicit Master confirmation after explanation of exact changes, rationale, impact, and risks.
+Python 3.11 or newer is required. The package has no mandatory third-party runtime dependencies. Development tools are installed with the `dev` extra.
 
-## Build status
-This repository is the VANE profile source of truth. The architecture baseline is being populated. It is not an installation package and does not authorize Hermes runtime, server, deployment, or production changes.
+## Architecture
+- **Hermes Agent:** runtime, sessions, profile loading, tool execution.
+- **VANE profile:** identity, authority, policy, skills, and operating contract.
+- **VANE Python engine:** domain models, policy decision point, orchestration, evidence, findings, persistence, validation.
+- **MCP/tools:** explicitly registered capabilities, disabled by default unless configured and approved.
 
-See [architecture](docs/architecture.md), [decisions](docs/master-decisions.md), [build status](docs/build-status.md), and [traceability](docs/traceability.md).
+See [Python engine](docs/python-engine.md), [architecture](docs/architecture.md), [security model](docs/security-model.md), [Master decisions](docs/master-decisions.md), and [build status](docs/build-status.md).
+
+## Security defaults
+Default deny. A valid authorization envelope must explicitly cover the asset and method. Discovery does not grant scope. Workers inherit a strict subset of authority. Unknown or out-of-scope assets are not inspected. Task completion is not assessment closure. MCP capabilities are disabled by default. No private signing key belongs in this repository or engine.
+
+## Important boundaries
+The default codebase contains planning, policy, validation, and adapter contracts. It does not ship an enabled live scanner, exploit runner, transaction sender, key manager, or autonomous scope expansion. The default Hermes adapter is inert and does not modify Hermes runtime state.
+
+Cloning and installing this Python package do not install, configure, restart, or deploy Hermes. Hermes-native profile compatibility and runtime integration still require a separate compatibility and approval gate.
+
+## Current authority status
+Hermes runtime/server inspection or mutation: **NOT AUTHORIZED**. Deployment: **NOT AUTHORIZED**. Live target assessment: requires a separate valid authorization envelope and enabled adapter. L3/R-12: **OPEN**. Gate 0b: **NOT PASSED**. Phase 1: **LOCKED**. Production: **NOT AUTHORIZED**.
