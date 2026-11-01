@@ -21,6 +21,8 @@ mcp_servers:
       include:
         - vane_status
         - vane_scope_check
+        - vane_verify_mission_approval
+        - vane_verify_action_approval
         - vane_plan_web2
         - vane_plan_web3
         - vane_validate_evidence
