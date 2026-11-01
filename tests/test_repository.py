@@ -32,3 +32,16 @@ def test_typed_repository_persists_domain_records_and_audit_chain(tmp_path):
     db.close()
     assert store.verify_project_chain("p1")
     assert not store.verify_project_integrity("p1")
+
+def test_read_only_store_verifies_without_allowing_mutation(tmp_path):
+    import pytest
+    path = tmp_path / "readonly.sqlite3"
+    store = SQLiteStore(path)
+    store.save_record(project_id="p1", record_type="project", record_id="p1",
+        record={"name": "P", "owner": "master", "created_at": datetime.now(timezone.utc).isoformat()},
+        actor="master")
+    readonly = SQLiteStore(path, read_only=True)
+    assert readonly.verify_project_integrity("p1")
+    with pytest.raises(PermissionError):
+        readonly.append_chained_event(project_id="p1", event_type="forbidden",
+                                      actor="test", payload={})
