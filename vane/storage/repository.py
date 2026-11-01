@@ -51,6 +51,21 @@ class SQLiteRepository:
         ])
         return revisions[0], revisions[1]
 
+    def save_closed_mission(self, mission: Mission, approval: Approval,
+                            *, actor: str = "master") -> tuple[int, int]:
+        mission_record = asdict(mission)
+        mission_record["status"] = mission.status.value
+        mission_record["required_evidence"] = sorted(mission.required_evidence)
+        mission_record["completed_evidence"] = sorted(mission.completed_evidence)
+        approval_record = asdict(approval)
+        revisions = self.store.save_records_atomic([
+            {"project_id": mission.project_id, "record_type": "approval",
+             "record_id": approval.approval_id, "record": approval_record, "actor": actor},
+            {"project_id": mission.project_id, "record_type": "mission",
+             "record_id": mission.mission_id, "record": mission_record, "actor": actor},
+        ])
+        return revisions[0], revisions[1]
+
     def save_mission(self, mission: Mission, *, actor: str = "master") -> int:
         record = asdict(mission)
         record["status"] = mission.status.value
