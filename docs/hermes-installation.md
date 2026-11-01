@@ -39,7 +39,7 @@ cd ~/.hermes/profiles/vane
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e '.[mcp]'
+python -m pip install -e '.[mcp,crypto]'
 vane version
 vane check --config config/vane.example.json
 ```
@@ -64,7 +64,7 @@ Then, from the VANE profile directory, refresh the editable Python package if de
 
 ```bash
 . .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e '.[mcp,crypto]'
 ```
 
 ## Scope of this installer
