@@ -19,7 +19,8 @@ Use before a mission is marked completed or closed, and when a finding is promot
 4. Confirm there are no unresolved blockers or uninspected assets misrepresented as covered.
 5. Review finding claims and evidence links independently.
 6. Return PASS, FAIL, or INDETERMINATE per check. Do not collapse unknown into pass.
-7. Keep validator identity and rationale in the validation record.
+7. After PASS, submit the completed mission snapshot for Master closure approval and verify it with `vane_verify_closure_approval`.
+8. Keep validator identity and rationale in the validation record.
 
 ## Engine Tool
 
