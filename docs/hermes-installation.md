@@ -46,6 +46,16 @@ vane check --config config/vane.example.json
 
 If your Hermes installation stores named profiles in a different home directory, use the path reported by `hermes profile info vane`. Keep the virtual environment and local database out of Git.
 
+## Configure the public approval keyring
+
+Create the local keyring from the example:
+
+```bash
+cp config/approval-public-keys.example.json config/approval-public-keys.json
+```
+
+Populate `keys` with the key IDs and base64-encoded 32-byte Ed25519 public keys supplied by the separate signing authority. The private key never belongs in this profile or repository. Until a trusted public key is configured, mission/action approval verification fails closed. The local keyring path is ignored by Git.
+
 ## First-run checks
 1. Read `SOUL.md` and `policies/` before using the profile.
 2. Confirm `config/vane.example.json` retains default-deny policy, external MCP capabilities disabled by default, the local VANE governance MCP server limited to deterministic tools, and external signing custody.
