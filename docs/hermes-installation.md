@@ -3,7 +3,7 @@
 VANE is packaged as a Hermes profile distribution. Hermes remains the runtime. Installing the distribution creates a separate profile named `vane`; it does not replace the default profile or modify the Hermes runtime source.
 
 ## Requirements
-- Hermes Agent with profile-distribution support (manifest declares Hermes >= 0.22.0).
+- Hermes Agent with profile-distribution support (manifest declares Hermes >= 0.12.0).
 - Git available to Hermes.
 - Python 3.11+ for the VANE Python engine.
 - A model/provider configured for the new profile.
@@ -69,6 +69,8 @@ Update the profile distribution with:
 ```bash
 hermes profile update vane
 ```
+
+Hermes preserves local `config.yaml` overrides during updates by default. If the shipped MCP server definition changes, merge the new `mcp_servers.vane_engine` block into the profile config. Use `hermes profile update vane --force-config` only when you intentionally want to reset the profile config to the repository version.
 
 Then, from the VANE profile directory, refresh the editable Python package if dependencies or package metadata changed:
 
