@@ -1,14 +1,56 @@
-# Local-only and sensitive material
+# Credentials and secrets
 .env
 .env.*
+.env.EXAMPLE
+auth.json
 *.pem
 *.key
 *.p12
 *.pfx
 secrets/
 private/
+
+# Hermes user state and runtime data
+memories/
+sessions/
+logs/
+workspace/
+plans/
+home/
+state.db*
+gateway.pid
+gateway_state.json
+processes.json
+auth.lock
+active_profile
+cache/
+*_cache/
+backups/
+checkpoints/
+sandboxes/
+
+# VANE local data
+data/
 target-data/
 evidence-local/
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-shm
+*.db-wal
+
+# Python/build/test artifacts
 __pycache__/
+*.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
 .venv/
+venv/
+build/
+dist/
+*.egg-info/
