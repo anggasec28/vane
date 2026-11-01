@@ -1,6 +1,7 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
 from copy import deepcopy
+from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.core.state_machine import transition
 from vane.errors import PolicyViolation
 from vane.evidence.manager import validate_evidence
@@ -32,6 +33,8 @@ class VaneEngine:
         self.workers = WorkerOrchestrator()
 
     def register_project(self, project_id: str, name: str, owner: str) -> Project:
+        if not all(value.strip() for value in (project_id, name, owner)):
+            raise ValueError("project_id, name, and owner are required.")
         try:
             self.projects.get(project_id)
         except KeyError:
@@ -63,6 +66,8 @@ class VaneEngine:
 
     def create_mission(self, project_id: str, objective: str,
                        required_evidence: set[str] | None = None) -> Mission:
+        if not objective.strip():
+            raise ValueError("Mission objective must not be empty.")
         project = self.get_project(project_id)
         mission = Mission.create(project_id, objective)
         mission.required_evidence = set(required_evidence or set())
@@ -161,19 +166,18 @@ class VaneEngine:
             raise
         return mission
 
-    def save_asset(self, project_id: str, asset: Asset, *, actor: str = "mapper") -> Asset:
-        project = self.get_project(project_id)
+    def save_asset(self, envelope: AuthorizationEnvelope, asset: Asset,
+                   *, actor: str = "mapper") -> Asset:
+        classify_discovered_asset(asset, envelope)
+        project = self.get_project(envelope.project_id)
         if self.repository is not None:
-            self.repository.save_asset(project_id, asset, actor=actor)
+            self.repository.save_asset(envelope.project_id, asset, actor=actor)
         project.assets[asset.asset_id] = asset
         return asset
 
     def save_evidence(self, evidence: EvidenceRecord, *, actor: str = "collector") -> None:
-        validate_evidence(evidence)
-        project = self.get_project(evidence.project_id)
-        if self.repository is not None:
-            self.repository.save_evidence(evidence, actor=actor)
-        project.evidence[evidence.evidence_id] = evidence
+        mission = self.get_mission(evidence.project_id, evidence.mission_id)
+        self.attach_evidence(mission, evidence, actor=actor)
 
     def attach_evidence(self, mission: Mission, evidence: EvidenceRecord,
                         *, actor: str = "collector") -> Mission:
