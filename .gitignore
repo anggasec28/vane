@@ -1,0 +1,14 @@
+# Local-only and sensitive material
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+private/
+target-data/
+evidence-local/
+__pycache__/
+.pytest_cache/
+.venv/
