@@ -8,8 +8,6 @@ class SecurityEnforcer:
         self._policy = policy or PolicyEngine()
     def authorize_action(self, envelope: AuthorizationEnvelope | None, locator: str,
                          method: str, *, approval_required: bool = False,
-                         approval: Approval | None = None,
-                         approval_subject_digest: str | None = None) -> PolicyDecision:
+                         approval: Approval | None = None) -> PolicyDecision:
         return self._policy.evaluate(envelope=envelope, locator=locator, method=method,
-            requires_human_approval=approval_required, approval=approval,
-            approval_subject_digest=approval_subject_digest)
+            requires_human_approval=approval_required, approval=approval)
