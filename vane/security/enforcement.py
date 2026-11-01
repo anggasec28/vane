@@ -1,5 +1,6 @@
-"""Single enforcement facade used by capability adapters."""
+"""Single enforcement facade used by every capability adapter."""
 from vane.models import AuthorizationEnvelope
+from vane.security.approval import Approval
 from vane.security.policy_engine import PolicyDecision, PolicyEngine
 
 class SecurityEnforcer:
@@ -7,6 +8,8 @@ class SecurityEnforcer:
         self._policy = policy or PolicyEngine()
     def authorize_action(self, envelope: AuthorizationEnvelope | None, locator: str,
                          method: str, *, approval_required: bool = False,
-                         approved: bool = False) -> PolicyDecision:
+                         approval: Approval | None = None,
+                         approval_subject_digest: str | None = None) -> PolicyDecision:
         return self._policy.evaluate(envelope=envelope, locator=locator, method=method,
-            requires_human_approval=approval_required, human_approved=approved)
+            requires_human_approval=approval_required, approval=approval,
+            approval_subject_digest=approval_subject_digest)
