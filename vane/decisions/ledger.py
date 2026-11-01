@@ -219,6 +219,7 @@ class DecisionLedger:
 
     def _append(self, snapshot: DecisionSnapshot, *, expected_revision: int) -> DecisionSnapshot:
         _validate_snapshot(snapshot)
+        validate_document(_serialize(snapshot), "decision-snapshot.schema.json")
         latest = {item.decision_id: item for item in self.list_decisions(snapshot.project_id)}
         for dependency_id in snapshot.dependency_decision_ids:
             if dependency_id not in latest:
