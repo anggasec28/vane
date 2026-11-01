@@ -25,6 +25,7 @@ The signature payload is the canonical JSON bytes. The verifier loads the public
 ## Subject digest
 - Mission approval: SHA-256 of the canonical authorization-envelope object.
 - Action approval: SHA-256 of canonical JSON containing `authorization_digest`, exact `locator`, and lowercased `method`.
+- Closure approval: SHA-256 of the completed mission snapshot, including required/completed evidence, blockers, authorization ID, and transition history.
 
 An approval for one envelope or action cannot be reused for a different one. Mission approval ID is tied to the envelope's `approval_id`; action approvals have their own IDs and bind to their action digest.
 
