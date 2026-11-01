@@ -6,7 +6,9 @@ def test_example_configuration_is_fail_closed(tmp_path):
     path = tmp_path / "config.json"
     path.write_text(json.dumps({
         "policy": {"default_decision": "deny", "require_authorization_envelope": True,
-                   "require_explicit_method_allowlist": True},
+                   "require_explicit_method_allowlist": True,
+                   "high_risk_methods": ["active_scan", "exploit_validation", "credential_test",
+                       "transaction_submit", "state_change", "data_export", "destructive_action"]},
         "mcp": {"default_enabled": False},
         "signing": {"private_key_in_engine": False},
         "approval_verification": {"algorithm": "Ed25519", "fail_closed_if_unavailable": True}
