@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Iterable
 
@@ -87,3 +87,46 @@ def validate_timeline_event(event: CaseTimelineEvent) -> None:
         raise PolicyViolation("Case timeline timestamp must be timezone-aware.")
     if event.occurred_at > datetime.now(timezone.utc):
         raise PolicyViolation("Case timeline event cannot be future-dated.")
+
+
+class SLAState(StrEnum):
+    ON_TRACK = "ON_TRACK"
+    DUE_SOON = "DUE_SOON"
+    OVERDUE = "OVERDUE"
+    BLOCKED = "BLOCKED"
+    COMPLETE = "COMPLETE"
+
+
+@dataclass(frozen=True, slots=True)
+class CaseSLAResult:
+    item_id: str
+    state: SLAState
+    seconds_to_due: int | None
+    escalation_recommended: bool
+    suggested_escalation_level: int
+
+
+def evaluate_case_sla(item: CaseWorkItem, *, now: datetime | None = None,
+                      warning_window: timedelta = timedelta(hours=24)) -> CaseSLAResult:
+    """Evaluate SLA state without scheduling, mutating, or auto-escalating a case."""
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None or current.utcoffset() is None:
+        raise PolicyViolation("SLA evaluation time must be timezone-aware.")
+    if item.due_at.tzinfo is None or item.due_at.utcoffset() is None:
+        raise PolicyViolation("Case due_at must be timezone-aware.")
+    if warning_window < timedelta(0):
+        raise ValueError("warning_window cannot be negative.")
+    if item.status in {WorkItemStatus.DONE, WorkItemStatus.CANCELLED}:
+        return CaseSLAResult(item.item_id, SLAState.COMPLETE, None, False, item.escalation_level)
+    if item.status == WorkItemStatus.BLOCKED:
+        return CaseSLAResult(item.item_id, SLAState.BLOCKED, None, True, item.escalation_level + 1)
+    remaining = item.due_at - current
+    seconds = int(remaining.total_seconds())
+    if seconds < 0:
+        return CaseSLAResult(item.item_id, SLAState.OVERDUE, seconds, True,
+                             item.escalation_level + 1)
+    if remaining <= warning_window:
+        return CaseSLAResult(item.item_id, SLAState.DUE_SOON, seconds, False,
+                             item.escalation_level)
+    return CaseSLAResult(item.item_id, SLAState.ON_TRACK, seconds, False,
+                         item.escalation_level)
