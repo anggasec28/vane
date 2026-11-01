@@ -6,6 +6,7 @@ is exposed by this server. Hermes connects over stdio after the Python extra is 
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from typing import Any
 
@@ -24,6 +25,10 @@ from vane.models import (
 )
 from vane.recovery.planner import plan_recovery
 from vane.security.authorization import require_authorized
+from vane.security.approval import Approval
+from vane.security.digests import authorization_digest, capability_action_digest
+from vane.crypto.approval_verifier import Ed25519ApprovalVerifier
+from vane.crypto.keyring import load_public_keyring
 from vane.security.serialization import authorization_from_dict
 from vane.validation.independent import validate_mission_closure
 
@@ -60,11 +65,55 @@ def vane_scope_check(envelope_json: str, locator: str, method: str) -> dict[str,
     try:
         envelope = authorization_from_dict(json.loads(envelope_json))
         require_authorized(envelope, locator, method)
-        return {"allowed": True, "decision": "ALLOW", "envelope_id": envelope.envelope_id,
-                "locator": locator, "method": method}
+        return {"scope_covered": True, "decision": "SCOPE_COVERED_NOT_EXECUTION_AUTHORIZATION",
+                "envelope_id": envelope.envelope_id, "locator": locator, "method": method,
+                "execution_authorized": False}
     except Exception as exc:
-        return {"allowed": False, "decision": "DENY", "reason": str(exc),
-                "locator": locator, "method": method}
+        return {"scope_covered": False, "decision": "SCOPE_DENIED", "reason": str(exc),
+                "locator": locator, "method": method, "execution_authorized": False}
+
+
+def _approval_from_dict(item: dict[str, Any]) -> Approval:
+    decided = datetime.fromisoformat(str(item["decided_at"]).replace("Z", "+00:00"))
+    expiry = item.get("expires_at")
+    expires_at = datetime.fromisoformat(str(expiry).replace("Z", "+00:00")) if expiry else None
+    return Approval(str(item["approval_id"]), str(item["approver"]),
+        str(item["subject_digest"]), str(item["decision"]), decided,
+        str(item["key_id"]), str(item["signature"]), expires_at,
+        str(item.get("rationale", "")))
+
+
+def _verify_approval(envelope_json: str, approval_json: str, expected_digest: str) -> dict[str, Any]:
+    try:
+        envelope = authorization_from_dict(json.loads(envelope_json))
+        approval = _approval_from_dict(json.loads(approval_json))
+        keyring_path = os.environ.get("VANE_APPROVAL_KEYRING", "config/approval-public-keys.json")
+        verifier = Ed25519ApprovalVerifier(load_public_keyring(keyring_path))
+        valid = (approval.approval_id == envelope.approval_id
+                 and approval.is_valid_for(expected_digest) and verifier.verify(approval))
+        return {"verified": valid, "approval_id": approval.approval_id,
+                "key_id": approval.key_id, "execution_authorized": valid}
+    except Exception as exc:
+        return {"verified": False, "execution_authorized": False, "reason": str(exc)}
+
+
+@server.tool()
+def vane_verify_mission_approval(envelope_json: str, approval_json: str) -> dict[str, Any]:
+    """Verify the Ed25519 approval bound to the exact authorization envelope."""
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    return _verify_approval(envelope_json, approval_json, authorization_digest(envelope))
+
+
+@server.tool()
+def vane_verify_action_approval(envelope_json: str, approval_json: str,
+                                locator: str, method: str) -> dict[str, Any]:
+    """Verify the Ed25519 approval bound to one exact asset and method."""
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    require_authorized(envelope, locator, method)
+    digest = capability_action_digest(envelope, locator, method)
+    result = _verify_approval(envelope_json, approval_json, digest)
+    result.update({"locator": locator, "method": method})
+    return result
 
 
 @server.tool()
