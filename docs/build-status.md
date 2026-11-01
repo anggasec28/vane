@@ -16,7 +16,7 @@ Package version: 0.2.0 development baseline.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
 - Bounded worker delegation lifecycle, strict result validation, durable task-contract persistence, evidence-led mission workflow, independent validation, and signed Master closure gate. Worker session spawning and durable completion-state storage remain open.
 - External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
-- Local stdio MCP server exposing policy, planning, evidence, and event-chain utilities only.
+- Local stdio MCP server exposing project/mission lifecycle, asset/evidence/finding persistence, approval verification, planning, and integrity utilities; no live target execution.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
 
 ## Remaining implementation and verification
