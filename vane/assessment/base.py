@@ -400,3 +400,107 @@ class TLSMetadataAdapter:
             return ObservationResult(
                 False, "TLS certificate collection failed.", blocked_reason=str(exc)
             )
+
+
+def _resolve_dns_records(hostname: str, timeout: float) -> dict[str, object]:
+    import time
+
+    import dns.exception
+    import dns.resolver
+
+    resolver = dns.resolver.Resolver(configure=True)
+    resolver.timeout = min(1.5, timeout)
+    deadline = time.monotonic() + timeout
+    records: dict[str, list[str]] = {}
+    statuses: dict[str, str] = {}
+    for record_type in ("A", "AAAA", "CNAME", "MX", "NS", "TXT", "CAA", "SOA"):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            statuses[record_type] = "TIME_BUDGET_EXHAUSTED"
+            continue
+        try:
+            answer = resolver.resolve(
+                hostname, record_type, lifetime=min(1.5, remaining),
+                search=False, raise_on_no_answer=False,
+            )
+            rrset = answer.rrset
+            records[record_type] = (
+                [str(item)[:512] for item in rrset][:64] if rrset is not None else []
+            )
+            statuses[record_type] = "ANSWER" if records[record_type] else "NO_DATA"
+        except dns.resolver.NXDOMAIN:
+            records[record_type] = []
+            statuses[record_type] = "NXDOMAIN"
+            break
+        except dns.resolver.NoNameservers:
+            records[record_type] = []
+            statuses[record_type] = "NO_NAMESERVERS"
+        except dns.exception.Timeout:
+            records[record_type] = []
+            statuses[record_type] = "TIMEOUT"
+    return {"hostname": hostname, "records": records, "statuses": statuses}
+
+
+class DNSMetadataAdapter:
+    """Collect bounded DNS record observations for one explicitly authorized hostname."""
+
+    def __init__(
+        self,
+        enforcer: SecurityEnforcer,
+        *,
+        timeout: float = 8.0,
+        transport: Callable[[str, float], dict[str, object]] | None = None,
+    ) -> None:
+        if not 0.5 <= timeout <= 20:
+            raise ValueError("timeout must be between 0.5 and 20 seconds.")
+        self._enforcer = enforcer
+        self._timeout = timeout
+        self._transport = transport or _resolve_dns_records
+
+    def observe(self, request: ObservationRequest) -> ObservationResult:
+        if request.method.casefold() != "dns_lookup":
+            return ObservationResult(False, "Observation blocked.", blocked_reason="Unsupported method.")
+        if not request.mission_id.strip() or request.mission_approval is None:
+            return ObservationResult(
+                False, "Observation blocked.",
+                blocked_reason="Mission ID and signed mission approval are required.",
+            )
+        decision = self._enforcer.authorize_action(
+            request.authorization, request.locator, request.method,
+            mission_approval=request.mission_approval,
+            action_approval=request.action_approval,
+        )
+        if not decision.allowed:
+            return ObservationResult(False, "Observation blocked.", blocked_reason=decision.reason)
+        try:
+            parsed = urlsplit(
+                request.locator if "://" in request.locator else "//" + request.locator
+            )
+            if not parsed.hostname or parsed.username or parsed.password:
+                raise ValueError("A valid hostname without URL credentials is required.")
+            metadata = self._transport(parsed.hostname.rstrip("."), self._timeout)
+            canonical = json.dumps(
+                metadata, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            )
+            evidence = EvidenceRecord(
+                evidence_id=str(uuid4()),
+                project_id=request.authorization.project_id,
+                mission_id=request.mission_id,
+                kind="dns_records",
+                source=request.locator,
+                observed_at=datetime.now(timezone.utc),
+                content_digest=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+                authorization_id=request.authorization.envelope_id,
+                collection_method="dns_lookup",
+                limitations=[
+                    "DNS answers reflect the resolver view and observation time.",
+                    "Record absence is not proof that a service or asset does not exist.",
+                    "DNS relationships do not grant authorization to discovered assets.",
+                ],
+                metadata={
+                    **metadata, "locator": request.locator, "method": request.method,
+                },
+            )
+            return ObservationResult(True, "DNS records collected.", evidence=evidence)
+        except Exception as exc:
+            return ObservationResult(False, "DNS collection failed.", blocked_reason=str(exc))
