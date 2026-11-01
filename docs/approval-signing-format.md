@@ -10,7 +10,7 @@ VANE verifies approval records; it does not hold or operate the private signing 
 - `decided_at`: timezone-aware ISO 8601 timestamp.
 - `key_id`: identifier of the public key used for verification.
 - `signature`: base64-encoded Ed25519 signature.
-- `expires_at`: optional timezone-aware ISO 8601 expiry.
+- `expires_at`: required timezone-aware ISO 8601 expiry.
 - `rationale`: signed approval rationale.
 
 ## Canonical payload
