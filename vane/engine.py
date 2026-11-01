@@ -243,7 +243,7 @@ class VaneEngine:
             raise PolicyViolation("Closure envelope does not match the mission authorization.")
         digest = mission_closure_digest(mission)
         if (not self.enforcer.validate_approval(closure_approval, digest, None)
-                or closure_approval.expires_at is None
+                or closure_approval.expires_at is None or envelope.expires_at is None
                 or closure_approval.expires_at > envelope.expires_at):
             raise PolicyViolation("A valid Ed25519 closure approval bound to this mission is required.")
         previous_status, previous_history = mission.status, list(mission.history)
