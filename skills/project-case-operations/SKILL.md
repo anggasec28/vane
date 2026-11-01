@@ -21,6 +21,9 @@ Use when creating or updating an assessment project, mission, task, handoff, or 
 6. Keep durable records in an approved persistence adapter. The baseline in-memory registry is not durable storage.
 7. Handoff with current state, evidence references, blockers, and next authorized actions.
 
+## Hermes MCP Workflow
+Use `vane_create_project`, `vane_create_mission`, `vane_get_mission`, and `vane_list_missions` for durable records. Use `vane_submit_mission`, `vane_start_mission`, `vane_add_blocker`, `vane_clear_blocker`, and `vane_request_evidence_review` to move the explicit mission lifecycle. The tools do not spawn worker sessions.
+
 ## Pitfalls
 - A project record does not authorize a mission.
 - A completed task does not close the mission.
