@@ -8,9 +8,9 @@
 - Central authorization, method allowlisting, signed mission approvals, high-risk action approvals, and policy enforcement.
 - Web2/Web3 assessment planning, asset disposition, and in-scope root-cause graph.
 - Evidence provenance, SHA-256 integrity, evidence-gated mission closure, and finding governance.
-- Adaptive recovery, data lifecycle policy, project registry, SQLite event persistence.
+- Adaptive recovery, data lifecycle policy, durable project/authorization/mission/asset/evidence/finding/approval records, and SQLite event integrity.
 - Worker delegation contracts, independent validation, MCP capability registry.
-- External Ed25519 signing interface with private-key custody outside the engine.
+- External Ed25519 signing contract and public-only approval verification; private-key custody remains outside the engine.
 - Hermes adapter contract, skills, policies, schemas, templates, and tests.
 
 ## Quick start
@@ -41,15 +41,15 @@ Then install the Python engine in the new profile's environment. Follow [the com
 - **Hermes Agent:** runtime, sessions, profile loading, tool execution.
 - **VANE profile:** identity, authority, policy, skills, and operating contract.
 - **VANE Python engine:** domain models, policy decision point, orchestration, evidence, findings, persistence, validation.
-- **MCP/tools:** explicitly registered capabilities, disabled by default unless configured and approved.
+- **MCP/tools:** local VANE workflow tools are explicitly allowlisted in the profile; external MCP capabilities remain disabled by default.
 
 See [Python engine](docs/python-engine.md), [architecture](docs/architecture.md), [security model](docs/security-model.md), [Master decisions](docs/master-decisions.md), and [build status](docs/build-status.md).
 
 ## Security defaults
-Default deny. A valid authorization envelope must explicitly cover the asset and method. Discovery does not grant scope. Workers inherit a strict subset of authority. Unknown or out-of-scope assets are not inspected. Task completion is not assessment closure. External MCP capabilities are disabled by default; the local VANE governance MCP server exposes only deterministic planning and validation tools. Mission approval signatures are verified with a profile-local public-only keyring. No private signing key belongs in this repository or engine.
+Default deny. Every mission requires a signed Ed25519 approval bound to its authorization envelope. High-risk methods require a second approval bound to the exact locator and method. Discovery does not grant scope. Workers inherit a strict subset of authority; unsupported high-risk worker delegation is denied. Unknown or out-of-scope assets are not inspected. Evidence is checked against the signed authorization at observation time. Mission completion requires evidence sufficiency and independent validation, then a separate signed Master closure approval. The local MCP server manages profile-local records and deterministic workflows only; it performs no target requests. External MCP capabilities remain disabled by default. No private signing key belongs in this repository or engine.
 
 ## Important boundaries
-The default codebase contains planning, policy, validation, and adapter contracts. It does not ship an enabled live scanner, exploit runner, transaction sender, key manager, or autonomous scope expansion. The default Hermes adapter is inert and does not modify Hermes runtime state.
+The default codebase contains the Python domain engine, durable project/mission workflow, planning, policy, evidence/finding governance, validation, and bounded adapter contracts. It does not ship an enabled live scanner, exploit runner, transaction sender, key manager, or autonomous scope expansion. The default Hermes adapter is inert and does not modify Hermes runtime state.
 
 Cloning and installing this Python package do not install, configure, restart, or deploy Hermes. Hermes-native profile compatibility and runtime integration still require a separate compatibility and approval gate.
 
