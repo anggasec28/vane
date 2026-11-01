@@ -19,6 +19,7 @@ from vane.assessment.web3 import plan_contract_review
 from vane.evidence.chain import verify_event_chain
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
+from vane.findings.remediation import RemediationAction, RemediationStatus
 from vane.lifecycle.policy import DataClass, LifecycleContext, decide_lifecycle
 from vane.models import (
     Asset, AssetDisposition, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
@@ -495,6 +496,68 @@ def vane_verify_project_integrity(project_id: str) -> dict[str, Any]:
             "event_chain_valid": store.verify_project_chain(project_id),
             "domain_records_valid": store.verify_domain_records(project_id),
             "project_id": project_id}
+
+@server.tool()
+def vane_list_specialists() -> list[dict[str, Any]]:
+    """List registered VANE specialist roles and their bounded contracts."""
+    registry = _get_engine().specialists
+    return [{
+        "profile_id": profile.profile_id,
+        "title": profile.title,
+        "responsibilities": list(profile.responsibilities),
+        "required_inputs": list(profile.required_inputs),
+        "allowed_activities": list(profile.allowed_activities),
+        "prohibited_activities": list(profile.prohibited_activities),
+        "output_type": profile.output_type,
+        "required_output_fields": list(profile.required_output_fields),
+    } for profile in (registry.get(item) for item in registry.profile_ids)]
+
+
+@server.tool()
+def vane_build_mission_report(project_id: str, mission_id: str, report_id: str,
+                              limitations_json: str = "[]") -> dict[str, Any]:
+    """Build an evidence-linked report bundle from a mission's durable records."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    limitations = json.loads(limitations_json)
+    if not isinstance(limitations, list) or not all(isinstance(item, str) for item in limitations):
+        raise ValueError("limitations_json must be a JSON array of strings.")
+    report = engine.build_mission_report(
+        mission, report_id=report_id, limitations=tuple(limitations))
+    return {
+        "report_id": report.report_id,
+        "generated_at": report.generated_at,
+        "executive_summary": report.executive_summary,
+        "mission": report.mission,
+        "findings": list(report.findings),
+        "evidence_index": list(report.evidence_index),
+        "limitations": list(report.limitations),
+        "unresolved_blockers": list(report.unresolved_blockers),
+    }
+
+
+@server.tool()
+def vane_validate_remediation_plan(project_id: str, actions_json: str) -> dict[str, Any]:
+    """Validate remediation action references, dependencies, and plan acyclicity."""
+    items = json.loads(actions_json)
+    if not isinstance(items, list):
+        raise ValueError("actions_json must be a JSON array.")
+    actions = [RemediationAction(
+        action_id=str(item["action_id"]),
+        finding_id=str(item["finding_id"]),
+        title=str(item["title"]),
+        description=str(item["description"]),
+        owner=str(item["owner"]),
+        priority=str(item["priority"]),
+        dependencies=tuple(item.get("dependencies", [])),
+        verification_criteria=tuple(item.get("verification_criteria", [])),
+        status=RemediationStatus(item.get("status", "PROPOSED")),
+        verification_evidence_ids=tuple(item.get("verification_evidence_ids", [])),
+    ) for item in items]
+    _get_engine().validate_remediation_plan(project_id, actions)
+    return {"valid": True, "action_ids": [item.action_id for item in actions],
+            "application_performed": False}
+
 
 def main() -> None:
     server.run(transport="stdio")
