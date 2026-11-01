@@ -36,6 +36,7 @@ mcp_servers:
         - vane_verify_closure_approval
         - vane_plan_web2
         - vane_plan_web3
+        - vane_build_assessment_plan
         - vane_validate_evidence
         - vane_validate_finding
         - vane_validate_mission_closure
@@ -44,6 +45,10 @@ mcp_servers:
         - vane_verify_event_chain
         - vane_verify_project_integrity
         - vane_list_specialists
+        - vane_delegate_worker_task
+        - vane_complete_worker_task
+        - vane_revoke_worker_task
+        - vane_list_worker_tasks
         - vane_build_mission_report
         - vane_validate_remediation_plan
         - vane_save_case_work_item
@@ -62,6 +67,13 @@ mcp_servers:
         - vane_save_finding
         - vane_list_findings
         - vane_list_projects
+        - vane_arbitrate_claims
+        - vane_create_decision
+        - vane_get_decision
+        - vane_get_decision_relationships
+        - vane_evaluate_knowledge_reuse
+        - vane_list_decisions
+        - vane_transition_decision
         - vane_create_project
         - vane_create_mission
         - vane_get_mission

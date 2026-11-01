@@ -6,6 +6,7 @@ from vane.models import AuthorizationEnvelope
 from vane.security.approval import Approval, ApprovalVerifier
 from vane.security.authorization import require_authorized
 from vane.security.digests import authorization_digest, capability_action_digest
+from vane.security.emergency_suspension import MasterEmergencySuspension
 
 HIGH_RISK_METHODS = {
     "active_scan", "exploit_validation", "credential_test", "transaction_submit",
@@ -20,8 +21,12 @@ class PolicyDecision:
     approval_required: bool = False
 
 class PolicyEngine:
-    def __init__(self, approval_verifier: ApprovalVerifier | None = None) -> None:
+    def __init__(self, approval_verifier: ApprovalVerifier | None = None, *,
+                 emergency_suspension: MasterEmergencySuspension | None = None,
+                 require_emergency_control: bool = False) -> None:
         self._approval_verifier = approval_verifier
+        self._emergency_suspension = emergency_suspension
+        self._require_emergency_control = require_emergency_control
 
     def validate_approval(self, approval: Approval | None, expected_digest: str,
                           expected_approval_id: str | None,
@@ -36,6 +41,17 @@ class PolicyEngine:
                  method: str, mission_approval: Approval | None = None,
                  action_approval: Approval | None = None,
                  requires_human_approval: bool = False) -> PolicyDecision:
+        if self._require_emergency_control and self._emergency_suspension is None:
+            return PolicyDecision(False, "EMERGENCY_CONTROL_UNAVAILABLE",
+                "Master emergency suspension control is not configured; fail closed.")
+        if self._emergency_suspension is not None:
+            try:
+                if self._emergency_suspension.is_suspended():
+                    return PolicyDecision(False, "MASTER_EMERGENCY_SUSPENSION",
+                        "Master emergency suspension is active.")
+            except Exception:
+                return PolicyDecision(False, "EMERGENCY_CONTROL_UNAVAILABLE",
+                    "Master emergency suspension state cannot be verified; fail closed.")
         try:
             require_authorized(envelope, locator, method)
         except AuthorizationError as exc:

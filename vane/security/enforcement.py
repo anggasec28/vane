@@ -3,10 +3,18 @@ from datetime import datetime
 from vane.models import AuthorizationEnvelope
 from vane.security.approval import Approval
 from vane.security.policy_engine import PolicyDecision, PolicyEngine
+from vane.security.approval import ApprovalVerifier
+from vane.security.emergency_suspension import MasterEmergencySuspension
 
 class SecurityEnforcer:
-    def __init__(self, policy: PolicyEngine | None = None) -> None:
-        self._policy = policy or PolicyEngine()
+    def __init__(self, policy: PolicyEngine | None = None, *,
+                 approval_verifier: ApprovalVerifier | None = None,
+                 emergency_suspension: MasterEmergencySuspension | None = None,
+                 require_emergency_control: bool = False) -> None:
+        self._policy = policy or PolicyEngine(
+            approval_verifier, emergency_suspension=emergency_suspension,
+            require_emergency_control=require_emergency_control,
+        )
     def authorize_action(self, envelope: AuthorizationEnvelope | None, locator: str,
                          method: str, *, mission_approval: Approval | None = None,
                          action_approval: Approval | None = None,

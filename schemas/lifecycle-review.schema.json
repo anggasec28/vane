@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$id": "https://vane.invalid/schemas/lifecycle-review.schema.json",
+  "title": "VANE Lifecycle Review",
+  "required": [
+    "review_id",
+    "project_id",
+    "record_id",
+    "data_class",
+    "project_active",
+    "disputed",
+    "legal_or_contractual_hold",
+    "ownership_known",
+    "retention_expired",
+    "action",
+    "rationale",
+    "actor",
+    "reviewed_at",
+    "approval_reference"
+  ],
+  "properties": {
+    "review_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "data_class": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "SECRET",
+        "EVIDENCE",
+        "UNKNOWN"
+      ]
+    },
+    "project_active": {
+      "type": "boolean"
+    },
+    "disputed": {
+      "type": "boolean"
+    },
+    "legal_or_contractual_hold": {
+      "type": "boolean"
+    },
+    "ownership_known": {
+      "type": "boolean"
+    },
+    "retention_expired": {
+      "type": "boolean"
+    },
+    "action": {
+      "enum": [
+        "RETAIN",
+        "PRESERVE",
+        "REVIEW",
+        "DISPOSE_PENDING_APPROVAL"
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

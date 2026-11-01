@@ -78,3 +78,31 @@ def test_evidence_attachment_after_restart_reloads_signed_authorization(tmp_path
         metadata={"locator":"https://example.net","method":"http_metadata"})
     restarted.attach_evidence(resumed_mission, evidence)
     assert repository.get_evidence("p3", "e3").authorization_id == "a3"
+
+def test_engine_exposes_append_only_decision_ledger(tmp_path):
+    from vane.decisions.ledger import DecisionLedger, DecisionStatus
+    from vane.storage.repository import SQLiteRepository
+    from vane.storage.sqlite_store import SQLiteStore
+
+    repository = SQLiteRepository(SQLiteStore(tmp_path / "decisions.sqlite3"))
+    engine = VaneEngine(repository=repository)
+    engine.register_project("decision-project", "Decision Project", "master")
+    created = engine.create_decision(
+        project_id="decision-project", decision_id="decision-1",
+        title="Ownership determination", rationale="Evidence is incomplete.",
+        actor="vane", authority_reference="master-approval-1",
+        trigger="mission-intake", uncertainty="Owner not yet established.",
+    )
+    assert created.status == DecisionStatus.UNRESOLVED
+    valid = engine.transition_decision(
+        project_id="decision-project", decision_id="decision-1",
+        expected_revision=1, target=DecisionStatus.VALID,
+        actor="master", authority_reference="master-approval-2",
+        trigger="owner-confirmation", rationale="Master confirmed ownership.",
+        uncertainty="",
+    )
+    assert valid.revision == 2
+    assert engine.decision_ledger.get("decision-project", "decision-1") == valid
+    assert repository.store.verify_project_integrity("decision-project")
+    assert repository.store.verify_project_integrity(DecisionLedger.LEDGER_PROJECT_ID)
+    assert [item.project_id for item in repository.list_projects()] == ["decision-project"]

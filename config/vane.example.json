@@ -43,5 +43,13 @@
     "algorithm": "Ed25519",
     "public_keyring_path": "./config/approval-public-keys.json",
     "fail_closed_if_unavailable": true
+  },
+  "emergency_control": {
+    "required_for_action": true,
+    "master_principal": null,
+    "master_key_ids": [],
+    "identity_binding": "hermes_telegram_operator",
+    "require_signed_master_approval": true,
+    "fail_closed_if_unavailable": true
   }
 }

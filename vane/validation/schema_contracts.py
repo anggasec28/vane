@@ -22,6 +22,13 @@ SCHEMA_BY_RECORD_TYPE = {
     "evidence": "evidence-record.schema.json",
     "finding": "finding-record.schema.json",
     "worker_task": "worker-task.schema.json",
+    "worker_assignment": "worker-assignment.schema.json",
+    "case_work_item": "case-work-item.schema.json",
+    "case_timeline_event": "case-timeline-event.schema.json",
+    "threat_intel": "threat-intel-record.schema.json",
+    "remediation_action": "remediation-action.schema.json",
+    "report_bundle": "report-bundle.schema.json",
+    "lifecycle_review": "lifecycle-review.schema.json",
 }
 
 

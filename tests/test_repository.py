@@ -38,7 +38,7 @@ def test_read_only_store_verifies_without_allowing_mutation(tmp_path):
     path = tmp_path / "readonly.sqlite3"
     store = SQLiteStore(path)
     store.save_record(project_id="p1", record_type="project", record_id="p1",
-        record={"name": "P", "owner": "master", "created_at": datetime.now(timezone.utc).isoformat()},
+        record={"project_id": "p1", "name": "P", "owner": "master", "created_at": datetime.now(timezone.utc).isoformat()},
         actor="master")
     readonly = SQLiteStore(path, read_only=True)
     assert readonly.verify_project_integrity("p1")
@@ -53,9 +53,9 @@ def test_multi_record_write_rolls_back_as_one_transaction(tmp_path):
     repository.save_project(Project("p1", "P1", "master"))
     records = [
         {"project_id":"p1", "record_type":"mission", "record_id":"m1",
-         "record":{"mission_id":"m1"}, "actor":"master"},
+         "record":{"mission_id":"m1", "project_id":"p1", "objective":"review", "status":"DRAFT", "required_evidence":[], "completed_evidence":[], "blockers":[]}, "actor":"master"},
         {"project_id":"missing", "record_type":"mission", "record_id":"m2",
-         "record":{"mission_id":"m2"}, "actor":"master"},
+         "record":{"mission_id":"m2", "project_id":"missing", "objective":"review", "status":"DRAFT", "required_evidence":[], "completed_evidence":[], "blockers":[]}, "actor":"master"},
     ]
     with pytest.raises(ValueError):
         store.save_records_atomic(records)

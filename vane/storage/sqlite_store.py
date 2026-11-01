@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from vane.evidence.provenance import chain_digest
 from vane.storage.migrations import apply_migrations
+from vane.validation.schema_contracts import validate_domain_record, validate_document
 
 
 def _json_default(value: Any) -> Any:
@@ -82,6 +83,9 @@ class SQLiteStore:
             "event_type": event_type, "actor": actor, "occurred_at": occurred,
             "payload": payload}
         digest = chain_digest(previous, event_payload)
+        validate_document({
+            **event_payload, "previous_digest": previous, "digest": digest,
+        }, "event-record.schema.json")
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"),
                              ensure_ascii=False, default=_json_default)
         cursor = db.execute(
@@ -112,6 +116,7 @@ class SQLiteStore:
                 raise ValueError(f"Unsupported record type: {item['record_type']}")
             if not all((item["project_id"], item["record_id"], item["actor"])):
                 raise ValueError("project_id, record_id, and actor are required.")
+            validate_domain_record(item["record_type"], item["record"])
             encoded = json.dumps(item["record"], sort_keys=True, separators=(",", ":"),
                                  ensure_ascii=False, default=_json_default)
             digest = __import__("hashlib").sha256(encoded.encode("utf-8")).hexdigest()
@@ -194,8 +199,10 @@ class SQLiteStore:
 
     def append_chained_event(self, *, project_id: str, event_type: str,
                              actor: str, payload: dict[str, Any],
-                             event_id: str | None = None) -> int:
-        """Atomically read the project head, calculate digest, and append the event."""
+                             event_id: str | None = None,
+                             expected_previous_digest: str | None = None,
+                             enforce_expected_head: bool = False) -> int:
+        """Append an immutable event, optionally using compare-and-swap on the chain head."""
         if self.read_only:
             raise PermissionError("SQLite store is read-only.")
         identifier = event_id or str(uuid4())
@@ -213,7 +220,12 @@ class SQLiteStore:
                 (project_id,),
             ).fetchone()
             previous = str(row["digest"]) if row else None
+            if enforce_expected_head and previous != expected_previous_digest:
+                raise ValueError("Event-chain head changed; refresh before appending.")
             digest = chain_digest(previous, event_payload)
+            validate_document({
+                **event_payload, "previous_digest": previous, "digest": digest,
+            }, "event-record.schema.json")
             cursor = db.execute(
                 """INSERT INTO events
                 (event_id, project_id, event_type, actor, occurred_at, payload_json,

@@ -43,6 +43,10 @@ def test_worker_assignment_survives_engine_restart(tmp_path):
     completed = restarted.complete_worker_task("task1", {
         "task_id": "task1", "worker_profile": "asset-surface-mapper",
         "asset_ids": ["asset1"], "methods": ["http_metadata"],
+        "output": {
+            "type": "asset_mapping_result", "assets": [], "source_links": [],
+            "dispositions": [], "unresolved_items": [], "limitations": [],
+        },
     })
     assert completed.status == WorkerTaskStatus.COMPLETED
     persisted = repository.get_worker_assignment("p1", "task1")

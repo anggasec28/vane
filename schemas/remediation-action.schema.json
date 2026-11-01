@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$id": "https://vane.invalid/schemas/remediation-action.schema.json",
+  "title": "VANE Remediation Action",
+  "required": [
+    "action_id",
+    "finding_id",
+    "title",
+    "description",
+    "owner",
+    "priority",
+    "dependencies",
+    "verification_criteria",
+    "status",
+    "verification_evidence_ids"
+  ],
+  "properties": {
+    "action_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "finding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "priority": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "verification_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "status": {
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "READY_FOR_VERIFICATION",
+        "VERIFIED",
+        "REJECTED"
+      ]
+    },
+    "verification_evidence_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,12 +1,34 @@
-version: 1
-authority:
-  master_profile: vane-master
-  master_profile_file: vane-master.yaml
-  approval_authority: master_only
-  scope_authority: master_only
-  dispatch_owner: vane-master
+version: 2
+identity:
+  primary_agent: vane
+  primary_profile: vane
   runtime: hermes
-  runtime_session_management: external_operator_agent
+  interaction:
+    master_channel: telegram
+    master_is_agent: false
+    master_has_profile: false
+authority:
+  principal:
+    type: human
+    role: master
+    approval_authority: ultimate
+    scope_authority: ultimate
+    final_decision_authority: ultimate
+  emergency_suspension:
+    suspend_owner: master
+    release_owner: master
+    global_scope: true
+    signed_ed25519_approval_required: true
+    key_ids_from_profile_environment: VANE_MASTER_KEY_IDS
+    principal_from_profile_environment: VANE_MASTER_PRINCIPAL
+    central_enforcement_gate: true
+    fail_closed_when_unavailable: true
+  orchestrator:
+    owner: vane
+    may_dispatch_within_effective_authority: true
+    may_expand_scope: false
+    may_self_approve: false
+  runtime_session_management: operator_hermes_agent
 defaults:
   execution_mode: analysis_and_planning
   live_target_actions: disabled
@@ -26,9 +48,14 @@ specialists:
   - {id: independent-validator, profile: specialists/independent-validator.yaml}
 coordination:
   delegation_contract: vane.workers.contracts.WorkerTask
-  require_explicit_master_dispatch: true
+  dispatch_owner: vane
+  require_named_profile: true
+  require_finite_asset_allowlist: true
+  require_method_allowlist: true
+  require_deadline: true
+  require_handoff_record: true
   reject_unknown_profile: true
   reject_expired_task: true
   reject_out_of_scope_assets: true
   reject_unapproved_methods: true
-  require_handoff_record: true
+  require_result_validation: true

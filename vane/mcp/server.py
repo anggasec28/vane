@@ -16,7 +16,12 @@ from vane import __version__
 from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.assessment.web2 import plan_web2_surface_review
 from vane.assessment.web3 import plan_contract_review
+from vane.assessment.base import build_assessment_plan
 from vane.evidence.chain import verify_event_chain
+from vane.decisions.ledger import DecisionStatus
+from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
+from vane.decisions.relationships import DecisionRelationshipIndex
+from vane.intelligence.knowledge_reuse import (KnowledgeCandidate, KnowledgeForm, evaluate_knowledge_reuse)
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import render_markdown
@@ -38,6 +43,7 @@ from vane.crypto.keyring import load_public_keyring
 from vane.security.serialization import authorization_from_dict
 from vane.validation.independent import validate_mission_closure
 from vane.storage.sqlite_store import SQLiteStore
+from vane.workers.contracts import WorkerTask
 
 server = FastMCP("vane-engine")
 
@@ -60,6 +66,53 @@ def _mission_payload(mission: Mission) -> dict[str, Any]:
         "blockers": list(mission.blockers), "history": list(mission.history)}
 
 
+def _decision_payload(snapshot) -> dict[str, Any]:
+    return {
+        "decision_id": snapshot.decision_id, "project_id": snapshot.project_id,
+        "revision": snapshot.revision, "status": snapshot.status.value,
+        "title": snapshot.title, "rationale": snapshot.rationale,
+        "actor": snapshot.actor, "authority_reference": snapshot.authority_reference,
+        "trigger": snapshot.trigger, "occurred_at": snapshot.occurred_at.isoformat(),
+        "evidence_references": list(snapshot.evidence_references),
+        "dependency_decision_ids": list(snapshot.dependency_decision_ids),
+        "policy_version": snapshot.policy_version,
+        "superseded_by_decision_id": snapshot.superseded_by_decision_id,
+        "superseded_by_revision": snapshot.superseded_by_revision,
+        "uncertainty": snapshot.uncertainty,
+    }
+
+
+
+
+def _worker_task_from_dict(item: dict[str, Any]) -> WorkerTask:
+    deadline = datetime.fromisoformat(str(item["deadline"]).replace("Z", "+00:00"))
+    return WorkerTask(
+        task_id=str(item["task_id"]),
+        parent_mission_id=str(item["parent_mission_id"]),
+        worker_profile=str(item["worker_profile"]),
+        objective=str(item["objective"]),
+        allowed_methods=tuple(item["allowed_methods"]),
+        allowed_asset_ids=tuple(item["allowed_asset_ids"]),
+        deadline=deadline,
+        approval_id=str(item["approval_id"]),
+    )
+
+
+def _worker_assignment_payload(assignment) -> dict[str, Any]:
+    task = assignment.task
+    return {
+        "task_id": task.task_id,
+        "parent_mission_id": task.parent_mission_id,
+        "worker_profile": task.worker_profile,
+        "objective": task.objective,
+        "allowed_methods": list(task.allowed_methods),
+        "allowed_asset_ids": list(task.allowed_asset_ids),
+        "deadline": task.deadline.isoformat(),
+        "approval_id": task.approval_id,
+        "status": assignment.status.value,
+        "result": assignment.result,
+        "history": list(assignment.history),
+    }
 
 
 def _evidence_from_dict(item: dict[str, Any]) -> EvidenceRecord:
@@ -238,6 +291,203 @@ def vane_list_projects() -> list[dict[str, Any]]:
                 else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
     return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
              "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
+def vane_evaluate_knowledge_reuse(candidate_json: str) -> dict[str, Any]:
+    """Evaluate cross-project knowledge reuse; permitted material is only a contextual lead."""
+    raw = json.loads(candidate_json)
+    if not isinstance(raw, dict):
+        raise ValueError("candidate_json must be a JSON object.")
+    revoked = raw.get("revoked", False)
+    if type(revoked) is not bool:
+        raise ValueError("revoked must be a JSON boolean.")
+    expires_at = raw.get("expires_at")
+    if expires_at is not None:
+        if not isinstance(expires_at, str):
+            raise ValueError("expires_at must be an ISO-8601 string or null.")
+        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    candidate = KnowledgeCandidate(
+        knowledge_id=raw["knowledge_id"],
+        source_project_id=raw["source_project_id"],
+        target_project_id=raw["target_project_id"],
+        data_class=DataClass(raw["data_class"]),
+        form=KnowledgeForm(raw["form"]),
+        provenance_reference=raw["provenance_reference"],
+        ownership_reference=raw["ownership_reference"],
+        quality_review_reference=raw["quality_review_reference"],
+        reuse_authorization_reference=raw["reuse_authorization_reference"],
+        applicability_reference=raw["applicability_reference"],
+        sanitized_record_reference=raw.get("sanitized_record_reference"),
+        sanitization_method=raw.get("sanitization_method"),
+        sanitization_reviewer=raw.get("sanitization_reviewer"),
+        expires_at=expires_at, revoked=revoked,
+    )
+    result = evaluate_knowledge_reuse(candidate)
+    return {
+        "status": result.status.value, "knowledge_id": result.knowledge_id,
+        "source_project_id": result.source_project_id,
+        "target_project_id": result.target_project_id,
+        "reasons": list(result.reasons),
+        "authoritative_evidence": False, "grants_authorization": False,
+    }
+
+
+@server.tool()
+def vane_get_decision_relationships(project_id: str, decision_id: str,
+                                    depth: int = 1) -> dict[str, Any]:
+    """Rebuild a project-scoped relationship view from the authoritative Decision Ledger."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    index = DecisionRelationshipIndex.rebuild(ledger, project_id)
+    related_ids = index.related(decision_id, depth=depth)
+    relations = [
+        {
+            "source_decision_id": item.source_decision_id,
+            "target_decision_id": item.target_decision_id,
+            "relationship": item.relationship.value,
+            "evidence_reference": item.evidence_reference,
+        }
+        for item in index.relationships
+        if item.source_decision_id == decision_id or item.target_decision_id == decision_id
+    ]
+    return {
+        "project_id": project_id,
+        "decision_id": decision_id,
+        "related_decision_ids": list(related_ids),
+        "relationships": relations,
+        "source": "authoritative_decision_ledger_rebuild",
+        "projection_persisted": False,
+    }
+
+
+@server.tool()
+def vane_arbitrate_claims(claims_json: str) -> dict[str, Any]:
+    """Compare competing claims using evidence quality and hard authority gates; never uses majority voting."""
+    raw = json.loads(claims_json)
+    if not isinstance(raw, list):
+        raise ValueError("claims_json must be a JSON array.")
+    claims = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise ValueError("Each claim must be a JSON object.")
+        def parse_quality(value: dict[str, Any]) -> EvidenceQuality:
+            if not isinstance(value, dict):
+                raise ValueError("Evidence quality entries must be JSON objects.")
+            evidence_id = value.get("evidence_id")
+            independence_group = value.get("independence_group")
+            if not isinstance(evidence_id, str) or not evidence_id.strip():
+                raise ValueError("Evidence quality requires a non-empty evidence_id.")
+            if not isinstance(independence_group, str) or not independence_group.strip():
+                raise ValueError("Evidence quality requires an independence_group.")
+            dimensions = ("provenance", "integrity", "independence",
+                          "reproducibility", "freshness", "relevance")
+            scores = [value.get(name) for name in dimensions]
+            if any(type(score) is not int or not 0 <= score <= 3 for score in scores):
+                raise ValueError("Evidence quality dimensions must be integer values from 0 to 3.")
+            return EvidenceQuality(evidence_id, independence_group, *scores)
+
+        def parse_flag(name: str) -> bool:
+            value = item.get(name, True)
+            if type(value) is not bool:
+                raise ValueError(f"{name} must be a JSON boolean.")
+            return value
+
+        claim_id = item.get("claim_id")
+        if not isinstance(claim_id, str) or not claim_id.strip():
+            raise ValueError("Each claim requires a non-empty claim_id.")
+        supporting = item.get("supporting_evidence", [])
+        contradicting = item.get("contradicting_evidence", [])
+        if not isinstance(supporting, list) or not isinstance(contradicting, list):
+            raise ValueError("Supporting and contradicting evidence must be JSON arrays.")
+        claims.append(ClaimAssessment(
+            claim_id=claim_id,
+            supporting_evidence=tuple(parse_quality(x) for x in supporting),
+            contradicting_evidence=tuple(parse_quality(x) for x in contradicting),
+            scope_valid=parse_flag("scope_valid"),
+            policy_valid=parse_flag("policy_valid"),
+            authority_valid=parse_flag("authority_valid"),
+            mission_priority=item.get("mission_priority", 0),
+            impact=item.get("impact", 0),
+            specialist_competence=item.get("specialist_competence", 0),
+        ))
+    result = arbitrate_claims(claims)
+    return {
+        "status": result.status.value, "selected_claim_id": result.selected_claim_id,
+        "considered_claim_ids": list(result.considered_claim_ids),
+        "excluded_claim_ids": list(result.excluded_claim_ids),
+        "rationale": list(result.rationale),
+        "majority_voting_used": False,
+        "execution_authorized": False,
+    }
+
+
+@server.tool()
+def vane_create_decision(project_id: str, title: str, rationale: str, actor: str,
+                         authority_reference: str, trigger: str,
+                         evidence_references_json: str = "[]",
+                         dependency_decision_ids_json: str = "[]",
+                         policy_version: str = "1", uncertainty: str = "",
+                         decision_id: str = "") -> dict[str, Any]:
+    """Create an UNRESOLVED decision snapshot in the authoritative append-only ledger."""
+    evidence_refs = json.loads(evidence_references_json)
+    dependencies = json.loads(dependency_decision_ids_json)
+    if not isinstance(evidence_refs, list) or not all(isinstance(x, str) and x for x in evidence_refs):
+        raise ValueError("evidence_references_json must be a JSON array of non-empty strings.")
+    if not isinstance(dependencies, list) or not all(isinstance(x, str) and x for x in dependencies):
+        raise ValueError("dependency_decision_ids_json must be a JSON array of non-empty strings.")
+    snapshot = _get_engine().create_decision(
+        project_id=project_id, title=title, rationale=rationale, actor=actor,
+        authority_reference=authority_reference, trigger=trigger,
+        evidence_references=tuple(evidence_refs), dependency_decision_ids=tuple(dependencies),
+        policy_version=policy_version, uncertainty=uncertainty, decision_id=decision_id or None,
+    )
+    return _decision_payload(snapshot)
+
+
+@server.tool()
+def vane_get_decision(project_id: str, decision_id: str) -> dict[str, Any]:
+    """Retrieve the latest immutable decision snapshot for a project decision ID."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    return _decision_payload(ledger.get(project_id, decision_id))
+
+
+@server.tool()
+def vane_list_decisions(project_id: str) -> list[dict[str, Any]]:
+    """List latest decision snapshots for a project; full history remains in the event chain."""
+    ledger = _get_engine().decision_ledger
+    if ledger is None:
+        raise RuntimeError("Durable Central Decision Ledger is not configured.")
+    return [_decision_payload(item) for item in ledger.list_decisions(project_id)]
+
+
+@server.tool()
+def vane_transition_decision(project_id: str, decision_id: str, expected_revision: int,
+                             target_status: str, actor: str, authority_reference: str,
+                             trigger: str, rationale: str,
+                             evidence_references_json: str = "",
+                             policy_version: str = "", uncertainty: str = "",
+                             superseded_by_decision_id: str = "",
+                             superseded_by_revision: int = 0) -> dict[str, Any]:
+    """Append a governed decision-state transition with revision and event-head checks."""
+    evidence_refs = None
+    if evidence_references_json:
+        evidence_refs = json.loads(evidence_references_json)
+        if not isinstance(evidence_refs, list) or not all(isinstance(x, str) and x for x in evidence_refs):
+            raise ValueError("evidence_references_json must be a JSON array of non-empty strings.")
+    snapshot = _get_engine().transition_decision(
+        project_id=project_id, decision_id=decision_id, expected_revision=expected_revision,
+        target=DecisionStatus(target_status), actor=actor,
+        authority_reference=authority_reference, trigger=trigger, rationale=rationale,
+        evidence_references=tuple(evidence_refs) if evidence_refs is not None else None,
+        policy_version=policy_version or None, uncertainty=uncertainty if uncertainty else None,
+        superseded_by_decision_id=superseded_by_decision_id or None,
+        superseded_by_revision=superseded_by_revision or None,
+    )
+    return _decision_payload(snapshot)
 
 
 @server.tool()
@@ -503,6 +753,57 @@ def vane_verify_project_integrity(project_id: str) -> dict[str, Any]:
             "project_id": project_id}
 
 @server.tool()
+def vane_delegate_worker_task(project_id: str, mission_id: str,
+                              envelope_json: str, task_json: str) -> dict[str, Any]:
+    """Create a bounded specialist handoff; Hermes owns actual worker-session spawning."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    task = _worker_task_from_dict(json.loads(task_json))
+    assets = ({item.asset_id: item for item in engine.repository.list_assets(project_id)}
+              if engine.repository is not None else dict(engine.get_project(project_id).assets))
+    assignment = engine.delegate_worker(task, mission, envelope, assets)
+    payload = _worker_assignment_payload(assignment)
+    payload["handoff"] = {
+        "dispatch_owner": "VANE primary Hermes profile",
+        "runtime_owner": "operator-managed Hermes runtime",
+        "session_spawned": False,
+        "required_inputs": list(engine.specialists.get(task.worker_profile).required_inputs),
+        "required_output_fields": list(
+            engine.specialists.get(task.worker_profile).required_output_fields
+        ),
+    }
+    return payload
+
+
+@server.tool()
+def vane_complete_worker_task(task_id: str, result_json: str) -> dict[str, Any]:
+    """Validate and persist a specialist result against its original bounded task contract."""
+    result = json.loads(result_json)
+    assignment = _get_engine().complete_worker_task(task_id, result)
+    return _worker_assignment_payload(assignment)
+
+
+@server.tool()
+def vane_revoke_worker_task(task_id: str, actor: str, reason: str) -> dict[str, Any]:
+    """Revoke a delegated task that has not yet completed."""
+    assignment = _get_engine().revoke_worker_task(task_id, actor=actor, reason=reason)
+    return _worker_assignment_payload(assignment)
+
+
+@server.tool()
+def vane_list_worker_tasks(project_id: str) -> list[dict[str, Any]]:
+    """List durable specialist assignments for one project."""
+    engine = _get_engine()
+    if engine.repository is None:
+        raise RuntimeError("Durable worker assignment repository is not configured.")
+    return [
+        _worker_assignment_payload(item)
+        for item in engine.repository.list_worker_assignments(project_id)
+    ]
+
+
+@server.tool()
 def vane_list_specialists() -> list[dict[str, Any]]:
     """List registered VANE specialist roles and their bounded contracts."""
     registry = _get_engine().specialists
@@ -737,6 +1038,34 @@ def vane_list_lifecycle_reviews(project_id: str) -> list[dict[str, Any]]:
         "reviewed_at": item.reviewed_at.isoformat(),
         "approval_reference": item.approval_reference,
     } for item in repository.list_lifecycle_reviews(project_id)]
+
+
+
+@server.tool()
+def vane_build_assessment_plan(envelope_json: str, assets_json: str, platform: str = "web2") -> dict[str, Any]:
+    """Build an authorization-bounded eleven-phase assessment plan; performs no target requests."""
+    try:
+        envelope = authorization_from_dict(json.loads(envelope_json))
+        raw_assets = json.loads(assets_json)
+        if not isinstance(raw_assets, list):
+            raise ValueError("assets_json must be a JSON array.")
+        assets = [
+            Asset(
+                asset_id=str(item["asset_id"]),
+                locator=str(item["locator"]),
+                asset_type=str(item.get("asset_type", "unknown")),
+                disposition=AssetDisposition(str(item.get("disposition", "UNKNOWN"))),
+            )
+            for item in raw_assets
+        ]
+        return build_assessment_plan(envelope, assets, platform)
+    except Exception as exc:
+        return {
+            "plan_created": False,
+            "execution_performed": False,
+            "target_requests_performed": False,
+            "error": str(exc),
+        }
 
 
 def main() -> None:
