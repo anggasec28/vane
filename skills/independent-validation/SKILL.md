@@ -21,6 +21,10 @@ Use before a mission is marked completed or closed, and when a finding is promot
 6. Return PASS, FAIL, or INDETERMINATE per check. Do not collapse unknown into pass.
 7. Keep validator identity and rationale in the validation record.
 
+## Engine Tool
+
+Use `mcp__vane_engine__vane_validate_mission_closure` with mission, evidence, and finding records. Treat every failed or indeterminate check as unresolved.
+
 ## Pitfalls
 - The worker who performed an observation is not automatically an independent verifier.
 - Task success is not assessment closure.
