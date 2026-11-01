@@ -20,6 +20,10 @@ Use when creating, triaging, validating, disputing, or closing a security findin
 5. Keep finding status separate from evidence status and mission status.
 6. Record remediation and residual risk without changing the original evidence.
 
+## Engine Tool
+
+Use `mcp__vane_engine__vane_validate_finding` with the finding JSON and its evidence records before marking a finding VALIDATED.
+
 ## Pitfalls
 - Do not promote an unverified hypothesis to a confirmed finding.
 - Do not infer severity from a scanner label alone.
