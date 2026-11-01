@@ -6,8 +6,9 @@ from datetime import datetime
 from typing import Any
 
 from vane.models import (
-    EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
+    Asset, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
 )
+from vane.security.approval import Approval
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
 
@@ -114,13 +115,13 @@ class SQLiteRepository:
             result.append(Finding(**record))
         return result
 
-    def save_asset(self, project_id: str, asset, *, actor: str = "mapper") -> int:
+    def save_asset(self, project_id: str, asset: Asset, *, actor: str = "mapper") -> int:
         record = asdict(asset)
         record["disposition"] = asset.disposition.value
         return self.store.save_record(project_id=project_id, record_type="asset",
             record_id=asset.asset_id, record=record, actor=actor)
 
-    def save_approval(self, project_id: str, approval, *, actor: str = "master") -> int:
+    def save_approval(self, project_id: str, approval: Approval, *, actor: str = "master") -> int:
         record = asdict(approval)
         return self.store.save_record(project_id=project_id, record_type="approval",
             record_id=approval.approval_id, record=record, actor=actor)
