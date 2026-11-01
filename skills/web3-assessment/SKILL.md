@@ -21,6 +21,10 @@ Use for smart-contract, wallet, protocol, and on-chain application review.
 6. Preserve block number, chain ID, contract address, tool version, and evidence digest for each observation.
 7. Never submit transactions or sign messages as part of the baseline workflow.
 
+## Engine Tool
+
+Use `mcp__vane_engine__vane_plan_web3` with the exact envelope, chain ID, and contract address. It returns review tracks only and performs no RPC call or transaction.
+
 ## Pitfalls
 - A token, proxy, implementation, wallet, or linked contract is not automatically in scope.
 - A verified source listing does not prove deployed bytecode matches it.
