@@ -156,23 +156,11 @@ class SQLiteRepository:
             record["expires_at"] = datetime.fromisoformat(record["expires_at"])
         return Approval(**record)
 
-    def save_worker_task(self, task: WorkerTask, *, actor: str = "master") -> int:
+    def save_worker_task(self, project_id: str, task: WorkerTask,
+                         *, actor: str = "master") -> int:
         record = asdict(task)
-        return self.store.save_record(project_id=self._mission_project_id(task.parent_mission_id),
-            record_type="worker_task", record_id=task.task_id, record=record, actor=actor)
-
-    def _mission_project_id(self, mission_id: str) -> str:
-        db = self.store._connect()
-        try:
-            row = db.execute(
-                "SELECT project_id FROM domain_records WHERE record_type='mission' AND record_id=?",
-                (mission_id,),
-            ).fetchone()
-        finally:
-            db.close()
-        if row is None:
-            raise KeyError(mission_id)
-        return str(row["project_id"])
+        return self.store.save_record(project_id=project_id, record_type="worker_task",
+            record_id=task.task_id, record=record, actor=actor)
 
     def get_worker_task(self, project_id: str, task_id: str) -> WorkerTask:
         result = self.store.get_record(project_id=project_id, record_type="worker_task",
