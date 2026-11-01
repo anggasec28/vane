@@ -15,6 +15,8 @@ VANE ships a local stdio MCP server for local governance and workflow operations
 - `vane_validate_evidence`: validates evidence record fields and digest shape.
 - `vane_verify_event_chain`: verifies a supplied event chain.
 - `vane_verify_project_integrity`: verifies the local SQLite event chain and current domain records for a project.
+- `vane_create_decision`, `vane_get_decision`, and `vane_list_decisions`: create and inspect immutable decision snapshots in the Central Decision Ledger.
+- `vane_transition_decision`: append an allowed decision-state transition with authority references, evidence references, optimistic revision checking, and event-head compare-and-swap.
 
 It does not expose live scanners, exploit execution, credential attacks, transaction submission, private-key operations, or target mutation.
 
@@ -28,6 +30,8 @@ python -m pip install -e '.[mcp,crypto]'
 Hermes connects to the local stdio server using the `mcp_servers.vane_engine` entry in the profile's `config.yaml`. The server is local to that profile. After changing MCP configuration, use `/reload-mcp` or restart the profile session and verify the discovered tools.
 
 ## Project and mission operations
+
+The local server also exposes a Central Decision Ledger. New decisions begin as UNRESOLVED; permitted transitions are appended as complete snapshots to the project event chain. The event chain is the authoritative history, with explicit actor, authority reference, trigger, rationale, evidence/dependency references, policy version, and revision. Stale revisions and stale event-chain heads are rejected. This is a ledger foundation, not yet the complete blueprint arbitration, appeals, reversals, continuity, or reconciliation system.
 
 The local server also exposes durable project/mission workflow tools: create/list projects, create mission, retrieve/list missions, submit for approval, verify and authorize a mission, start, attach evidence, add/clear blockers, request independent review, complete, and close with signed Master approval. Inventory tools persist assets and list assets/evidence/findings; finding tools persist drafts or evidence-validated findings.
 
