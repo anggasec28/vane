@@ -26,6 +26,9 @@ Use before a mission is marked completed or closed, and when a finding is promot
 
 Use `vane_validate_mission_closure` with mission, evidence, and finding records. Treat every failed or indeterminate check as unresolved.
 
+## Mission Lifecycle Tools
+After the review checks pass, use `vane_complete_mission` to record COMPLETED. Then verify the signed Master closure approval with `vane_verify_closure_approval` and call `vane_close_mission` with the exact completed snapshot. Do not mark CLOSED on a worker's assertion.
+
 ## Pitfalls
 - The worker who performed an observation is not automatically an independent verifier.
 - Task success is not assessment closure.
