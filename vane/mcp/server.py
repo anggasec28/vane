@@ -31,6 +31,7 @@ from vane.crypto.approval_verifier import Ed25519ApprovalVerifier
 from vane.crypto.keyring import load_public_keyring
 from vane.security.serialization import authorization_from_dict
 from vane.validation.independent import validate_mission_closure
+from vane.storage.sqlite_store import SQLiteStore
 
 server = FastMCP("vane-engine")
 
@@ -233,6 +234,18 @@ def vane_verify_event_chain(events_json: str) -> dict[str, Any]:
     return {"valid": result.valid, "checked": result.checked,
             "failed_sequence": result.failed_sequence, "reason": result.reason}
 
+
+@server.tool()
+def vane_verify_project_integrity(project_id: str) -> dict[str, Any]:
+    """Verify local SQLite event-chain and current-record integrity for one project."""
+    db_path = os.environ.get("VANE_DB_PATH", "data/vane.sqlite3")
+    if not os.path.isfile(db_path):
+        return {"valid": False, "reason": "database_not_found", "project_id": project_id}
+    store = SQLiteStore(db_path)
+    return {"valid": store.verify_project_integrity(project_id),
+            "event_chain_valid": store.verify_project_chain(project_id),
+            "domain_records_valid": store.verify_domain_records(project_id),
+            "project_id": project_id}
 
 def main() -> None:
     server.run(transport="stdio")
