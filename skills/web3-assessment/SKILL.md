@@ -1,6 +1,6 @@
 ---
 name: web3-assessment
-description: Plan contract reviews within explicit chain and address scope.
+description: Plan smart-contract reviews within explicit chain/address scope.
 version: 0.2.0
 metadata:
   hermes:
