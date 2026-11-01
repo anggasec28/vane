@@ -108,8 +108,12 @@ class SQLiteRepository:
 
     def save_finding(self, finding: Finding, *, actor: str = "analyst") -> int:
         if finding.status in {FindingStatus.VALIDATED, FindingStatus.ACCEPTED}:
-            evidence = {eid: self.get_evidence(finding.project_id, eid)
-                        for eid in finding.evidence_ids}
+            evidence: dict[str, EvidenceRecord] = {}
+            for evidence_id in finding.evidence_ids:
+                try:
+                    evidence[evidence_id] = self.get_evidence(finding.project_id, evidence_id)
+                except KeyError:
+                    continue
             validate_finding(deepcopy(finding), evidence)
         record = asdict(finding)
         record["status"] = finding.status.value
