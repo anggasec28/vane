@@ -5,6 +5,7 @@ VANE ships a local stdio MCP server for local governance and workflow operations
 - `vane_scope_check`: checks scope coverage only; it does not grant execution authority.
 - `vane_verify_mission_approval`: verifies an Ed25519 approval bound to an authorization envelope.
 - `vane_verify_action_approval`: verifies an Ed25519 approval bound to one exact asset and method.
+- `vane_verify_closure_approval`: verifies a Master approval bound to a completed mission snapshot.
 - `vane_plan_web2`: classifies supplied assets and creates passive review work items; it performs no requests.
 - `vane_plan_web3`: creates read-only smart-contract review tracks for an explicitly scoped address.
 - `vane_validate_finding`: validates a finding against supplied evidence.
