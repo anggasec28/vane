@@ -1,7 +1,7 @@
 # Build Status
 
 Repository: https://github.com/anggasec28/vane  
-Architecture: Hybrid modular Python engine + VANE profile + Hermes runtime boundary.  
+Architecture: One primary VANE Hermes profile + seven logical domains + supporting modular Python engine + Hermes native runtime boundary.  
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
@@ -22,7 +22,7 @@ Package version: 0.2.0 development baseline.
 - Project registry, typed SQLite repositories for projects/authorization envelopes/missions/evidence/findings/assets/approvals/worker tasks, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
 - Bounded worker delegation lifecycle, strict result validation, durable task-contract and assignment-state persistence, restore-on-demand for delegated assignments, and completion/revocation audit history. Hermes worker-session spawning remains outside this repository runtime boundary.
-- One VANE Master profile and eight specialist role contracts with a central registry, explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions. These are repository-side definitions; Hermes profile loading is not yet verified.
+- One primary VANE Hermes profile with eight subordinate specialist role contracts. Master is the human authority principal, not an agent/profile/runtime. The specialist registry defines explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions; Hermes profile loading is not yet verified.
 - Evidence-aware dependency graph primitives with bounded traversal, evidence-link checks, and explicit separation between graph relationships and authorization scope.
 - Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers, with an engine-level mission report facade and cross-mission evidence rejection.
 - Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks, including whole-plan cycle detection and engine-level plan validation.
@@ -44,8 +44,12 @@ Package version: 0.2.0 development baseline.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
 - Add Hermes worker-session spawning and a separately hosted independent verifier workflow through the operator's Hermes agent; VANE repository role contracts are now present.
 - Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
+- Align all seven logical domains and cross-domain dependency/acceptance criteria in a source-decision-to-code traceability matrix.
 - Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
+
+## Architecture identity correction
+The obsolete separate `profiles/vane-master.yaml` has been removed. Master is represented as the human authority principal who interacts directly with the single VANE orchestrator through Telegram. `profiles/registry.yaml` now registers VANE as the orchestrator and lists subordinate specialists only. This repository change does not configure or verify the live Hermes Telegram gateway.
 
 ## Authority status
 Hermes runtime/server inspection or mutation: **NOT AUTHORIZED**. Installation into Hermes, deployment, live target assessment, signing-key provisioning, and production activation are not authorized by this repository build. L3/R-12 remains **OPEN**; Gate 0b **NOT PASSED**; Phase 1 **LOCKED**; Production **NOT AUTHORIZED**.
