@@ -20,6 +20,10 @@ Use when retaining, archiving, reviewing, or proposing disposal of project data 
 5. Treat disposal as a proposed action requiring approval, not an automatic timer event.
 6. Preserve audit metadata and chain-of-custody references.
 
+## Engine Tool
+
+Use `mcp__vane_engine__vane_lifecycle_decision` to obtain a retention decision. The tool never deletes data; any disposal remains a separately approved action.
+
 ## Pitfalls
 - Unknown ownership is not permission to delete.
 - Expired retention does not override legal, contractual, or evidentiary holds.
