@@ -1,6 +1,6 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
-from vane.models import Asset, AuthorizationEnvelope, EvidenceRecord, Finding, Mission
+from vane.models import Asset, AuthorizationEnvelope, EvidenceRecord, Finding, Mission, MissionStatus
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
 from vane.security.enforcement import SecurityEnforcer
@@ -29,9 +29,9 @@ class VaneEngine:
             else:
                 raise ValueError(f"Project already exists: {project_id}")
         project = Project(project_id, name, owner)
-        self.projects.add(project)
         if self.repository is not None:
             self.repository.save_project(project)
+        self.projects.add(project)
         return project
 
     def get_project(self, project_id: str) -> Project:
@@ -47,9 +47,9 @@ class VaneEngine:
     def create_mission(self, project_id: str, objective: str) -> Mission:
         project = self.get_project(project_id)
         mission = Mission.create(project_id, objective)
-        project.missions[mission.mission_id] = mission
         if self.repository is not None:
             self.repository.save_mission(mission)
+        project.missions[mission.mission_id] = mission
         return mission
 
     def get_mission(self, project_id: str, mission_id: str) -> Mission:
@@ -63,16 +63,31 @@ class VaneEngine:
         return mission
 
     def submit_mission(self, mission: Mission, *, actor: str = "master") -> Mission:
+        previous_history = list(mission.history)
         result = self.orchestrator.submit_for_approval(mission, actor=actor)
         if self.repository is not None:
-            self.repository.save_mission(result, actor=actor)
+            try:
+                self.repository.save_mission(result, actor=actor)
+            except Exception:
+                mission.status = MissionStatus.DRAFT
+                mission.history = previous_history
+                raise
         return result
 
     def authorize_mission(self, mission: Mission, envelope: AuthorizationEnvelope,
                           approval: Approval, *, actor: str = "master") -> Mission:
+        previous_status = mission.status
+        previous_authorization_id = mission.authorization_id
+        previous_history = list(mission.history)
         result = self.orchestrator.authorize_mission(mission, envelope, approval, actor=actor)
         if self.repository is not None:
-            self.repository.save_authorized_mission(result, approval, actor=actor)
+            try:
+                self.repository.save_authorized_mission(result, approval, actor=actor)
+            except Exception:
+                mission.status = previous_status
+                mission.authorization_id = previous_authorization_id
+                mission.history = previous_history
+                raise
         return result
 
     def save_evidence(self, evidence: EvidenceRecord, *, actor: str = "collector") -> None:
