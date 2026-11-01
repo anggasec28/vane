@@ -21,6 +21,10 @@ Use when an observation is blocked, incomplete, inconsistent, or unavailable.
 6. If no compliant recovery exists, preserve the blocker and report the evidence gap.
 7. Re-evaluate closure criteria after recovery.
 
+## Engine Tool
+
+Use `mcp__vane_engine__vane_plan_recovery` to classify a recovery option. Follow its approval requirement; never convert a recommendation into permission.
+
 ## Pitfalls
 - Never bypass a block page, rate limit, authentication gate, or scope denial.
 - Never silently expand to related assets.
