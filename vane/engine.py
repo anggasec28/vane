@@ -384,8 +384,7 @@ class VaneEngine:
         assignment = self.workers.delegate(task, mission, trusted_envelope, assets)
         if self.repository is not None:
             try:
-                self.repository.save_worker_task(mission.project_id, task)
-                self.repository.save_worker_assignment(mission.project_id, assignment)
+                self.repository.save_worker_delegation(mission.project_id, task, assignment)
                 self._worker_project_ids[task.task_id] = mission.project_id
             except Exception:
                 self.workers.revoke(task.task_id, actor="system",

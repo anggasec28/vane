@@ -220,6 +220,25 @@ class SQLiteRepository:
         record["allowed_asset_ids"] = tuple(record["allowed_asset_ids"])
         return WorkerTask(**record)
 
+    def save_worker_delegation(self, project_id: str, task: WorkerTask,
+                               assignment: WorkerAssignment, *, actor: str = "master") -> tuple[int, int]:
+        if assignment.task.task_id != task.task_id:
+            raise ValueError("Worker task and assignment identities do not match.")
+        task_record = asdict(task)
+        assignment_record = {
+            "task": task_record,
+            "status": assignment.status.value,
+            "result": assignment.result,
+            "history": list(assignment.history),
+        }
+        revisions = self.store.save_records_atomic([
+            {"project_id": project_id, "record_type": "worker_task",
+             "record_id": task.task_id, "record": task_record, "actor": actor},
+            {"project_id": project_id, "record_type": "worker_assignment",
+             "record_id": task.task_id, "record": assignment_record, "actor": actor},
+        ])
+        return revisions[0], revisions[1]
+
     def save_worker_assignment(self, project_id: str, assignment: WorkerAssignment,
                                *, actor: str = "master") -> int:
         record = {
