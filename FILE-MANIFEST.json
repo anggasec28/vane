@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 176,
+  "file_count": 177,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -95,6 +95,7 @@
     "tests/test_governance_extensions.py",
     "tests/test_governance_repository.py",
     "tests/test_independent_validation.py",
+    "tests/test_internal_intel_project.py",
     "tests/test_keyring.py",
     "tests/test_lifecycle.py",
     "tests/test_mcp_registry.py",
@@ -184,5 +185,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline with Master and specialist profiles, durable worker lifecycle, evidence/report/remediation governance, durable case and threat-intelligence repositories, JSON Schema validation, and expanded unit coverage. Hermes runtime validation, external anchoring, and remaining release gates remain open."
+  "completion_note": "Active development baseline with Master and specialist profiles, durable worker lifecycle, case/intelligence/remediation/report repositories, evidence graph, JSON Schema validation foundations, and expanded unit coverage. Remaining work includes complete schema-to-model enforcement, case SLA automation, external anchoring, and Hermes runtime approval."
 }
