@@ -1,0 +1,18 @@
+package:
+  name: vane-hermes-profile
+  version: 0.1.0
+  artifact_type: profile_source
+  runtime_dependency: hermes-agent
+  standalone: false
+  source_of_truth: https://github.com/anggasec28/vane
+included: [SOUL.md, config.yaml, policies/, skills/, templates/, docs/]
+excluded:
+  - Hermes runtime source
+  - runtime secrets and credentials
+  - private signing keys
+  - live target data
+  - deployment manifests that mutate an environment
+release_gate:
+  requires_master_approval: true
+  requires_manifest_verification: true
+  requires_validation_report: true
