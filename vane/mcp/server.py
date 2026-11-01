@@ -16,7 +16,7 @@ from vane import __version__
 from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.assessment.web2 import plan_web2_surface_review
 from vane.assessment.web3 import plan_contract_review
-from vane.assessment.base import build_assessment_plan
+from vane.assessment.base import build_assessment_plan, HTTPMetadataAdapter, ObservationRequest
 from vane.evidence.chain import verify_event_chain
 from vane.decisions.ledger import DecisionStatus
 from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
@@ -136,6 +136,7 @@ def vane_status() -> dict[str, Any]:
     """Return VANE engine version and safe capability status."""
     return {"name": "VANE", "version": __version__, "runtime": "Hermes Agent",
             "default_policy": "deny", "live_scanning_enabled": False,
+            "passive_http_metadata_enabled": True,
             "transaction_submission_enabled": False, "signing_keys_in_engine": False}
 
 
@@ -600,6 +601,45 @@ def vane_close_mission(envelope_json: str, mission_id: str,
     approval = _approval_from_dict(json.loads(closure_approval_json))
     mission = engine.get_mission(envelope.project_id, mission_id)
     return _mission_payload(engine.close_mission(mission, envelope, approval))
+
+
+
+@server.tool()
+def vane_observe_http_metadata(
+    envelope_json: str,
+    mission_id: str,
+    mission_approval_json: str,
+    locator: str,
+) -> dict[str, Any]:
+    """Collect header-only HTTP metadata for one explicitly authorized asset."""
+    engine = _get_engine()
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    approval = _approval_from_dict(json.loads(mission_approval_json))
+    mission = engine.get_mission(envelope.project_id, mission_id)
+    if mission.authorization_id != envelope.envelope_id:
+        return {"observed": False, "reason": "Mission is not bound to this authorization envelope."}
+    adapter = HTTPMetadataAdapter(engine.enforcer)
+    result = adapter.observe(ObservationRequest(
+        locator=locator,
+        method="http_metadata",
+        purpose="Authorized passive HTTP response metadata collection.",
+        authorization=envelope,
+        mission_id=mission_id,
+        mission_approval=approval,
+    ))
+    if not result.success or result.evidence is None:
+        return {"observed": False, "reason": result.blocked_reason or result.summary}
+    engine.save_evidence(result.evidence, actor="vane-http-metadata-adapter")
+    return {
+        "observed": True,
+        "summary": result.summary,
+        "evidence_id": result.evidence.evidence_id,
+        "content_digest": result.evidence.content_digest,
+        "status_code": result.evidence.metadata["status_code"],
+        "headers": result.evidence.metadata["headers"],
+        "body_collected": False,
+        "redirects_followed": False,
+    }
 
 
 @server.tool()
