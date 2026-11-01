@@ -11,6 +11,9 @@ Package version: 0.2.0 development baseline.
 - 18 JSON configuration/schema documents are present; schema meta-validation passed in CI.
 - GitHub Actions run #478 on commit `75ec83a` completed successfully: compileall passed, **110 tests passed**, and the CLI version/config check passed. The latest branch-head workflow is green.
 
+## Assessment workflow planner
+- Added an eleven-phase adaptive assessment plan builder and `vane_build_assessment_plan` MCP tool. It requires a current approved authorization envelope and explicitly IN_SCOPE assets, rejects out-of-scope assets, and labels every phase PLANNED. The planner performs no network requests, invokes no scanner, and does not spawn Hermes sessions.
+
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
 - Authorization envelope, exact asset/method scope checks, signed mission approval, separate action-bound approval for high-risk methods, observation-time approval verification and signed authorization revalidation on resume/delegation, public-only Ed25519 verification, and central policy enforcement.
