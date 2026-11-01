@@ -1,0 +1,37 @@
+# Python Engine
+
+## Package boundary
+The `vane/` package is the domain engine. Hermes remains the runtime and host for profiles, sessions, tools, and skills. The default Hermes adapter is descriptive/inert: it does not load profiles, call tools, or modify Hermes state.
+
+## Core modules
+- `models.py`: authorization, mission, asset, evidence, and finding domain types.
+- `security/`: authorization checks, approvals, policy decision point, enforcement facade.
+- `core/`: mission lifecycle and orchestration.
+- `assessment/`: Web2/Web3 planning, asset disposition, dependency graph.
+- `evidence/`: SHA-256 integrity and evidence validation.
+- `findings/`: evidence-linked finding validation.
+- `projects/`: project registry.
+- `recovery/`: bounded evidence-driven recovery planning.
+- `lifecycle/`: data retention/disposition decisions.
+- `mcp/`: capability allowlist.
+- `storage/`: SQLite event persistence.
+- `crypto/`: external Ed25519 signing contract.
+- `integrations/hermes/`: host adapter contract.
+- `validation/`: release readiness gates.
+
+## Safety and authority model
+All capability execution is denied unless a valid envelope covers the exact asset and method. Discovery does not expand scope. The repository includes planners and interfaces, not a live scanner. No RPC, HTTP, exploit, transaction, or mutation adapter is enabled by default. Signing private keys are never stored in the engine.
+
+## Install for isolated development
+```bash
+git clone https://github.com/anggasec28/vane.git
+cd vane
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e '.[dev]'
+pytest
+vane version
+vane check --config config.yaml
+```
+
+These steps install the Python package in an isolated environment. They do not install or modify Hermes, deploy services, authorize a target assessment, or enable MCP tools.
