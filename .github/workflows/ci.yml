@@ -25,4 +25,4 @@ jobs:
       - name: Check CLI
         run: |
           vane version
-          vane check --config config.yaml
+          vane check --config config/vane.example.json
