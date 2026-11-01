@@ -129,6 +129,10 @@ def test_decision_dependencies_must_exist_and_cannot_be_superseded(tmp_path):
                   dependency_decision_ids=("d1",))
     ledger.create(project_id="p1", decision_id="d3", title="D3", rationale="R",
                   actor="vane", authority_reference="master-3", trigger="intake")
+    ledger.transition(project_id="p1", decision_id="d2", expected_revision=1,
+                      target=DecisionStatus.SUSPENDED, actor="master",
+                      authority_reference="master-3a", trigger="dependency-change",
+                      rationale="Suspend dependent decision pending revalidation.")
     ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
                       target=DecisionStatus.SUPERSEDED, actor="master",
                       authority_reference="master-4", trigger="replace", rationale="R",
