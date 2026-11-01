@@ -13,6 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 from vane.storage.sqlite_store import SQLiteStore
+from vane.validation.schema_contracts import validate_document
 
 
 class DecisionStatus(StrEnum):
