@@ -25,3 +25,26 @@ def test_engine_requires_explicit_mission_submission_and_bound_signed_approval()
                         envelope.expires_at)
     engine.authorize_mission(mission, envelope, approval)
     assert mission.status == MissionStatus.AUTHORIZED
+
+def test_mission_authorization_and_approval_persist_together(tmp_path):
+    from vane.storage.repository import SQLiteRepository
+    from vane.storage.sqlite_store import SQLiteStore
+    repository = SQLiteRepository(SQLiteStore(tmp_path / "vane.sqlite3"))
+    engine = VaneEngine(enforcer=SecurityEnforcer(PolicyEngine(TestVerifier())),
+                        repository=repository)
+    engine.register_project("p2", "Persistent Project", "master")
+    mission = engine.create_mission("p2", "Review approved surface")
+    engine.submit_mission(mission)
+    now = datetime.now(timezone.utc)
+    envelope = AuthorizationEnvelope("a2", "master", "p2",
+        (ScopeRule("hostname", "example.org"),), ("http_metadata",),
+        starts_at=now - timedelta(minutes=1),
+        expires_at=now + timedelta(hours=1), approval_id="approval-2")
+    approval = Approval("approval-2", "master", authorization_digest(envelope), "APPROVE",
+        now, "master-key-1", "test-signature", envelope.expires_at)
+    engine.authorize_mission(mission, envelope, approval)
+    persisted = repository.get_mission("p2", mission.mission_id)
+    assert persisted.status == MissionStatus.AUTHORIZED
+    assert repository.get_approval("p2", "approval-2").subject_digest == authorization_digest(envelope)
+    restarted = VaneEngine(repository=repository)
+    assert restarted.get_mission("p2", mission.mission_id).status == MissionStatus.AUTHORIZED
