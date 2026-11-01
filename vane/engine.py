@@ -192,8 +192,17 @@ class VaneEngine:
     def save_finding(self, finding: Finding, *, actor: str = "analyst") -> None:
         project = self.get_project(finding.project_id)
         if finding.status in {FindingStatus.VALIDATED, FindingStatus.ACCEPTED}:
-            linked = {eid: project.evidence[eid] for eid in finding.evidence_ids
-                      if eid in project.evidence}
+            if self.repository is not None:
+                linked = {}
+                for evidence_id in finding.evidence_ids:
+                    try:
+                        linked[evidence_id] = self.repository.get_evidence(
+                            finding.project_id, evidence_id)
+                    except KeyError:
+                        continue
+            else:
+                linked = {eid: project.evidence[eid] for eid in finding.evidence_ids
+                          if eid in project.evidence}
             validate_finding(deepcopy(finding), linked)
         if self.repository is not None:
             self.repository.save_finding(finding, actor=actor)
