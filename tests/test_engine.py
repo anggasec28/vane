@@ -80,7 +80,7 @@ def test_evidence_attachment_after_restart_reloads_signed_authorization(tmp_path
     assert repository.get_evidence("p3", "e3").authorization_id == "a3"
 
 def test_engine_exposes_append_only_decision_ledger(tmp_path):
-    from vane.decisions.ledger import DecisionStatus
+    from vane.decisions.ledger import DecisionLedger, DecisionStatus
     from vane.storage.repository import SQLiteRepository
     from vane.storage.sqlite_store import SQLiteStore
 
