@@ -1,13 +1,14 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
 from copy import deepcopy
+from datetime import datetime
 from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.core.state_machine import transition
 from vane.errors import PolicyViolation
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.models import (
-    Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus,
+    Asset, AuthorizationEnvelope, EvidenceRecord, Finding, FindingStatus, Mission, MissionStatus, utc_now,
 )
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
@@ -34,6 +35,23 @@ class VaneEngine:
         self.workers = WorkerOrchestrator()
         self._authorization_cache: dict[str, AuthorizationEnvelope] = {}
         self._approval_cache: dict[str, Approval] = {}
+
+    def _trusted_authorization(self, project_id: str, envelope_id: str,
+                                now: datetime | None = None) -> tuple[AuthorizationEnvelope, Approval]:
+        current = now or utc_now()
+        if self.repository is not None:
+            envelope = self.repository.get_authorization(project_id, envelope_id)
+            approval = self.repository.get_approval(project_id, envelope.approval_id)
+        else:
+            envelope = self._authorization_cache.get(envelope_id)
+            approval = self._approval_cache.get(envelope.approval_id) if envelope else None
+        if (envelope is None or approval is None or envelope.project_id != project_id
+                or not envelope.is_time_valid(current)
+                or not self.enforcer.validate_approval(approval, authorization_digest(envelope),
+                    envelope.approval_id, now=current)
+                or approval.expires_at is None or approval.expires_at > envelope.expires_at):
+            raise PolicyViolation("A valid signed authorization envelope is required.")
+        return envelope, approval
 
     def register_project(self, project_id: str, name: str, owner: str) -> Project:
         if not all(value.strip() for value in (project_id, name, owner)):
@@ -120,6 +138,9 @@ class VaneEngine:
         return result
 
     def start_mission(self, mission: Mission, *, actor: str = "master") -> Mission:
+        if not mission.authorization_id:
+            raise PolicyViolation("Mission has no authorization envelope.")
+        self._trusted_authorization(mission.project_id, mission.authorization_id)
         previous_history = list(mission.history)
         previous_status = mission.status
         transition(mission, MissionStatus.RUNNING, actor=actor,
@@ -157,6 +178,10 @@ class VaneEngine:
         if reason not in mission.blockers:
             return mission
         previous_status, previous_history = mission.status, list(mission.history)
+        if mission.status == MissionStatus.BLOCKED and len(mission.blockers) == 1:
+            if not mission.authorization_id:
+                raise PolicyViolation("Blocked mission has no authorization envelope.")
+            self._trusted_authorization(mission.project_id, mission.authorization_id)
         mission.blockers.remove(reason)
         if mission.status == MissionStatus.BLOCKED and not mission.blockers:
             transition(mission, MissionStatus.RUNNING, actor=actor,
@@ -173,7 +198,11 @@ class VaneEngine:
 
     def save_asset(self, envelope: AuthorizationEnvelope, asset: Asset,
                    *, actor: str = "mapper") -> Asset:
-        classify_discovered_asset(asset, envelope)
+        trusted_envelope, _ = self._trusted_authorization(
+            envelope.project_id, envelope.envelope_id)
+        if authorization_digest(trusted_envelope) != authorization_digest(envelope):
+            raise PolicyViolation("Asset envelope does not match the stored signed authorization.")
+        classify_discovered_asset(asset, trusted_envelope)
         project = self.get_project(envelope.project_id)
         if self.repository is not None:
             self.repository.save_asset(envelope.project_id, asset, actor=actor)
@@ -194,19 +223,8 @@ class VaneEngine:
         if not mission.authorization_id or evidence.authorization_id != mission.authorization_id:
             raise PolicyViolation("Evidence is not bound to the mission authorization envelope.")
         validate_evidence(evidence)
-        if self.repository is not None:
-            envelope = self.repository.get_authorization(mission.project_id, mission.authorization_id)
-            mission_approval = self.repository.get_approval(mission.project_id, envelope.approval_id)
-        else:
-            envelope = self._authorization_cache.get(mission.authorization_id)
-            mission_approval = self._approval_cache.get(envelope.approval_id) if envelope else None
-        if (envelope is None or mission_approval is None
-                or not envelope.is_time_valid(evidence.observed_at)
-                or not self.enforcer.validate_approval(mission_approval,
-                    authorization_digest(envelope), envelope.approval_id, now=evidence.observed_at)
-                or mission_approval.expires_at is None
-                or mission_approval.expires_at > envelope.expires_at):
-            raise PolicyViolation("Evidence observation is not covered by a valid signed mission approval.")
+        envelope, mission_approval = self._trusted_authorization(
+            mission.project_id, mission.authorization_id, now=evidence.observed_at)
         locator = evidence.metadata.get("locator")
         method = str(evidence.metadata.get("method", evidence.collection_method)).strip().lower()
         allowed_methods = {item.lower() for item in envelope.allowed_methods}
@@ -348,7 +366,12 @@ class VaneEngine:
     def delegate_worker(self, task: WorkerTask, mission: Mission,
                         envelope: AuthorizationEnvelope,
                         assets: dict[str, Asset]) -> WorkerAssignment:
-        assignment = self.workers.delegate(task, mission, envelope, assets)
+        if not mission.authorization_id:
+            raise PolicyViolation("Worker parent mission has no authorization envelope.")
+        trusted_envelope, _ = self._trusted_authorization(mission.project_id, mission.authorization_id)
+        if authorization_digest(trusted_envelope) != authorization_digest(envelope):
+            raise PolicyViolation("Worker delegation envelope does not match the stored signed authorization.")
+        assignment = self.workers.delegate(task, mission, trusted_envelope, assets)
         if self.repository is not None:
             try:
                 self.repository.save_worker_task(mission.project_id, task)
