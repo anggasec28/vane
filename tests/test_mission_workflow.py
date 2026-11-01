@@ -88,3 +88,62 @@ def test_high_risk_evidence_requires_exact_action_approval():
         metadata={"locator":"https://example.com","method":"active_scan",
                   "action_approval_id":"action-ap3"})
     engine.attach_evidence(mission, evidence)
+
+
+
+def test_eleven_phase_assessment_plan_is_planning_only_and_scope_bounded():
+    from vane.assessment.base import build_assessment_plan
+    from vane.models import Asset, AssetDisposition
+    now = datetime.now(timezone.utc)
+    envelope = AuthorizationEnvelope(
+        "auth-plan", "master", "p-plan",
+        (ScopeRule("hostname", "example.com", include_subdomains=True),),
+        ("http_metadata",), starts_at=now - timedelta(minutes=1),
+        expires_at=now + timedelta(hours=1), approval_id="approval-plan")
+    plan = build_assessment_plan(envelope, [
+        Asset("asset-1", "https://example.com", "web", AssetDisposition.IN_SCOPE)
+    ])
+    assert len(plan["phases"]) == 11
+    assert plan["phases"][0]["name"] == "MISSION_COMPREHENSION"
+    assert plan["phases"][-1]["name"] == "REPORTING_KNOWLEDGE"
+    assert plan["execution_performed"] is False
+    assert plan["target_requests_performed"] is False
+    assert plan["phases"][6]["asset_ids"] == ["asset-1"]
+
+
+def test_assessment_plan_rejects_expired_or_unapproved_envelope():
+    import pytest
+    from vane.assessment.base import build_assessment_plan
+    from vane.errors import AuthorizationError
+    from vane.models import Asset, AssetDisposition
+    now = datetime.now(timezone.utc)
+    envelope = AuthorizationEnvelope(
+        "auth-expired", "master", "p-expired",
+        (ScopeRule("hostname", "example.com"),), ("http_metadata",),
+        starts_at=now - timedelta(days=2), expires_at=now - timedelta(days=1),
+        approval_id="approval-expired")
+    with pytest.raises(AuthorizationError):
+        build_assessment_plan(envelope, [
+            Asset("asset-1", "https://example.com", "web", AssetDisposition.IN_SCOPE)
+        ])
+
+
+def test_assessment_plan_rejects_out_of_scope_asset_and_unknown_platform():
+    import pytest
+    from vane.assessment.base import build_assessment_plan
+    from vane.errors import AuthorizationError
+    from vane.models import Asset, AssetDisposition
+    now = datetime.now(timezone.utc)
+    envelope = AuthorizationEnvelope(
+        "auth-scope", "master", "p-scope",
+        (ScopeRule("hostname", "example.com"),), ("http_metadata",),
+        starts_at=now - timedelta(minutes=1), expires_at=now + timedelta(hours=1),
+        approval_id="approval-scope")
+    with pytest.raises(AuthorizationError):
+        build_assessment_plan(envelope, [
+            Asset("outside", "https://outside.test", "web", AssetDisposition.IN_SCOPE)
+        ])
+    with pytest.raises(ValueError):
+        build_assessment_plan(envelope, [
+            Asset("asset-1", "https://example.com", "web", AssetDisposition.IN_SCOPE)
+        ], "ftp")
