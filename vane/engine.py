@@ -82,5 +82,9 @@ class VaneEngine:
         self.repository.save_finding(finding, actor=actor)
 
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
-                              locator: str, method: str):
-        return self.orchestrator.authorize_observation(envelope, locator, method)
+                              locator: str, method: str, *, mission_approval: Approval,
+                              action_approval: Approval | None = None,
+                              requires_human_approval: bool = False):
+        return self.orchestrator.authorize_observation(envelope, locator, method,
+            mission_approval=mission_approval, action_approval=action_approval,
+            requires_human_approval=requires_human_approval)
