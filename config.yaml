@@ -3,10 +3,19 @@
 # VANE engine policy lives separately in config/vane.example.json.
 skills:
   auto_load:
+    - adaptive-recovery
     - assessment-orchestrator
+    - asset-surface-mapping
     - authorization-scope
+    - data-lifecycle
+    - evidence-management
+    - finding-governance
+    - independent-validation
     - mcp-tool-governance
+    - project-case-operations
     - security-evidence-integrity
+    - web2-assessment
+    - web3-assessment
 
 mcp_servers:
   vane_engine:
@@ -34,6 +43,9 @@ mcp_servers:
         - vane_lifecycle_decision
         - vane_verify_event_chain
         - vane_verify_project_integrity
+        - vane_list_specialists
+        - vane_build_mission_report
+        - vane_validate_remediation_plan
         - vane_save_asset
         - vane_list_assets
         - vane_list_evidence
