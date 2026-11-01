@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 182,
+  "file_count": 181,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -53,7 +53,6 @@
     "profiles/specialists/root-cause-analyst.yaml",
     "profiles/specialists/web2-assessment-analyst.yaml",
     "profiles/specialists/web3-contract-analyst.yaml",
-    "profiles/vane-master.yaml",
     "pyproject.toml",
     "schemas/approval.schema.json",
     "schemas/asset.schema.json",
@@ -190,5 +189,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline with Master/specialist profiles, durable worker and governance repositories, typed JSON Schema enforcement, forward SQLite migrations, auditable data-lifecycle reviews, and expanded tests. Hermes runtime validation and external L3 anchoring remain open."
+  "completion_note": "Active development baseline with one VANE Hermes primary profile, human Master authority, subordinate specialist contracts, durable worker and governance repositories, typed JSON Schema enforcement, forward SQLite migrations, auditable data-lifecycle reviews, and expanded tests. Hermes runtime validation and external L3 anchoring remain open."
 }
