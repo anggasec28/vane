@@ -1,8 +1,10 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
+from copy import deepcopy
 from vane.core.state_machine import transition
 from vane.errors import PolicyViolation
 from vane.evidence.manager import validate_evidence
+from vane.findings.governance import validate_finding
 from vane.models import (
     Asset, AuthorizationEnvelope, EvidenceRecord, Finding, Mission, MissionStatus,
 )
@@ -189,6 +191,10 @@ class VaneEngine:
 
     def save_finding(self, finding: Finding, *, actor: str = "analyst") -> None:
         project = self.get_project(finding.project_id)
+        if finding.status in {finding.status.VALIDATED, finding.status.ACCEPTED}:
+            linked = {eid: project.evidence[eid] for eid in finding.evidence_ids
+                      if eid in project.evidence}
+            validate_finding(deepcopy(finding), linked)
         if self.repository is not None:
             self.repository.save_finding(finding, actor=actor)
         project.findings[finding.finding_id] = finding
