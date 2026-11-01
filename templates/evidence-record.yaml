@@ -1,0 +1,25 @@
+evidence_id: ""
+project_id: ""
+case_id: ""
+mission_id: ""
+authorization_id: ""
+target: ""
+collector: ""
+tool_id: ""
+tool_version: ""
+method: ""
+observed_at: ""
+collected_at: ""
+content_digest:
+  algorithm: sha256
+  value: ""
+source_reference: ""
+provenance: []
+data_class: ""
+state: PROPOSED
+confidence: ""
+limitations: []
+validation:
+  status: NOT_VALIDATED
+  reviewer: ""
+  reviewed_at: ""
