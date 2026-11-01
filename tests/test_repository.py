@@ -45,3 +45,19 @@ def test_read_only_store_verifies_without_allowing_mutation(tmp_path):
     with pytest.raises(PermissionError):
         readonly.append_chained_event(project_id="p1", event_type="forbidden",
                                       actor="test", payload={})
+
+def test_multi_record_write_rolls_back_as_one_transaction(tmp_path):
+    import pytest
+    store = SQLiteStore(tmp_path / "atomic.sqlite3")
+    repository = SQLiteRepository(store)
+    repository.save_project(Project("p1", "P1", "master"))
+    records = [
+        {"project_id":"p1", "record_type":"mission", "record_id":"m1",
+         "record":{"mission_id":"m1"}, "actor":"master"},
+        {"project_id":"missing", "record_type":"mission", "record_id":"m2",
+         "record":{"mission_id":"m2"}, "actor":"master"},
+    ]
+    with pytest.raises(ValueError):
+        store.save_records_atomic(records)
+    assert store.get_record(project_id="p1", record_type="mission", record_id="m1") is None
+    assert store.verify_project_integrity("p1")
