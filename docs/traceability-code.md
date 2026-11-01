@@ -9,7 +9,7 @@ This is the initial code-level traceability map. A mapping means the requirement
 | Central enforcement (Decision 59 A) | `vane/security/enforcement.py`, `policy_engine.py` | Central decision facade |
 | Hybrid finding governance (Decision 56 C) | `vane/findings/governance.py` | Evidence-linked validation; workflow incomplete |
 | Hybrid evidence management (Decision 57 C) | `vane/evidence/`, `vane/storage/sqlite_store.py` | Integrity, provenance, persistence foundation |
-| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/engine.py` | In-memory project/mission composition |
+| Hybrid project/case operations (Decision 58 C) | `vane/projects/registry.py`, `vane/storage/repository.py`, `vane/engine.py` | In-memory registry plus durable SQLite project/mission/evidence/finding records |
 | Independent hybrid validation (Decision 60 C) | `vane/validation/independent.py` | Deterministic closure checks |
 | Adaptive hybrid workflow | `vane/core/state_machine.py`, `vane/core/orchestrator.py` | Mission lifecycle foundation |
 | Deep root-cause within approved scope | `vane/assessment/root_cause.py` | In-scope graph traversal |
