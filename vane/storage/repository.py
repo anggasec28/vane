@@ -53,7 +53,7 @@ class SQLiteRepository:
             {"project_id": mission.project_id, "record_type": "mission",
              "record_id": mission.mission_id, "record": mission_record, "actor": actor},
         ])
-        return revisions[0], revisions[1]
+        return revisions[0], revisions[1], revisions[2]
 
     def save_closed_mission(self, mission: Mission, approval: Approval,
                             *, actor: str = "master") -> tuple[int, int]:
@@ -68,7 +68,7 @@ class SQLiteRepository:
             {"project_id": mission.project_id, "record_type": "mission",
              "record_id": mission.mission_id, "record": mission_record, "actor": actor},
         ])
-        return revisions[0], revisions[1], revisions[2]
+        return revisions[0], revisions[1]
 
     def get_authorization(self, project_id: str, envelope_id: str) -> AuthorizationEnvelope:
         result = self.store.get_record(project_id=project_id, record_type="authorization",
