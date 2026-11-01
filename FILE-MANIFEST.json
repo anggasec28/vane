@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 126,
+  "file_count": 127,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -72,6 +72,7 @@
     "tests/test_independent_validation.py",
     "tests/test_lifecycle.py",
     "tests/test_mcp_registry.py",
+    "tests/test_mcp_server.py",
     "tests/test_policy_engine.py",
     "tests/test_provenance.py",
     "tests/test_readiness.py",
