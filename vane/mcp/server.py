@@ -150,6 +150,80 @@ def vane_verify_action_approval(envelope_json: str, approval_json: str,
 
 
 
+
+@server.tool()
+def vane_save_asset(asset_json: str, envelope_json: str) -> dict[str, Any]:
+    """Classify and persist a supplied asset against the current authorization envelope."""
+    engine = _get_engine()
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    item = json.loads(asset_json)
+    asset = Asset(str(item["asset_id"]), str(item["locator"]),
+        str(item.get("asset_type", "hostname")),
+        AssetDisposition(item.get("disposition", "UNKNOWN")),
+        item.get("discovered_from"), str(item.get("notes", "")))
+    classify_discovered_asset(asset, envelope)
+    engine.save_asset(envelope.project_id, asset)
+    return {"asset_id": asset.asset_id, "locator": asset.locator,
+            "disposition": asset.disposition.value, "notes": asset.notes}
+
+
+@server.tool()
+def vane_list_assets(project_id: str) -> list[dict[str, Any]]:
+    """List the durable asset inventory for a project."""
+    engine = _get_engine()
+    assets = (engine.repository.list_assets(project_id) if engine.repository is not None
+              else list(engine.get_project(project_id).assets.values()))
+    return [{"asset_id": a.asset_id, "locator": a.locator, "asset_type": a.asset_type,
+             "disposition": a.disposition.value, "discovered_from": a.discovered_from,
+             "notes": a.notes} for a in assets]
+
+
+@server.tool()
+def vane_list_evidence(project_id: str) -> list[dict[str, Any]]:
+    """List durable evidence records for a project."""
+    engine = _get_engine()
+    records = (engine.repository.list_evidence(project_id) if engine.repository is not None
+               else list(engine.get_project(project_id).evidence.values()))
+    return [{"evidence_id": r.evidence_id, "project_id": r.project_id,
+        "mission_id": r.mission_id, "kind": r.kind, "source": r.source,
+        "observed_at": r.observed_at.isoformat(), "content_digest": r.content_digest,
+        "status": r.status.value, "authorization_id": r.authorization_id,
+        "collection_method": r.collection_method, "limitations": r.limitations,
+        "parent_evidence_ids": r.parent_evidence_ids, "metadata": r.metadata} for r in records]
+
+
+@server.tool()
+def vane_save_finding(finding_json: str) -> dict[str, Any]:
+    """Persist a draft or evidence-validated finding in its project."""
+    engine = _get_engine()
+    item = json.loads(finding_json)
+    finding = Finding(
+        finding_id=str(item["finding_id"]), project_id=str(item["project_id"]),
+        title=str(item["title"]), description=str(item["description"]),
+        severity=str(item["severity"]), status=FindingStatus(item.get("status", "DRAFT")),
+        evidence_ids=list(item.get("evidence_ids", [])),
+        affected_assets=list(item.get("affected_assets", [])),
+        root_cause=item.get("root_cause"), confidence=str(item.get("confidence", "unknown")),
+        remediation=str(item.get("remediation", "")),
+    )
+    engine.save_finding(finding)
+    return {"finding_id": finding.finding_id, "status": finding.status.value,
+            "evidence_ids": finding.evidence_ids}
+
+
+@server.tool()
+def vane_list_findings(project_id: str) -> list[dict[str, Any]]:
+    """List durable findings for a project."""
+    engine = _get_engine()
+    records = (engine.repository.list_findings(project_id) if engine.repository is not None
+               else list(engine.get_project(project_id).findings.values()))
+    return [{"finding_id": f.finding_id, "project_id": f.project_id, "title": f.title,
+        "description": f.description, "severity": f.severity, "status": f.status.value,
+        "evidence_ids": f.evidence_ids, "affected_assets": f.affected_assets,
+        "root_cause": f.root_cause, "confidence": f.confidence,
+        "remediation": f.remediation, "created_at": f.created_at.isoformat()} for f in records]
+
+
 @server.tool()
 def vane_create_project(project_id: str, name: str, owner: str) -> dict[str, Any]:
     """Create a durable project record. This does not authorize an assessment."""
