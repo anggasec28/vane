@@ -1,0 +1,28 @@
+{
+  "name": "VANE Hermes Profile",
+  "version": "0.1.0",
+  "artifact_type": "profile_source",
+  "runtime": "Hermes Agent",
+  "standalone": false,
+  "files": [
+    "README.md", "SOUL.md", "config.yaml", "distribution.yaml", ".gitignore",
+    "docs/architecture.md", "docs/build-status.md", "docs/master-decisions.md",
+    "docs/operating-model.md", "docs/security-controls.md", "docs/evidence-model.md",
+    "docs/traceability.md", "docs/finding-governance.md", "docs/project-case-operations.md",
+    "docs/data-lifecycle.md", "docs/mcp-integration.md", "docs/validation-plan.md",
+    "policies/authorization.md", "policies/approval-gates.md", "policies/central-enforcement.md",
+    "policies/recovery.md", "policies/cryptographic-trust.md", "policies/data-lifecycle.md",
+    "policies/worker-governance.md",
+    "skills/assessment-orchestrator/SKILL.md", "skills/authorization-scope/SKILL.md",
+    "skills/asset-surface-mapping/SKILL.md", "skills/web2-assessment/SKILL.md",
+    "skills/web3-assessment/SKILL.md", "skills/evidence-management/SKILL.md",
+    "skills/finding-governance/SKILL.md", "skills/project-case-operations/SKILL.md",
+    "skills/independent-validation/SKILL.md", "skills/mcp-tool-governance/SKILL.md",
+    "skills/data-lifecycle/SKILL.md", "skills/adaptive-recovery/SKILL.md",
+    "skills/security-evidence-integrity/SKILL.md",
+    "templates/authorization-envelope.yaml", "templates/evidence-record.yaml",
+    "templates/finding-record.yaml", "templates/assessment-record.yaml",
+    "templates/approval-request.yaml", "tests/README.md"
+  ],
+  "completion_note": "Initial architecture/source baseline. Full completion requires holistic inventory, schema and policy validation, and detailed source-decision traceability."
+}
