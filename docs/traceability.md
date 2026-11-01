@@ -22,7 +22,7 @@ This matrix maps the seven logical domains in **05 — VANE Final Architecture B
 | D6 — Security & Validation | Identity, access, secrets, central enforcement, signing/verifier separation, security controls, independent validation | `vane/security/`, `vane/crypto/`, `vane/validation/`, `policies/` | PARTIAL: central policy enforcement, public-only Ed25519 verification, external signer contract, and deterministic validation foundations exist; signing-service deployment, key custody, meaningful independence, and failure-mode acceptance are unverified |
 | D7 — Project & Case Operations | Project/case identity, ownership, workspace, reporting, closure, retention | `vane/projects/`, `vane/findings/`, `vane/storage/governance_repository.py`, project/case skills | PARTIAL: project/mission records, case work items/timeline, reporting, remediation, and lifecycle review foundations exist; workspace governance, SLA/escalation automation, complete case closure, and retention orchestration remain gaps |
 
-Decision Ledger and arbitration sources: `vane/decisions/ledger.py`, `vane/decisions/arbitration.py`; storage CAS: `vane/storage/sqlite_store.py`; engine facade: `vane/engine.py`; schema: `schemas/decision-snapshot.schema.json`; tests: `tests/test_decision_ledger.py`, `tests/test_decision_arbitration.py`. The tests are authored but have not been executed. A VALID decision record is a governance record only; it does not replace or grant a signed mission authorization envelope or action-bound approval.
+Decision Ledger and arbitration sources: `vane/decisions/ledger.py`, `vane/decisions/arbitration.py`; storage CAS: `vane/storage/sqlite_store.py`; engine facade: `vane/engine.py`; schema: `schemas/decision-snapshot.schema.json`; tests: `tests/test_decision_ledger.py`, `tests/test_decision_arbitration.py`. The Decision Ledger, arbitration, and relationship-index tests have executed in GitHub Actions; run #429 passed all 84 tests, and run #430 passed after manifest registration. A VALID decision record is a governance record only; it does not replace or grant a signed mission authorization envelope or action-bound approval.
 
 ## Cross-domain requirements
 
@@ -68,7 +68,7 @@ Conflict and adjudication register: `docs/architecture-conflicts.md`. CF-01 thro
 
 - Expand each domain row into requirement-level traceability against the full blueprint and documents 00–07.
 - Define objective acceptance criteria and evidence records for each mandatory requirement.
-- Implement evidence-weighted arbitration, hybrid decision-memory projections/relationship retrieval, governed cross-mission knowledge gates, Master-only emergency suspension, and explicit frontier lifecycle/maturity tracking.
+- Extend the first evidence-weighted arbitration and rebuildable relationship-retrieval slices into full hybrid decision memory; implement governed cross-mission knowledge gates, Master-only emergency suspension, and explicit frontier lifecycle/maturity tracking.
 - Complete and test Decision Ledger arbitration, appeals/reversals, authoritative projections, continuity, dependency-health, cross-domain reconciliation, and recovery mechanisms.
 - Validate meaningful independent verification and signing-service boundaries.
 - Complete worker orchestration handoff to the operator-owned Hermes agent without creating a second runtime.
