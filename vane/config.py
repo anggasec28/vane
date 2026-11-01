@@ -26,15 +26,17 @@ def load_config(path: str | Path) -> dict[str, Any]:
         raise ConfigurationError("Explicit method allowlisting must remain enabled.")
     required_high_risk = {"active_scan", "exploit_validation", "credential_test",
         "transaction_submit", "state_change", "data_export", "destructive_action"}
-    if not required_high_risk.issubset(set(policy.get("high_risk_methods", []))):
+    high_risk = policy.get("high_risk_methods")
+    if not isinstance(high_risk, list) or not required_high_risk.issubset(set(high_risk)):
         raise ConfigurationError("The complete high-risk method approval set is required.")
     mcp = data.get("mcp", {})
-    if mcp.get("default_enabled") is not False:
+    if not isinstance(mcp, dict) or mcp.get("default_enabled") is not False:
         raise ConfigurationError("MCP capabilities must be disabled by default.")
     signing = data.get("signing", {})
-    if signing.get("private_key_in_engine") is not False:
+    if not isinstance(signing, dict) or signing.get("private_key_in_engine") is not False:
         raise ConfigurationError("Private signing keys must remain outside the engine.")
     approval = data.get("approval_verification", {})
-    if approval.get("algorithm") != "Ed25519" or approval.get("fail_closed_if_unavailable") is not True:
+    if (not isinstance(approval, dict) or approval.get("algorithm") != "Ed25519"
+            or approval.get("fail_closed_if_unavailable") is not True):
         raise ConfigurationError("Ed25519 approval verification must fail closed.")
     return data
