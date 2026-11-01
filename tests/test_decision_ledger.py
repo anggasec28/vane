@@ -54,7 +54,7 @@ def test_decision_ledger_rejects_stale_revision_and_invalid_transition(tmp_path)
         ledger.transition(project_id="p1", decision_id="d1", expected_revision=1,
                           target=DecisionStatus.SUPERSEDED, actor="master",
                           authority_reference="master-2", trigger="replace", rationale="R",
-                          supersedes_decision_id="d2", supersedes_revision=1)
+                          superseded_by_decision_id="d2", superseded_by_revision=1)
     with pytest.raises(ValueError, match="revision changed"):
         ledger.transition(project_id="p1", decision_id="d1", expected_revision=0,
                           target=DecisionStatus.VALID, actor="master",
