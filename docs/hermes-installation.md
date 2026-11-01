@@ -58,7 +58,7 @@ Populate `keys` with the key IDs and base64-encoded 32-byte Ed25519 public keys 
 
 ## First-run checks
 1. Read `SOUL.md` and `policies/` before using the profile.
-2. Confirm `config/vane.example.json` retains default-deny policy, external MCP capabilities disabled by default, the local VANE governance MCP server limited to deterministic tools, and external signing custody.
+2. Confirm `config/vane.example.json` retains default-deny policy, external MCP capabilities disabled by default, the local VANE MCP server limited to profile-local project/mission/evidence/finding state plus deterministic planning/validation, with no target requests, and external signing custody.
 3. Run the Python test suite from a development checkout: `python -m pytest`.
 4. Keep live assessment capabilities disabled until a project-specific authorization envelope and method allowlist are approved.
 5. Keep runtime integration and production status unchanged until their separate approval gates pass.
