@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from vane.engine import VaneEngine
-from vane.models import AuthorizationEnvelope, ScopeRule, MissionStatus
+from vane.models import AuthorizationEnvelope, EvidenceRecord, ScopeRule, MissionStatus
 from vane.security.approval import Approval
 from vane.security.digests import authorization_digest
 from vane.security.enforcement import SecurityEnforcer
