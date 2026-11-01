@@ -6,7 +6,7 @@ Package version: 0.2.0 development baseline.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
-- Authorization envelope, exact asset/method scope checks, signed mission approval, separate action-bound approval for high-risk methods, public-only Ed25519 verification, and central policy enforcement.
+- Authorization envelope, exact asset/method scope checks, signed mission approval, separate action-bound approval for high-risk methods, observation-time approval verification, public-only Ed25519 verification, and central policy enforcement.
 - Mission lifecycle with evidence-gated completion and orchestration facade.
 - Web2/Web3 planning, asset disposition, dependency graph, and authorization envelope review.
 - Evidence record validation, SHA-256 helpers, canonical provenance, and event-chain verification.
