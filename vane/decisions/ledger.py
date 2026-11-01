@@ -236,6 +236,16 @@ class DecisionLedger:
                 raise ValueError("Superseding decision revision does not match the current ledger.")
             if target.status == DecisionStatus.SUPERSEDED:
                 raise ValueError("A superseded decision cannot supersede another decision.")
+            active_dependents = [
+                item.decision_id for item in latest.values()
+                if snapshot.decision_id in item.dependency_decision_ids
+                and item.status in {DecisionStatus.VALID, DecisionStatus.UNRESOLVED}
+            ]
+            if active_dependents:
+                raise ValueError(
+                    "Dependent decisions require revalidation or suspension before supersession: "
+                    + ", ".join(sorted(active_dependents))
+                )
         events = self._events(snapshot.project_id)
         current = next((item for item in reversed(events)
                         if item["payload"]["snapshot"]["decision_id"] == snapshot.decision_id), None)
