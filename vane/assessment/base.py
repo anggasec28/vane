@@ -210,7 +210,10 @@ class HTTPMetadataAdapter:
                     "Redirects are recorded but never followed.",
                     "Metadata is an observation, not proof of vulnerability.",
                 ],
-                metadata={"status_code": status, "headers": headers, "protocol": protocol},
+                metadata={
+                    "status_code": status, "headers": headers, "protocol": protocol,
+                    "locator": request.locator, "method": request.method,
+                },
             )
             return ObservationResult(True, f"HTTP {status} metadata collected.", evidence=evidence)
         except Exception as exc:
