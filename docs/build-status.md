@@ -31,6 +31,7 @@ Package version: 0.2.0 development baseline.
 - Durable persistence for remediation actions, supplied threat-intelligence records, and generated report bundles through a typed governance repository. Verified remediation now requires existing, usable evidence; the internal global-intelligence ledger is excluded from user project listings.
 - JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
+- Append-only Central Decision Ledger foundation: immutable full decision snapshots in the project event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, and event-head compare-and-swap for concurrent append safety. Exposed through the VANE engine facade; unit tests authored but not executed.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
@@ -44,8 +45,10 @@ Package version: 0.2.0 development baseline.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
 - Add Hermes worker-session spawning and a separately hosted independent verifier workflow through the operator's Hermes agent; VANE repository role contracts are now present.
 - Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
+- Add and execute concurrency/failure-injection tests for Decision Ledger append races, stale revisions, replay, and recovery.
 - Align all seven logical domains and cross-domain dependency/acceptance criteria in a source-decision-to-code traceability matrix.
 - Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
+- Complete Decision Ledger arbitration, appeals/reversals, supersession linkage across decision IDs, authoritative projections, continuity caches, and causal reconciliation.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
 
 ## Architecture identity correction
