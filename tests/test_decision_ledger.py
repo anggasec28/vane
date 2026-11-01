@@ -168,3 +168,26 @@ def test_decision_supersession_requires_existing_current_same_project_target(tmp
         superseded_by_decision_id="d2", superseded_by_revision=1,
     )
     assert result.status == DecisionStatus.SUPERSEDED
+
+
+def test_decision_cannot_be_superseded_while_valid_dependent_remains(tmp_path):
+    store = SQLiteStore(tmp_path / "active-dependent.sqlite3")
+    _project(store)
+    ledger = DecisionLedger(store)
+    ledger.create(project_id="p1", decision_id="base", title="Base", rationale="R",
+                  actor="vane", authority_reference="master-1", trigger="intake")
+    ledger.transition(project_id="p1", decision_id="base", expected_revision=1,
+                      target=DecisionStatus.VALID, actor="master",
+                      authority_reference="master-2", trigger="validation", rationale="Valid.")
+    ledger.create(project_id="p1", decision_id="dependent", title="Dependent", rationale="R",
+                  actor="vane", authority_reference="master-3", trigger="intake",
+                  dependency_decision_ids=("base",))
+    ledger.create(project_id="p1", decision_id="replacement", title="Replacement", rationale="R",
+                  actor="vane", authority_reference="master-4", trigger="intake")
+    with pytest.raises(ValueError, match="Dependent decisions require revalidation"):
+        ledger.transition(
+            project_id="p1", decision_id="base", expected_revision=2,
+            target=DecisionStatus.SUPERSEDED, actor="master",
+            authority_reference="master-5", trigger="replace", rationale="R",
+            superseded_by_decision_id="replacement", superseded_by_revision=1,
+        )
