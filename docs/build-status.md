@@ -19,13 +19,12 @@ Package version: 0.2.0 development baseline.
 - JSON schemas and initial unit tests.
 
 ## Remaining implementation and verification
-- Complete persistent repositories for all domain objects, schema migrations, and transactional event append integration.
-- Harden event-chain semantics, concurrency, recovery, and tamper-evidence storage.
+- Complete durable repositories for all domain objects and schema migrations; the SQLite event chain is implemented as a foundation.
+- Add external anchoring and trusted-head publication for tamper evidence; L3/R-12 remains unimplemented.
 - Complete all JSON schemas and validation wiring.
-- Implement real Hermes profile packaging compatibility and adapter contract tests.
-- Implement MCP transport only after tool-by-tool capability review and approval.
+- Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
 - Add worker execution orchestration and independent verifier workflow.
-- Expand test coverage, CI, packaging checks, security review, and release artifacts.
+- Execute and review CI results, expand test coverage, and complete packaging/security review and release artifacts.
 - Map every Master decision and historical requirement to code-level acceptance tests.
 - Perform holistic consistency review and manifest reconciliation.
 
