@@ -15,6 +15,7 @@ Package version: 0.2.0 development baseline.
 - Project registry, SQLite event persistence, MCP capability allowlist.
 - Worker delegation contracts and independent mission closure validator.
 - External Ed25519 signing interface and inert Hermes adapter.
+- Local stdio MCP server exposing policy, planning, evidence, and event-chain utilities only.
 - JSON schemas and initial unit tests.
 
 ## Remaining implementation and verification
