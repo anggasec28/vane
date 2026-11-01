@@ -23,7 +23,7 @@ Use when an observation is blocked, incomplete, inconsistent, or unavailable.
 
 ## Engine Tool
 
-Use `mcp__vane_engine__vane_plan_recovery` to classify a recovery option. Follow its approval requirement; never convert a recommendation into permission.
+Use `vane_plan_recovery` to classify a recovery option. Follow its approval requirement; never convert a recommendation into permission.
 
 ## Pitfalls
 - Never bypass a block page, rate limit, authentication gate, or scope denial.
