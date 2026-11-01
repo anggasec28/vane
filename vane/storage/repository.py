@@ -15,6 +15,7 @@ from vane.workers.orchestrator import WorkerAssignment, WorkerTaskStatus
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
 from vane.evidence.manager import validate_evidence
+from vane.validation.schema_contracts import validate_domain_record
 from vane.findings.governance import validate_finding
 from copy import deepcopy
 
@@ -26,6 +27,7 @@ class SQLiteRepository:
     def save_project(self, project: Project, *, actor: str = "master") -> int:
         record = {"project_id": project.project_id, "name": project.name,
                   "owner": project.owner, "created_at": project.created_at.isoformat()}
+        validate_domain_record("project", record)
         return self.store.save_record(project_id=project.project_id, record_type="project",
             record_id=project.project_id, record=record, actor=actor)
 
@@ -46,6 +48,9 @@ class SQLiteRepository:
         mission_record["completed_evidence"] = sorted(mission.completed_evidence)
         approval_record = asdict(approval)
         envelope_record = asdict(envelope)
+        validate_domain_record("authorization", envelope_record)
+        validate_domain_record("approval", approval_record)
+        validate_domain_record("mission", mission_record)
         revisions = self.store.save_records_atomic([
             {"project_id": mission.project_id, "record_type": "authorization",
              "record_id": envelope.envelope_id, "record": envelope_record, "actor": actor},
@@ -63,6 +68,8 @@ class SQLiteRepository:
         mission_record["required_evidence"] = sorted(mission.required_evidence)
         mission_record["completed_evidence"] = sorted(mission.completed_evidence)
         approval_record = asdict(approval)
+        validate_domain_record("approval", approval_record)
+        validate_domain_record("mission", mission_record)
         revisions = self.store.save_records_atomic([
             {"project_id": mission.project_id, "record_type": "approval",
              "record_id": approval.approval_id, "record": approval_record, "actor": actor},
@@ -84,6 +91,7 @@ class SQLiteRepository:
         record["status"] = mission.status.value
         record["required_evidence"] = sorted(mission.required_evidence)
         record["completed_evidence"] = sorted(mission.completed_evidence)
+        validate_domain_record("mission", record)
         return self.store.save_record(project_id=mission.project_id, record_type="mission",
             record_id=mission.mission_id, record=record, actor=actor)
 
@@ -116,6 +124,7 @@ class SQLiteRepository:
         validate_evidence(evidence)
         record = asdict(evidence)
         record["status"] = evidence.status.value
+        validate_domain_record("evidence", record)
         return self.store.save_record(project_id=evidence.project_id, record_type="evidence",
             record_id=evidence.evidence_id, record=record, actor=actor)
 
@@ -128,8 +137,10 @@ class SQLiteRepository:
                 except KeyError:
                     continue
             validate_finding(deepcopy(finding), evidence)
+        finding.severity = finding.severity.lower()
         record = asdict(finding)
         record["status"] = finding.status.value
+        validate_domain_record("finding", record)
         return self.store.save_record(project_id=finding.project_id, record_type="finding",
             record_id=finding.finding_id, record=record, actor=actor)
 
@@ -174,11 +185,13 @@ class SQLiteRepository:
     def save_asset(self, project_id: str, asset: Asset, *, actor: str = "mapper") -> int:
         record = asdict(asset)
         record["disposition"] = asset.disposition.value
+        validate_domain_record("asset", record)
         return self.store.save_record(project_id=project_id, record_type="asset",
             record_id=asset.asset_id, record=record, actor=actor)
 
     def save_approval(self, project_id: str, approval: Approval, *, actor: str = "master") -> int:
         record = asdict(approval)
+        validate_domain_record("approval", record)
         return self.store.save_record(project_id=project_id, record_type="approval",
             record_id=approval.approval_id, record=record, actor=actor)
 
@@ -206,6 +219,7 @@ class SQLiteRepository:
     def save_worker_task(self, project_id: str, task: WorkerTask,
                          *, actor: str = "master") -> int:
         record = asdict(task)
+        validate_domain_record("worker_task", record)
         return self.store.save_record(project_id=project_id, record_type="worker_task",
             record_id=task.task_id, record=record, actor=actor)
 
@@ -225,6 +239,7 @@ class SQLiteRepository:
         if assignment.task.task_id != task.task_id:
             raise ValueError("Worker task and assignment identities do not match.")
         task_record = asdict(task)
+        validate_domain_record("worker_task", task_record)
         assignment_record = {
             "task": task_record,
             "status": assignment.status.value,
