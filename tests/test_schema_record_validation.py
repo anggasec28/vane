@@ -7,7 +7,7 @@ from vane.validation.schema_contracts import validate_all_schemas, validate_doma
 
 
 def test_repository_schemas_are_meta_valid():
-    assert len(validate_all_schemas()) == 9
+    assert len(validate_all_schemas()) == 10
 
 
 def test_typed_project_record_passes_schema():
