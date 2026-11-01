@@ -75,17 +75,51 @@ class MasterEmergencySuspension:
         transitions = [item for item in events if item["event_type"] == self.EVENT_TYPE]
         if not transitions:
             return None
-        raw = transitions[-1]["payload"]["snapshot"]
-        snapshot = SuspensionSnapshot(
-            status=SuspensionStatus(raw["status"]), revision=int(raw["revision"]),
-            master_principal=str(raw["master_principal"]), reason=str(raw["reason"]),
-            authority_reference=str(raw["authority_reference"]), trigger=str(raw["trigger"]),
-            occurred_at=datetime.fromisoformat(raw["occurred_at"]),
-            approval_id=str(raw["approval_id"]),
-        )
-        if snapshot.master_principal != self.master_principal:
-            raise RuntimeError("Emergency control Master principal mismatch; fail closed.")
-        return snapshot
+        previous_status = SuspensionStatus.ACTIVE
+        previous_revision = 0
+        latest: SuspensionSnapshot | None = None
+        for event in transitions:
+            payload = event["payload"]
+            raw = payload["snapshot"]
+            approval_raw = payload["approval"]
+            snapshot = SuspensionSnapshot(
+                status=SuspensionStatus(raw["status"]), revision=int(raw["revision"]),
+                master_principal=str(raw["master_principal"]), reason=str(raw["reason"]),
+                authority_reference=str(raw["authority_reference"]), trigger=str(raw["trigger"]),
+                occurred_at=datetime.fromisoformat(raw["occurred_at"]),
+                approval_id=str(raw["approval_id"]),
+            )
+            approval = Approval(
+                approval_id=str(approval_raw["approval_id"]),
+                approver=str(approval_raw["approver"]),
+                subject_digest=str(approval_raw["subject_digest"]),
+                decision=str(approval_raw["decision"]),
+                decided_at=datetime.fromisoformat(approval_raw["decided_at"]),
+                key_id=str(approval_raw["key_id"]),
+                signature=str(approval_raw["signature"]),
+                expires_at=datetime.fromisoformat(approval_raw["expires_at"])
+                    if approval_raw.get("expires_at") else None,
+                rationale=str(approval_raw.get("rationale", "")),
+            )
+            expected_digest = suspension_approval_digest(
+                operation=snapshot.status, expected_revision=previous_revision,
+                master_principal=self.master_principal, reason=snapshot.reason,
+                authority_reference=snapshot.authority_reference, trigger=snapshot.trigger,
+            )
+            if (snapshot.master_principal != self.master_principal
+                    or snapshot.revision != previous_revision + 1
+                    or snapshot.status == previous_status
+                    or event["actor"] != self.master_principal
+                    or approval.approval_id != snapshot.approval_id
+                    or approval.approver != self.master_principal
+                    or approval.key_id not in self.master_key_ids
+                    or not approval.is_valid_for(expected_digest, snapshot.occurred_at)
+                    or not self.verifier.verify(approval)):
+                raise RuntimeError("Emergency control authorization history invalid; fail closed.")
+            latest = snapshot
+            previous_status = snapshot.status
+            previous_revision = snapshot.revision
+        return latest
 
     def is_suspended(self) -> bool:
         snapshot = self.current()
@@ -131,6 +165,14 @@ class MasterEmergencySuspension:
                 "approval_id": snapshot.approval_id,
             },
             "approval_digest": digest,
+            "approval": {
+                "approval_id": approval.approval_id, "approver": approval.approver,
+                "subject_digest": approval.subject_digest, "decision": approval.decision,
+                "decided_at": approval.decided_at.isoformat(), "key_id": approval.key_id,
+                "signature": approval.signature,
+                "expires_at": approval.expires_at.isoformat() if approval.expires_at else None,
+                "rationale": approval.rationale,
+            },
             "approval_signing_payload_sha256": hashlib.sha256(
                 approval_signing_payload(approval)).hexdigest(),
         }
