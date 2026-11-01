@@ -113,3 +113,33 @@ def test_expired_master_approval_is_rejected(tmp_path):
     with pytest.raises(PermissionError, match="signature"):
         control.suspend(expected_revision=0, reason="stop", authority_reference="directive",
                         trigger="telegram", approval=expired, now=now)
+
+
+def test_central_security_enforcement_blocks_actions_when_master_suspends(tmp_path):
+    from vane.security.enforcement import SecurityEnforcer
+
+    control = controller(tmp_path)
+    enforcer = SecurityEnforcer(
+        emergency_suspension=control, require_emergency_control=True,
+    )
+    now = datetime.now(timezone.utc)
+    control.suspend(
+        expected_revision=0, reason="Stop all operations",
+        authority_reference="master-stop", trigger="telegram",
+        approval=make_approval(
+            SuspensionStatus.SUSPENDED, 0, "Stop all operations",
+            "master-stop", "telegram", now=now,
+        ), now=now,
+    )
+    decision = enforcer.authorize_action(None, "asset.example", "passive_scan")
+    assert decision.allowed is False
+    assert decision.code == "MASTER_EMERGENCY_SUSPENSION"
+
+
+def test_central_enforcement_fails_closed_when_required_control_is_missing():
+    from vane.security.enforcement import SecurityEnforcer
+
+    enforcer = SecurityEnforcer(require_emergency_control=True)
+    decision = enforcer.authorize_action(None, "asset.example", "passive_scan")
+    assert decision.allowed is False
+    assert decision.code == "EMERGENCY_CONTROL_UNAVAILABLE"
