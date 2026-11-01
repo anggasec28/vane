@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 146,
+  "file_count": 148,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -97,6 +97,7 @@
     "tests/test_web2_planning.py",
     "tests/test_web3_planning.py",
     "tests/test_worker_contracts.py",
+    "tests/test_worker_orchestrator.py",
     "vane/__init__.py",
     "vane/__main__.py",
     "vane/assessment/__init__.py",
@@ -152,7 +153,8 @@
     "vane/validation/independent.py",
     "vane/validation/readiness.py",
     "vane/workers/__init__.py",
-    "vane/workers/contracts.py"
+    "vane/workers/contracts.py",
+    "vane/workers/orchestrator.py"
   ],
   "completion_note": "Active modular Python implementation baseline. Inventory is explicit; build completion still requires full traceability, automated validation, Hermes compatibility review, and release gates."
 }
