@@ -5,9 +5,9 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 193 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 195 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 52 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 53 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 11 JSON configuration/schema documents are present; schema meta-validation passed in CI.
 - GitHub Actions run #443 on code commit `a1201ce` completed successfully: compileall passed, **93 tests passed**, and the CLI version/config check passed. Run #442 also passed all 93 tests after the bootstrap tests were added.
 
@@ -35,6 +35,7 @@ Package version: 0.2.0 development baseline.
 - Conservative hierarchical evidence-weighted arbitration: six evidence-quality dimensions, strict Pareto dominance without arbitrary weights, hard scope/policy/authority gates, and explicit UNRESOLVED outcomes for ties, incomparable evidence, or material contradictions. Exposed through an allowlisted MCP tool.
 - Rebuildable project-scoped Decision Relationship Index for dependency, supersession, and shared-evidence links; retrieval is bounded and derived from the authoritative ledger, not persisted as an authority source.
 - Master-only Emergency Suspension Authority: signed operation-bound SUSPEND/RELEASE, configured Master principal and key-ID allowlist, revision/CAS protection, full event-chain and historical signature verification, and fail-closed central enforcement. Hermes bootstrap requires this control by default; missing identity/key configuration or unverifiable state denies actions.
+- Governed cross-mission knowledge reuse gate: only PUBLIC or reviewed SANITIZED_GENERALIZED INTERNAL material can be reused after provenance, ownership, quality, authorization, applicability, expiry, and revocation checks. Raw, confidential, secret, evidence-class, unknown, or cross-project restricted data is denied. Allowed knowledge is explicitly a lead, never target-specific evidence or authorization. Exposed through one allowlisted MCP evaluation tool; full sanitization pipeline remains open.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
@@ -54,6 +55,7 @@ Package version: 0.2.0 development baseline.
 - Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
 - Complete context-sensitive Decision Ledger arbitration, appeals/reversals, durable projections, authority continuity, and causal reconciliation.
 - Bind the canonical Master principal to the actual operator-owned Hermes Telegram identity and provision the external Master signing key through the separate signing authority; until then the bootstrap emergency-control gate intentionally fails closed.
+- Build the full sanitization/generalization pipeline, independent reviewer workflow, and governed cross-mission knowledge artifact lifecycle.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
 
 ## Architecture identity correction
