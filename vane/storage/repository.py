@@ -9,6 +9,7 @@ from vane.models import (
     Asset, EvidenceRecord, EvidenceStatus, Finding, FindingStatus, Mission, MissionStatus,
 )
 from vane.security.approval import Approval
+from vane.workers.contracts import WorkerTask
 from vane.projects.registry import Project
 from vane.storage.sqlite_store import SQLiteStore
 from vane.evidence.manager import validate_evidence
@@ -154,3 +155,32 @@ class SQLiteRepository:
         if record.get("expires_at"):
             record["expires_at"] = datetime.fromisoformat(record["expires_at"])
         return Approval(**record)
+
+    def save_worker_task(self, task: WorkerTask, *, actor: str = "master") -> int:
+        record = asdict(task)
+        return self.store.save_record(project_id=self._mission_project_id(task.parent_mission_id),
+            record_type="worker_task", record_id=task.task_id, record=record, actor=actor)
+
+    def _mission_project_id(self, mission_id: str) -> str:
+        db = self.store._connect()
+        try:
+            row = db.execute(
+                "SELECT project_id FROM domain_records WHERE record_type='mission' AND record_id=?",
+                (mission_id,),
+            ).fetchone()
+        finally:
+            db.close()
+        if row is None:
+            raise KeyError(mission_id)
+        return str(row["project_id"])
+
+    def get_worker_task(self, project_id: str, task_id: str) -> WorkerTask:
+        result = self.store.get_record(project_id=project_id, record_type="worker_task",
+                                       record_id=task_id)
+        if result is None:
+            raise KeyError(task_id)
+        record, _ = result
+        record["deadline"] = datetime.fromisoformat(record["deadline"])
+        record["allowed_methods"] = tuple(record["allowed_methods"])
+        record["allowed_asset_ids"] = tuple(record["allowed_asset_ids"])
+        return WorkerTask(**record)
