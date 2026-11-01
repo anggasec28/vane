@@ -308,3 +308,13 @@ class SQLiteStore:
     def verify_project_integrity(self, project_id: str) -> bool:
         """Verify event chain continuity and current domain rows against recorded digests."""
         return self.verify_project_chain(project_id) and self.verify_domain_records(project_id)
+
+    def list_projects(self) -> list[dict[str, str]]:
+        db = self._connect()
+        try:
+            rows = db.execute(
+                "SELECT project_id,name,owner,created_at FROM projects ORDER BY created_at,project_id"
+            ).fetchall()
+        finally:
+            db.close()
+        return [dict(row) for row in rows]
