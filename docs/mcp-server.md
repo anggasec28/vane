@@ -4,6 +4,11 @@ VANE ships a local stdio MCP server for deterministic governance utilities. It e
 - `vane_status`: reports version and safe capability flags.
 - `vane_scope_check`: checks an exact asset/method against a supplied authorization envelope.
 - `vane_plan_web2`: classifies supplied assets and creates passive review work items; it performs no requests.
+- `vane_plan_web3`: creates read-only smart-contract review tracks for an explicitly scoped address.
+- `vane_validate_finding`: validates a finding against supplied evidence.
+- `vane_validate_mission_closure`: checks evidence completeness, blockers, references, and mission state.
+- `vane_plan_recovery`: recommends a bounded recovery action.
+- `vane_lifecycle_decision`: recommends retention/preservation action without deleting data.
 - `vane_validate_evidence`: validates evidence record fields and digest shape.
 - `vane_verify_event_chain`: verifies a supplied event chain.
 
