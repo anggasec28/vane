@@ -11,3 +11,6 @@ class SecurityEnforcer:
                          approval: Approval | None = None) -> PolicyDecision:
         return self._policy.evaluate(envelope=envelope, locator=locator, method=method,
             requires_human_approval=approval_required, approval=approval)
+    def validate_approval(self, approval: Approval | None, expected_digest: str,
+                          expected_approval_id: str | None) -> bool:
+        return self._policy.validate_approval(approval, expected_digest, expected_approval_id)
