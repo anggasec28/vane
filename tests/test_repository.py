@@ -6,6 +6,7 @@ from vane.storage.sqlite_store import SQLiteStore
 
 def test_typed_repository_persists_domain_records_and_audit_chain(tmp_path):
     store = SQLiteStore(tmp_path / "data" / "vane.sqlite3")
+    assert store.schema_version() == 1
     repository = SQLiteRepository(store)
     project = Project("p1", "Test Project", "master")
     repository.save_project(project)
