@@ -28,7 +28,7 @@ Hermes connects to the local stdio server using the `mcp_servers.vane_engine` en
 
 ## Project and mission operations
 
-The local server also exposes durable project/mission workflow tools: create project/mission, retrieve/list missions, submit for approval, verify and authorize a mission, start, attach evidence, add/clear blockers, request independent review, complete, and close with signed Master approval. Inventory tools persist assets and list assets/evidence/findings; finding tools persist drafts or evidence-validated findings.
+The local server also exposes durable project/mission workflow tools: create/list projects, create mission, retrieve/list missions, submit for approval, verify and authorize a mission, start, attach evidence, add/clear blockers, request independent review, complete, and close with signed Master approval. Inventory tools persist assets and list assets/evidence/findings; finding tools persist drafts or evidence-validated findings.
 
 These tools operate on the profile-local SQLite database. They do not spawn workers or perform target requests. Project/mission creation and evidence/finding record writes are local state changes; target-facing actions remain subject to mission approval, exact scope, method allowlists, and separate high-risk action approval.
 
