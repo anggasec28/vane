@@ -54,6 +54,9 @@ class EvidenceGraph:
             raise KeyError(start)
         if max_depth < 0 or max_depth > 32:
             raise ValueError("max_depth must be between 0 and 32.")
+        if (allowed_asset_ids is not None and self.nodes[start].asset_id is not None
+                and self.nodes[start].asset_id not in allowed_asset_ids):
+            return ()
         results: list[GraphPath] = []
         queue = deque([(start, (start,), (), ())])
         while queue:

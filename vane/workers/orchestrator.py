@@ -61,10 +61,10 @@ class WorkerOrchestrator:
         self._assignments[task.task_id] = assignment
         return assignment
 
-    def restore(self, assignment: WorkerAssignment) -> WorkerAssignment:
+    def restore(self, assignment: WorkerAssignment, *, replace: bool = False) -> WorkerAssignment:
         task_id = assignment.task.task_id
         existing = self._assignments.get(task_id)
-        if existing is not None and existing != assignment:
+        if existing is not None and existing != assignment and not replace:
             raise ValueError(f"Conflicting worker assignment already loaded: {task_id}")
         self._assignments[task_id] = assignment
         return assignment

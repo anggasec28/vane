@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 170,
+  "file_count": 173,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -91,6 +91,7 @@
     "tests/test_engine.py",
     "tests/test_evidence.py",
     "tests/test_finding_governance.py",
+    "tests/test_governance_extensions.py",
     "tests/test_independent_validation.py",
     "tests/test_keyring.py",
     "tests/test_lifecycle.py",
@@ -101,6 +102,7 @@
     "tests/test_provenance.py",
     "tests/test_readiness.py",
     "tests/test_recovery.py",
+    "tests/test_reporting_and_registry.py",
     "tests/test_repository.py",
     "tests/test_schemas.py",
     "tests/test_serialization.py",
@@ -109,6 +111,7 @@
     "tests/test_state_machine.py",
     "tests/test_web2_planning.py",
     "tests/test_web3_planning.py",
+    "tests/test_worker_assignment_persistence.py",
     "tests/test_worker_contracts.py",
     "tests/test_worker_orchestrator.py",
     "vane/__init__.py",
@@ -178,5 +181,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline. Repository-side specialist contracts, typed worker registry, evidence graph, report assembly, remediation validation, durable worker assignment state, threat-intelligence normalization, case operations contracts, and JSON Schema validation have been added. Completion still requires isolated validation, full traceability, Hermes compatibility review, and release gates."
+  "completion_note": "Active development baseline. Specialist contracts, durable worker assignment state, evidence graph, report assembly, remediation validation, threat-intelligence normalization, case operations, and schema validation foundations are implemented. CI covers the repository baseline and newly added governance/worker tests; remaining work includes broader schema/traceability validation, Hermes compatibility review, and release gates."
 }

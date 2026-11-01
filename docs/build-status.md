@@ -5,7 +5,7 @@ Architecture: Hybrid modular Python engine + VANE profile + Hermes runtime bound
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 170 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 173 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
 - 33 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 10 JSON configuration/schema documents parsed successfully during structural checks.
@@ -24,8 +24,8 @@ Package version: 0.2.0 development baseline.
 - Bounded worker delegation lifecycle, strict result validation, durable task-contract and assignment-state persistence, restore-on-demand for delegated assignments, and completion/revocation audit history. Hermes worker-session spawning remains outside this repository runtime boundary.
 - Eight specialist role contracts with a central registry, explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions. These are repository-side definitions; Hermes profile loading is not yet verified.
 - Evidence-aware dependency graph primitives with bounded traversal, evidence-link checks, and explicit separation between graph relationships and authorization scope.
-- Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers.
-- Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks.
+- Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers, with an engine-level mission report facade and cross-mission evidence rejection.
+- Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks, including whole-plan cycle detection and engine-level plan validation.
 - Threat-intelligence record normalization, source provenance, expiry handling, confidence-weighted relevance scoring, and explicit distinction between relevance and exploitability.
 - Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation.
 - Optional JSON Schema document validation and repository-wide schema meta-validation using the declared development dependency.
@@ -39,7 +39,7 @@ Package version: 0.2.0 development baseline.
 - Complete schema-to-model validation coverage and verify all serialized record types against their schemas.
 - Verify Hermes profile installation and MCP discovery on the target Hermes runtime version; no target runtime has been inspected or changed.
 - Add Hermes worker-session spawning and a separately hosted independent verifier workflow through the operator's Hermes agent; VANE repository role contracts are now present.
-- Execute and review CI results, expand test coverage for specialist dispatch, reporting, remediation, persistence recovery, and schema compatibility, and complete packaging/security review and release artifacts.
+- Continue expanding test coverage for schema-to-model mappings, lifecycle failure recovery, and all governance edge cases; complete packaging/security review and release artifacts.
 - Map every Master decision and historical requirement to code-level acceptance tests.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
 

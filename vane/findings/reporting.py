@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from vane.models import EvidenceRecord, Finding, Mission
+from vane.errors import PolicyViolation
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +26,15 @@ def build_report(mission: Mission, findings: list[Finding],
                  report_id: str, limitations: tuple[str, ...] = ()) -> ReportBundle:
     if not report_id.strip():
         raise ValueError("report_id is required.")
+    for finding in findings:
+        if finding.project_id != mission.project_id:
+            raise PolicyViolation("Report cannot combine findings from another project.")
+        for evidence_id in finding.evidence_ids:
+            record = evidence.get(evidence_id)
+            if record is not None and (
+                record.project_id != mission.project_id or record.mission_id != mission.mission_id
+            ):
+                raise PolicyViolation("Report evidence reference belongs to another project or mission.")
     report_findings: list[dict[str, Any]] = []
     referenced: set[str] = set()
     for finding in sorted(findings, key=lambda item: (item.severity.lower(), item.finding_id)):
