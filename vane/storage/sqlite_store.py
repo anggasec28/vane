@@ -1,4 +1,4 @@
-"""SQLite persistence with serialized, hash-linked event appends."""
+"""SQLite persistence with atomic domain-record and hash-linked event writes."""
 from __future__ import annotations
 
 import json
@@ -11,11 +11,24 @@ from uuid import uuid4
 from vane.evidence.provenance import chain_digest
 
 
+def _json_default(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, set):
+        return sorted(value)
+    if hasattr(value, "value"):
+        return value.value
+    raise TypeError(f"Unsupported JSON value: {type(value).__name__}")
+
+
 class SQLiteStore:
-    """Small SQLite store. Each append obtains a write lock before reading chain head."""
+    """SQLite store with serialized writers and atomic event-linked record updates."""
+
+    ALLOWED_RECORD_TYPES = {"project", "mission", "asset", "evidence", "finding", "approval", "worker_task"}
 
     def __init__(self, path: str | Path) -> None:
         self.path = str(path)
+        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
@@ -33,6 +46,11 @@ class SQLiteStore:
                     project_id TEXT PRIMARY KEY, name TEXT NOT NULL, owner TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS domain_records (
+                    project_id TEXT NOT NULL, record_type TEXT NOT NULL, record_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL, record_json TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    PRIMARY KEY(project_id, record_type, record_id)
+                );
                 CREATE TABLE IF NOT EXISTS events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id TEXT NOT NULL UNIQUE, project_id TEXT NOT NULL,
@@ -42,9 +60,112 @@ class SQLiteStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_events_project_sequence
                     ON events(project_id, sequence);
+                CREATE INDEX IF NOT EXISTS idx_records_project_type
+                    ON domain_records(project_id, record_type);
             """)
         finally:
             db.close()
+
+    def _append_event_locked(self, db: sqlite3.Connection, *, project_id: str,
+                             event_type: str, actor: str, payload: dict[str, Any]) -> int:
+        identifier = str(uuid4())
+        occurred = datetime.now(timezone.utc).isoformat()
+        row = db.execute(
+            "SELECT digest FROM events WHERE project_id=? ORDER BY sequence DESC LIMIT 1",
+            (project_id,),
+        ).fetchone()
+        previous = str(row["digest"]) if row else None
+        event_payload = {"event_id": identifier, "project_id": project_id,
+            "event_type": event_type, "actor": actor, "occurred_at": occurred,
+            "payload": payload}
+        digest = chain_digest(previous, event_payload)
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                             ensure_ascii=False, default=_json_default)
+        cursor = db.execute(
+            """INSERT INTO events
+            (event_id, project_id, event_type, actor, occurred_at, payload_json,
+             previous_digest, digest) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (identifier, project_id, event_type, actor, occurred, encoded, previous, digest),
+        )
+        return int(cursor.lastrowid)
+
+    def save_record(self, *, project_id: str, record_type: str, record_id: str,
+                    record: dict[str, Any], actor: str) -> int:
+        """Persist a versioned record and its hash-linked audit event atomically."""
+        if record_type not in self.ALLOWED_RECORD_TYPES:
+            raise ValueError(f"Unsupported record type: {record_type}")
+        if not all((project_id, record_id, actor)):
+            raise ValueError("project_id, record_id, and actor are required.")
+        encoded = json.dumps(record, sort_keys=True, separators=(",", ":"),
+                             ensure_ascii=False, default=_json_default)
+        digest = __import__("hashlib").sha256(encoded.encode("utf-8")).hexdigest()
+        db = self._connect()
+        try:
+            db.execute("BEGIN IMMEDIATE")
+            if record_type == "project":
+                db.execute(
+                    """INSERT INTO projects(project_id,name,owner,created_at) VALUES(?,?,?,?)
+                    ON CONFLICT(project_id) DO UPDATE SET name=excluded.name, owner=excluded.owner""",
+                    (project_id, record["name"], record["owner"], record["created_at"]),
+                )
+            else:
+                exists = db.execute("SELECT 1 FROM projects WHERE project_id=?", (project_id,)).fetchone()
+                if exists is None:
+                    raise ValueError(f"Project does not exist: {project_id}")
+            row = db.execute(
+                """SELECT revision FROM domain_records
+                WHERE project_id=? AND record_type=? AND record_id=?""",
+                (project_id, record_type, record_id),
+            ).fetchone()
+            revision = int(row["revision"]) + 1 if row else 1
+            db.execute(
+                """INSERT INTO domain_records
+                (project_id,record_type,record_id,revision,record_json,updated_at)
+                VALUES(?,?,?,?,?,?)
+                ON CONFLICT(project_id,record_type,record_id) DO UPDATE SET
+                  revision=excluded.revision, record_json=excluded.record_json,
+                  updated_at=excluded.updated_at""",
+                (project_id, record_type, record_id, revision, encoded,
+                 datetime.now(timezone.utc).isoformat()),
+            )
+            self._append_event_locked(db, project_id=project_id,
+                event_type=f"{record_type}.saved", actor=actor,
+                payload={"record_type": record_type, "record_id": record_id,
+                         "revision": revision, "record_digest": digest})
+            db.commit()
+            return revision
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def get_record(self, *, project_id: str, record_type: str,
+                   record_id: str) -> tuple[dict[str, Any], int] | None:
+        db = self._connect()
+        try:
+            row = db.execute(
+                """SELECT record_json,revision FROM domain_records
+                WHERE project_id=? AND record_type=? AND record_id=?""",
+                (project_id, record_type, record_id),
+            ).fetchone()
+        finally:
+            db.close()
+        if row is None:
+            return None
+        return json.loads(row["record_json"]), int(row["revision"])
+
+    def list_records(self, *, project_id: str, record_type: str) -> list[dict[str, Any]]:
+        db = self._connect()
+        try:
+            rows = db.execute(
+                """SELECT record_json FROM domain_records
+                WHERE project_id=? AND record_type=? ORDER BY record_id""",
+                (project_id, record_type),
+            ).fetchall()
+        finally:
+            db.close()
+        return [json.loads(row["record_json"]) for row in rows]
 
     def append_chained_event(self, *, project_id: str, event_type: str,
                              actor: str, payload: dict[str, Any],
@@ -53,12 +174,10 @@ class SQLiteStore:
         identifier = event_id or str(uuid4())
         occurred = datetime.now(timezone.utc).isoformat()
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"),
-                             ensure_ascii=False, default=str)
-        event_payload = {
-            "event_id": identifier, "project_id": project_id,
-            "event_type": event_type, "actor": actor,
-            "occurred_at": occurred, "payload": payload,
-        }
+                             ensure_ascii=False, default=_json_default)
+        event_payload = {"event_id": identifier, "project_id": project_id,
+            "event_type": event_type, "actor": actor, "occurred_at": occurred,
+            "payload": payload}
         db = self._connect()
         try:
             db.execute("BEGIN IMMEDIATE")
