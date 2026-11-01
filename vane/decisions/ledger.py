@@ -59,8 +59,8 @@ class DecisionSnapshot:
     evidence_references: tuple[str, ...] = ()
     dependency_decision_ids: tuple[str, ...] = ()
     policy_version: str = "1"
-    supersedes_decision_id: str | None = None
-    supersedes_revision: int | None = None
+    superseded_by_decision_id: str | None = None
+    superseded_by_revision: int | None = None
     uncertainty: str = ""
 
 
@@ -75,7 +75,7 @@ def _validate_snapshot(snapshot: DecisionSnapshot) -> None:
     if snapshot.revision < 1:
         raise ValueError("Decision revision must be positive.")
     if snapshot.status == DecisionStatus.SUPERSEDED:
-        if not snapshot.supersedes_decision_id or snapshot.supersedes_revision is None:
+        if not snapshot.superseded_by_decision_id or snapshot.superseded_by_revision is None:
             raise ValueError("A superseding decision must identify the prior decision and revision.")
     if snapshot.decision_id in snapshot.dependency_decision_ids:
         raise ValueError("A decision cannot depend on itself.")
@@ -102,8 +102,8 @@ def _deserialize(value: dict[str, Any]) -> DecisionSnapshot:
         evidence_references=tuple(value.get("evidence_references", [])),
         dependency_decision_ids=tuple(value.get("dependency_decision_ids", [])),
         policy_version=value.get("policy_version", "1"),
-        supersedes_decision_id=value.get("supersedes_decision_id"),
-        supersedes_revision=value.get("supersedes_revision"),
+        superseded_by_decision_id=value.get("superseded_by_decision_id"),
+        superseded_by_revision=value.get("superseded_by_revision"),
         uncertainty=value.get("uncertainty", ""),
     )
 
@@ -167,8 +167,8 @@ class DecisionLedger:
         actor: str, authority_reference: str, trigger: str, rationale: str,
         evidence_references: tuple[str, ...] | None = None,
         policy_version: str | None = None, uncertainty: str | None = None,
-        supersedes_decision_id: str | None = None,
-        supersedes_revision: int | None = None,
+        superseded_by_decision_id: str | None = None,
+        superseded_by_revision: int | None = None,
     ) -> DecisionSnapshot:
         current = self.get(project_id, decision_id)
         if current.revision != expected_revision:
@@ -184,8 +184,8 @@ class DecisionLedger:
                                  else current.evidence_references),
             dependency_decision_ids=current.dependency_decision_ids,
             policy_version=policy_version or current.policy_version,
-            supersedes_decision_id=supersedes_decision_id,
-            supersedes_revision=supersedes_revision, uncertainty=(
+            superseded_by_decision_id=superseded_by_decision_id,
+            superseded_by_revision=superseded_by_revision, uncertainty=(
                 current.uncertainty if uncertainty is None else uncertainty),
         )
         return self._append(snapshot, expected_revision=current.revision)
