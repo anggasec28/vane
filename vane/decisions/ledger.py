@@ -110,19 +110,36 @@ def _deserialize(value: dict[str, Any]) -> DecisionSnapshot:
 
 
 class DecisionLedger:
-    """Project-scoped authoritative ledger with immutable event history."""
+    """One central authoritative event chain with project-scoped decision views."""
 
     EVENT_TYPE = "decision.snapshot"
+    LEDGER_PROJECT_ID = "__central_decision_ledger__"
 
     def __init__(self, store: SQLiteStore) -> None:
         self.store = store
+        if store.get_record(project_id=self.LEDGER_PROJECT_ID, record_type="project",
+                            record_id=self.LEDGER_PROJECT_ID) is None:
+            from datetime import timezone
+            store.save_record(
+                project_id=self.LEDGER_PROJECT_ID, record_type="project",
+                record_id=self.LEDGER_PROJECT_ID, actor="vane-ledger",
+                record={
+                    "project_id": self.LEDGER_PROJECT_ID,
+                    "name": "VANE Central Decision Ledger", "owner": "VANE",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
 
-    def _events(self, project_id: str) -> list[dict[str, Any]]:
-        return [event for event in self.store.list_events(project_id, limit=None)
-                if event["event_type"] == self.EVENT_TYPE]
+    def _events(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        events = [event for event in self.store.list_events(self.LEDGER_PROJECT_ID, limit=None)
+                  if event["event_type"] == self.EVENT_TYPE]
+        if project_id is not None:
+            events = [event for event in events
+                      if event["payload"]["snapshot"]["project_id"] == project_id]
+        return events
 
-    def _head_digest(self, project_id: str) -> str | None:
-        events = self.store.list_events(project_id, limit=None)
+    def _head_digest(self) -> str | None:
+        events = self.store.list_events(self.LEDGER_PROJECT_ID, limit=None)
         return str(events[-1]["digest"]) if events else None
 
     def list_decisions(self, project_id: str) -> tuple[DecisionSnapshot, ...]:
@@ -133,6 +150,16 @@ class DecisionLedger:
             if current is None or snapshot.revision > current.revision:
                 latest[snapshot.decision_id] = snapshot
         return tuple(sorted(latest.values(), key=lambda item: item.decision_id))
+
+    def list_all_decisions(self) -> tuple[DecisionSnapshot, ...]:
+        latest: dict[tuple[str, str], DecisionSnapshot] = {}
+        for event in self._events():
+            snapshot = _deserialize(event["payload"]["snapshot"])
+            key = (snapshot.project_id, snapshot.decision_id)
+            current = latest.get(key)
+            if current is None or snapshot.revision > current.revision:
+                latest[key] = snapshot
+        return tuple(sorted(latest.values(), key=lambda item: (item.project_id, item.decision_id)))
 
     def get(self, project_id: str, decision_id: str) -> DecisionSnapshot:
         for snapshot in self.list_decisions(project_id):
@@ -199,9 +226,9 @@ class DecisionLedger:
         actual_revision = int(current["payload"]["snapshot"]["revision"]) if current else 0
         if actual_revision != expected_revision:
             raise ValueError("Decision revision changed; refresh before appending.")
-        head = self._head_digest(snapshot.project_id)
+        head = self._head_digest()
         self.store.append_chained_event(
-            project_id=snapshot.project_id, event_type=self.EVENT_TYPE,
+            project_id=self.LEDGER_PROJECT_ID, event_type=self.EVENT_TYPE,
             actor=snapshot.actor,
             payload={"snapshot": _serialize(snapshot),
                      "previous_decision_revision": expected_revision,
