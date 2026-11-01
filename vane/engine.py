@@ -122,7 +122,8 @@ class VaneEngine:
         if not reason.strip():
             raise ValueError("Blocker reason must not be empty.")
         previous_status, previous_history = mission.status, list(mission.history)
-        if reason not in mission.blockers:
+        added = reason not in mission.blockers
+        if added:
             mission.blockers.append(reason)
         if mission.status in {MissionStatus.AUTHORIZED, MissionStatus.RUNNING}:
             transition(mission, MissionStatus.BLOCKED, actor=actor, reason=reason)
@@ -132,7 +133,8 @@ class VaneEngine:
         except Exception:
             mission.status = previous_status
             mission.history = previous_history
-            mission.blockers.remove(reason)
+            if added:
+                mission.blockers.remove(reason)
             raise
         return mission
 
@@ -209,11 +211,13 @@ class VaneEngine:
             evidence = {item.evidence_id: item
                         for item in self.repository.list_evidence(mission.project_id)
                         if item.mission_id == mission.mission_id}
-            findings = [item for item in self.repository.list_findings(mission.project_id)]
+            findings = [item for item in self.repository.list_findings(mission.project_id)
+                        if set(item.evidence_ids) & set(evidence)]
         else:
             evidence = {key: value for key, value in project.evidence.items()
                         if value.mission_id == mission.mission_id}
-            findings = list(project.findings.values())
+            findings = [item for item in project.findings.values()
+                        if set(item.evidence_ids) & set(evidence)]
         checks = validate_mission_closure(mission, evidence, findings)
         failures = [f"{check.code}: {check.detail}" for check in checks if not check.passed]
         if failures:
