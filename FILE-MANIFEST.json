@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 120,
+  "file_count": 121,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -20,6 +20,7 @@
     "docs/data-lifecycle.md",
     "docs/evidence-model.md",
     "docs/finding-governance.md",
+    "docs/hermes-installation.md",
     "docs/master-decisions.md",
     "docs/mcp-integration.md",
     "docs/operating-model.md",
