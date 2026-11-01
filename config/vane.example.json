@@ -1,0 +1,18 @@
+{
+  "profile": "vane",
+  "runtime": "hermes-agent",
+  "mode": "autonomous_with_approval",
+  "storage": {"backend": "sqlite", "path": "./data/vane.sqlite3"},
+  "policy": {
+    "default_decision": "deny",
+    "require_authorization_envelope": true,
+    "require_explicit_method_allowlist": true,
+    "scope_expansion": "deny_without_master_approval",
+    "unknown_asset_disposition": "not_inspected",
+    "require_evidence_for_finding_validation": true
+  },
+  "mcp": {"default_enabled": false, "require_capability_registration": true},
+  "signing": {"algorithm": "Ed25519", "provider": "external_signing_service", "private_key_in_engine": false},
+  "runtime_integration": {"enabled": false, "mutate_hermes": false},
+  "production": {"authorized": false}
+}
