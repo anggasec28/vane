@@ -66,6 +66,7 @@ mcp_servers:
         - vane_create_decision
         - vane_get_decision
         - vane_get_decision_relationships
+        - vane_evaluate_knowledge_reuse
         - vane_list_decisions
         - vane_transition_decision
         - vane_create_project
