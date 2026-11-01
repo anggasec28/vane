@@ -7,7 +7,7 @@ Package version: 0.2.0 development baseline.
 ## Current repository inventory
 - 173 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
-- 33 MCP tools defined in the server and exactly matched by the profile tool allowlist.
+- 36 MCP tools defined in the server and exactly matched by the profile tool allowlist.
 - 10 JSON configuration/schema documents parsed successfully during structural checks.
 - A GitHub Actions workflow is configured for push and pull-request CI; test execution/results have not yet been verified.
 
@@ -22,13 +22,15 @@ Package version: 0.2.0 development baseline.
 - Project registry, typed SQLite repositories for projects/authorization envelopes/missions/evidence/findings/assets/approvals/worker tasks, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with profile-local SQLite and public-only Ed25519 verifier.
 - Bounded worker delegation lifecycle, strict result validation, durable task-contract and assignment-state persistence, restore-on-demand for delegated assignments, and completion/revocation audit history. Hermes worker-session spawning remains outside this repository runtime boundary.
-- Eight specialist role contracts with a central registry, explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions. These are repository-side definitions; Hermes profile loading is not yet verified.
+- One VANE Master profile and eight specialist role contracts with a central registry, explicit input/output contracts, allowed/prohibited activities, handoff ownership, and stop conditions. These are repository-side definitions; Hermes profile loading is not yet verified.
 - Evidence-aware dependency graph primitives with bounded traversal, evidence-link checks, and explicit separation between graph relationships and authorization scope.
 - Deterministic report bundle assembly linking findings to evidence, preserving limitations and blockers, with an engine-level mission report facade and cross-mission evidence rejection.
 - Remediation action contracts with finding-state, dependency, priority, and verification-evidence checks, including whole-plan cycle detection and engine-level plan validation.
 - Threat-intelligence record normalization, source provenance, expiry handling, confidence-weighted relevance scoring, and explicit distinction between relevance and exploitability.
 - Case work-item and timeline contracts with ownership, due-date, dependency-cycle, and escalation-level validation.
 - Optional JSON Schema document validation and repository-wide schema meta-validation using the declared development dependency.
+- Engine-level report assembly and remediation-plan validation, exposed through three additional MCP tools for specialist listing, mission reports, and remediation validation.
+- Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
 - Local stdio MCP server exposing project/mission lifecycle, asset/evidence/finding persistence, approval verification, planning, and integrity utilities; no live target execution.
 - JSON schemas and initial unit tests, including skill metadata, approval signatures, scoped planners, and SQLite event integrity.
