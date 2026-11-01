@@ -47,5 +47,6 @@ def test_mission_authorization_and_approval_persist_together(tmp_path):
     assert persisted.status == MissionStatus.AUTHORIZED
     assert repository.get_approval("p2", "approval-2").subject_digest == authorization_digest(envelope)
     assert repository.get_authorization("p2", "a2").envelope_id == "a2"
+    assert repository.store.verify_project_integrity("p2")
     restarted = VaneEngine(repository=repository)
     assert restarted.get_mission("p2", mission.mission_id).status == MissionStatus.AUTHORIZED
