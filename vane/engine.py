@@ -86,6 +86,16 @@ class VaneEngine:
             raise RuntimeError("Durable finding storage is not configured.")
         self.repository.save_finding(finding, actor=actor)
 
+    def delegate_worker(self, task: WorkerTask, mission: Mission,
+                        envelope: AuthorizationEnvelope, assets: dict[str, Asset]) -> WorkerAssignment:
+        assignment = self.workers.delegate(task, mission, envelope, assets)
+        if self.repository is not None:
+            self.repository.save_worker_task(mission.project_id, task)
+        return assignment
+
+    def complete_worker_task(self, task_id: str, result: dict) -> WorkerAssignment:
+        return self.workers.complete(task_id, result)
+
     def authorize_observation(self, envelope: AuthorizationEnvelope | None,
                               locator: str, method: str, *, mission_approval: Approval,
                               action_approval: Approval | None = None,
