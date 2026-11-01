@@ -113,3 +113,14 @@ class SQLiteRepository:
             record["status"] = FindingStatus(record["status"])
             result.append(Finding(**record))
         return result
+
+    def save_asset(self, project_id: str, asset, *, actor: str = "mapper") -> int:
+        record = asdict(asset)
+        record["disposition"] = asset.disposition.value
+        return self.store.save_record(project_id=project_id, record_type="asset",
+            record_id=asset.asset_id, record=record, actor=actor)
+
+    def save_approval(self, project_id: str, approval, *, actor: str = "master") -> int:
+        record = asdict(approval)
+        return self.store.save_record(project_id=project_id, record_type="approval",
+            record_id=approval.approval_id, record=record, actor=actor)
