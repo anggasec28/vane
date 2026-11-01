@@ -5,7 +5,7 @@
   "runtime": "Hermes Agent",
   "python": ">=3.11",
   "standalone": false,
-  "file_count": 182,
+  "file_count": 183,
   "files": [
     ".github/workflows/ci.yml",
     ".gitignore",
@@ -87,6 +87,7 @@
     "tests/test_asset_mapping.py",
     "tests/test_authorization.py",
     "tests/test_authorization_review.py",
+    "tests/test_case_sla.py",
     "tests/test_config.py",
     "tests/test_ed25519_approval.py",
     "tests/test_engine.py",
@@ -190,5 +191,5 @@
     "vane/workers/orchestrator.py",
     "vane/workers/registry.py"
   ],
-  "completion_note": "Active development baseline with Master/specialist profiles, durable worker and governance repositories, typed JSON Schema enforcement, forward SQLite migrations, auditable data-lifecycle reviews, and expanded tests. Hermes runtime validation and external L3 anchoring remain open."
+  "completion_note": "Active development baseline with Master/specialist profiles, durable worker and governance records, schema enforcement, forward SQLite migrations, auditable lifecycle review, and read-only case SLA evaluation. Hermes runtime validation, external anchoring, and remaining release gates remain open."
 }
