@@ -22,7 +22,7 @@ Use when retaining, archiving, reviewing, or proposing disposal of project data 
 
 ## Engine Tool
 
-Use `mcp__vane_engine__vane_lifecycle_decision` to obtain a retention decision. The tool never deletes data; any disposal remains a separately approved action.
+Use `vane_lifecycle_decision` to obtain a retention decision. The tool never deletes data; any disposal remains a separately approved action.
 
 ## Pitfalls
 - Unknown ownership is not permission to delete.
