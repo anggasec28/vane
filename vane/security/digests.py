@@ -36,3 +36,20 @@ def approval_signing_payload(approval: Approval) -> bytes:
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"),
                       ensure_ascii=False, default=_json_default).encode("utf-8")
+
+from vane.models import Mission
+
+def mission_closure_digest(mission: Mission) -> str:
+    """Digest the independently validated completed mission snapshot."""
+    if mission.status.value != "COMPLETED":
+        raise ValueError("Only a completed mission can be closure-approved.")
+    return _digest({
+        "mission_id": mission.mission_id,
+        "project_id": mission.project_id,
+        "authorization_id": mission.authorization_id,
+        "status": mission.status.value,
+        "required_evidence": sorted(mission.required_evidence),
+        "completed_evidence": sorted(mission.completed_evidence),
+        "blockers": list(mission.blockers),
+        "history": mission.history,
+    })
