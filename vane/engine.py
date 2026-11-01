@@ -161,6 +161,13 @@ class VaneEngine:
             raise
         return mission
 
+    def save_asset(self, project_id: str, asset: Asset, *, actor: str = "mapper") -> Asset:
+        project = self.get_project(project_id)
+        if self.repository is not None:
+            self.repository.save_asset(project_id, asset, actor=actor)
+        project.assets[asset.asset_id] = asset
+        return asset
+
     def save_evidence(self, evidence: EvidenceRecord, *, actor: str = "collector") -> None:
         validate_evidence(evidence)
         project = self.get_project(evidence.project_id)
