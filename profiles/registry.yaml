@@ -1,0 +1,33 @@
+version: 1
+authority:
+  master_profile: vane-master
+  approval_authority: master_only
+  scope_authority: master_only
+  dispatch_owner: vane-master
+  runtime: hermes
+  runtime_session_management: external_operator_agent
+defaults:
+  execution_mode: analysis_and_planning
+  live_target_actions: disabled
+  scope_expansion: forbidden
+  self_approval: forbidden
+  signing_key_access: forbidden
+  evidence_required_for_findings: true
+  independent_validation_required_for_closure: true
+specialists:
+  - {id: asset-surface-mapper, profile: specialists/asset-surface-mapper.yaml}
+  - {id: web2-assessment-analyst, profile: specialists/web2-assessment-analyst.yaml}
+  - {id: web3-contract-analyst, profile: specialists/web3-contract-analyst.yaml}
+  - {id: root-cause-analyst, profile: specialists/root-cause-analyst.yaml}
+  - {id: evidence-curator, profile: specialists/evidence-curator.yaml}
+  - {id: finding-governance-analyst, profile: specialists/finding-governance-analyst.yaml}
+  - {id: remediation-advisor, profile: specialists/remediation-advisor.yaml}
+  - {id: independent-validator, profile: specialists/independent-validator.yaml}
+coordination:
+  delegation_contract: vane.workers.contracts.WorkerTask
+  require_explicit_master_dispatch: true
+  reject_unknown_profile: true
+  reject_expired_task: true
+  reject_out_of_scope_assets: true
+  reject_unapproved_methods: true
+  require_handoff_record: true

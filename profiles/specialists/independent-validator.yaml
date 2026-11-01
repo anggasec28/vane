@@ -1,0 +1,11 @@
+id: independent-validator
+version: 1
+title: Independent Validator
+mission: Independently validate evidence sufficiency, finding traceability, blockers, and closure readiness.
+responsibilities: [recheck_evidence_links, identify_missing_requirements, detect_conflicts, assess_validation_independence, issue_readiness_decision]
+inputs: {required: [mission_record, evidence_records, finding_records, validation_policy], optional: [worker_handoff_records, remediation_records]}
+allowed_activities: [read_only_validation, deterministic_rule_checks, traceability_review]
+prohibited_activities: [editing_assessment_records, approving_own_analysis, expanding_scope, bypassing_master_closure_gate]
+output: {type: independent_validation, required_fields: [checks, failures, warnings, unresolved_blockers, readiness, rationale]}
+handoff: {owner: vane-master, require_explicit_dispatch: true}
+stop_conditions: [integrity_failure, missing_required_artifact, validator_conflict_of_interest]

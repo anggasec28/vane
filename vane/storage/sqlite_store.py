@@ -24,7 +24,7 @@ def _json_default(value: Any) -> Any:
 class SQLiteStore:
     """SQLite store with serialized writers and atomic event-linked record updates."""
 
-    ALLOWED_RECORD_TYPES = {"project", "authorization", "mission", "asset", "evidence", "finding", "approval", "worker_task"}
+    ALLOWED_RECORD_TYPES = {"project", "authorization", "mission", "asset", "evidence", "finding", "approval", "worker_task", "worker_assignment"}
 
     def __init__(self, path: str | Path, *, read_only: bool = False) -> None:
         self.path = str(path)
