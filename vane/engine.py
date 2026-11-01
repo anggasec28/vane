@@ -1,7 +1,7 @@
 """Public application facade for embedding VANE in a host runtime."""
 from vane.core.orchestrator import AssessmentOrchestrator
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from vane.assessment.asset_mapping import classify_discovered_asset
 from vane.core.state_machine import transition
 from vane.errors import PolicyViolation
@@ -10,7 +10,7 @@ from vane.findings.governance import validate_finding
 from vane.findings.reporting import ReportBundle, build_report
 from vane.findings.remediation import RemediationAction, validate_remediation, validate_remediation_graph
 from vane.intelligence.threat_intel import ThreatIntelRecord
-from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem
+from vane.projects.case_ops import CaseTimelineEvent, CaseWorkItem, evaluate_case_sla
 from vane.lifecycle.policy import LifecycleContext
 from vane.lifecycle.review import LifecycleReview, create_lifecycle_review
 from vane.models import (
@@ -381,6 +381,15 @@ class VaneEngine:
         )
         self.governance_repository.save_lifecycle_review(review, actor=actor)
         return review
+
+    def evaluate_case_sla(self, project_id: str, *,
+                          warning_window: timedelta = timedelta(hours=24),
+                          now: datetime | None = None):
+        if self.governance_repository is None:
+            raise PolicyViolation("Case SLA evaluation requires a configured repository.")
+        current = now or datetime.now(timezone.utc)
+        return tuple(evaluate_case_sla(item, now=current, warning_window=warning_window)
+                     for item in self.governance_repository.list_work_items(project_id))
 
     def save_case_work_item(self, item: CaseWorkItem, *, actor: str = "master") -> int:
         if self.governance_repository is None:
