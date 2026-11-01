@@ -26,6 +26,17 @@ vane version
 
 Python 3.11 or newer is required. The package has no mandatory third-party runtime dependencies. Development tools are installed with the `dev` extra.
 
+## Install as a Hermes profile
+
+The repository is structured as a Hermes profile distribution. On a Hermes machine, install it with:
+
+```bash
+hermes profile install github.com/anggasec28/vane --alias
+hermes -p vane setup
+```
+
+Then install the Python engine in the new profile's environment. Follow [the complete Hermes installation guide](docs/hermes-installation.md) for the exact steps and boundaries. The distribution installer does not install Python dependencies or activate the engine automatically.
+
 ## Architecture
 - **Hermes Agent:** runtime, sessions, profile loading, tool execution.
 - **VANE profile:** identity, authority, policy, skills, and operating contract.
