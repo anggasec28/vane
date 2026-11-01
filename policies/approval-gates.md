@@ -9,4 +9,5 @@ High-risk methods require a second, separately signed Ed25519 approval bound to 
 Missing public keys, unknown key IDs, malformed or invalid signatures, expired approvals, mismatched digests, or missing authorization references mean DENY.
 
 Protected identity/authority edits, deployment, reset, signing-key operations, and scope changes require explicit Master approval under their separate policies. Approval for one action cannot be stretched to materially different actions.
-\nMission closure is a separate Master-controlled gate. The mission must first pass independent evidence validation and reach COMPLETED; closure then requires a finite Ed25519 approval bound to the exact completed mission snapshot.\n
+
+Mission closure is a separate Master-controlled gate. The mission must first pass independent evidence validation and reach COMPLETED; closure then requires a finite Ed25519 approval bound to the exact completed mission snapshot.
