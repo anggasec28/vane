@@ -12,7 +12,7 @@ Package version: 0.2.0 development baseline.
 - Evidence record validation, SHA-256 helpers, canonical provenance, and event-chain verification.
 - Finding validation linked to usable evidence.
 - Adaptive recovery planner and hybrid lifecycle policy.
-- Project registry, typed SQLite repositories for projects/missions/evidence/findings, versioned domain records, and atomic hash-linked audit events.
+- Project registry, typed SQLite repositories for projects/missions/evidence/findings/assets/approvals, versioned domain records, atomic hash-linked audit events, and current-row integrity verification.
 - Explicit engine bootstrap with local SQLite and public-only Ed25519 verifier.
 - Worker delegation contracts and independent mission closure validator.
 - External Ed25519 signing interface, public-only approval verifier/keyring, and inert Hermes adapter.
