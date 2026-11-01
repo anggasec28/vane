@@ -5,7 +5,7 @@
 2. Scope is explicit. Discovered assets and dependencies are not implicitly authorized.
 3. Method allowlisting is exact. An allowed hostname does not imply permission for every technique.
 4. Central policy evaluation precedes capability execution.
-5. Human approval is bound to a specific action digest and validity window, then verified using an Ed25519 public key from a trusted keyring.
+5. Every mission requires a signed Ed25519 approval bound to its exact authorization envelope. High-risk methods additionally require a separate signed approval bound to the exact asset and method.
 6. Worker authority is a strict subset of the parent mission.
 7. Evidence records retain source, time, digest, method, and authorization linkage.
 8. Findings require resolvable evidence and cannot validate on disputed/insufficient evidence.
