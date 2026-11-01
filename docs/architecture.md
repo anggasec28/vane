@@ -16,13 +16,13 @@ Hermes Agent provides runtime, sessions, profile loading, and tool execution. VA
 10. Hermes adapter boundary and external signing service.
 
 ## Python package map
-`core` orchestration; `security` policy and authorization; `assessment` Web2/Web3 planning; `evidence` integrity/provenance; `findings` governance; `projects` registry; `recovery` adaptive recovery; `lifecycle` data lifecycle; `storage` SQLite persistence; `workers` delegation contracts; `validation` independent checks; `mcp` capability registry; `crypto` signer interface; `integrations/hermes` runtime boundary.
+`core` orchestration; `security` policy and authorization; `assessment` Web2/Web3 planning; `evidence` integrity/provenance; `findings` governance; `projects` registry; `recovery` adaptive recovery; `lifecycle` data lifecycle; `storage` versioned SQLite domain records and hash-linked events; `workers` bounded delegation lifecycle; `validation` independent checks; `mcp` local stdio workflow server and capability registry; `crypto` public-only Ed25519 approval verifier/keyring; `integrations/hermes` runtime boundary.
 
 ## Trust boundaries
 Master↔VANE; orchestrator↔worker; VANE↔Hermes host; policy engine↔capability adapter; target↔observation channel; evidence producer↔store; signer↔verifier; local event store↔external anchor.
 
 ## Invariants
-- No consequential action without a valid authorization envelope.
+- Every mission requires a signed Ed25519 approval bound to its authorization envelope; high-risk methods require a second approval bound to the exact locator/method.
 - Asset and method permissions are both explicit.
 - Discovery, redirects, DNS, certificates, links, and dependency edges do not grant scope.
 - Out-of-scope assets remain uninspected and are recorded as such.
@@ -30,6 +30,7 @@ Master↔VANE; orchestrator↔worker; VANE↔Hermes host; policy engine↔capabi
 - Task completion does not imply assessment closure.
 - Evidence state and finding state are distinct.
 - Workers cannot exceed delegated asset/method constraints.
+- Evidence is rechecked against the stored signed authorization at observation time; mission closure requires independent validation and a separate signed Master approval.
 - Signing and verification authority are separated.
 - Unclear ownership or preservation status blocks automatic destructive lifecycle action.
 - Runtime and production activation require separate explicit approval.
