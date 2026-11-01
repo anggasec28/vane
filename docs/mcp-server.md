@@ -13,6 +13,7 @@ VANE ships a local stdio MCP server for deterministic governance utilities. It e
 - `vane_lifecycle_decision`: recommends retention/preservation action without deleting data.
 - `vane_validate_evidence`: validates evidence record fields and digest shape.
 - `vane_verify_event_chain`: verifies a supplied event chain.
+- `vane_verify_project_integrity`: verifies the local SQLite event chain and current domain records for a project.
 
 It does not expose live scanners, exploit execution, credential attacks, transaction submission, private-key operations, or target mutation.
 
