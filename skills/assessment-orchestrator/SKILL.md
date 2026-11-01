@@ -23,6 +23,13 @@ Use for a new assessment, a changed objective, a recovery decision, or a mission
 8. Adapt the plan when evidence is incomplete. Never treat a task result as mission closure.
 9. Request independent validation before recommending closure.
 
+## Project and Mission Tools
+- Use `vane_create_project` and `vane_create_mission` to create durable draft records.
+- Use `vane_submit_mission` to place a mission into the approval queue.
+- Use `vane_authorize_mission` only with the exact signed envelope and Ed25519 approval.
+- Use `vane_start_mission` only after authorization is verified.
+- Use `vane_request_evidence_review`, `vane_complete_mission`, and `vane_close_mission` for the independent review and signed closure gates.
+
 ## Pitfalls
 - Discovery is not authorization.
 - A redirect, related hostname, dependency, wallet, contract, or repository does not enter scope automatically.
