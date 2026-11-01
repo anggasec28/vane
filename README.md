@@ -10,7 +10,7 @@
 - Evidence provenance, SHA-256 integrity, evidence-gated mission closure, and finding governance.
 - Adaptive recovery, data lifecycle policy, durable project/authorization/mission/asset/evidence/finding/approval records, and SQLite event integrity.
 - Eight specialist role contracts with a typed registry/catalog, bounded worker delegation, durable assignment lifecycle, independent validation, and MCP capability registry.
-- Evidence-linked report assembly, remediation plan validation, threat-intelligence normalization/relevance scoring, case work-item/timeline contracts, and optional JSON Schema validation.
+- Evidence-linked report assembly, durable remediation actions, supplied threat-intelligence ingestion, durable case work items/timeline, and optional JSON Schema validation.
 - External Ed25519 signing contract and public-only approval verification; private-key custody remains outside the engine.
 - Hermes adapter contract, skills, policies, schemas, templates, and tests.
 
