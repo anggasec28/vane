@@ -11,6 +11,8 @@ The `vane/` package is the domain engine. Hermes remains the runtime and host fo
 - `evidence/`: SHA-256 integrity and evidence validation.
 - `findings/`: evidence-linked finding validation.
 - `projects/`: project registry.
+- `storage/repository.py`: durable project, mission, evidence, and finding repositories.
+- `bootstrap.py`: composes SQLite persistence and public-key-only approval verification.
 - `recovery/`: bounded evidence-driven recovery planning.
 - `lifecycle/`: data retention/disposition decisions.
 - `mcp/`: capability allowlist and local stdio MCP server.
