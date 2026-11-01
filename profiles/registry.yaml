@@ -14,6 +14,15 @@ authority:
     approval_authority: ultimate
     scope_authority: ultimate
     final_decision_authority: ultimate
+  emergency_suspension:
+    suspend_owner: master
+    release_owner: master
+    global_scope: true
+    signed_ed25519_approval_required: true
+    key_ids_from_profile_environment: VANE_MASTER_KEY_IDS
+    principal_from_profile_environment: VANE_MASTER_PRINCIPAL
+    central_enforcement_gate: true
+    fail_closed_when_unavailable: true
   orchestrator:
     owner: vane
     may_dispatch_within_effective_authority: true
