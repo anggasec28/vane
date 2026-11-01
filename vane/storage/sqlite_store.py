@@ -202,15 +202,21 @@ class SQLiteStore:
         finally:
             db.close()
 
-    def list_events(self, project_id: str, *, limit: int = 100) -> list[dict[str, Any]]:
-        if limit < 1 or limit > 10000:
-            raise ValueError("limit must be between 1 and 10000")
+    def list_events(self, project_id: str, *, limit: int | None = 100) -> list[dict[str, Any]]:
+        if limit is not None and (limit < 1 or limit > 10000):
+            raise ValueError("limit must be between 1 and 10000, or None for all events")
         db = self._connect()
         try:
-            rows = db.execute(
-                "SELECT * FROM events WHERE project_id=? ORDER BY sequence LIMIT ?",
-                (project_id, limit),
-            ).fetchall()
+            if limit is None:
+                rows = db.execute(
+                    "SELECT * FROM events WHERE project_id=? ORDER BY sequence",
+                    (project_id,),
+                ).fetchall()
+            else:
+                rows = db.execute(
+                    "SELECT * FROM events WHERE project_id=? ORDER BY sequence LIMIT ?",
+                    (project_id, limit),
+                ).fetchall()
         finally:
             db.close()
         result: list[dict[str, Any]] = []
@@ -222,4 +228,4 @@ class SQLiteStore:
 
     def verify_project_chain(self, project_id: str) -> bool:
         from vane.evidence.chain import verify_event_chain
-        return verify_event_chain(self.list_events(project_id, limit=10000)).valid
+        return verify_event_chain(self.list_events(project_id, limit=None)).valid
