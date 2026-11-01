@@ -30,6 +30,12 @@ Use for a new assessment, a changed objective, a recovery decision, or a mission
 - Use `vane_start_mission` only after authorization is verified. The engine revalidates the stored signature before starting or resuming.
 - Save assets only after signed mission authorization. Use `vane_request_evidence_review`, `vane_complete_mission`, and `vane_close_mission` for the independent review and signed closure gates.
 
+## Complete workflow planning
+- Use `vane_build_assessment_plan` with the current authorization envelope and explicitly classified IN_SCOPE assets to build the eleven-phase adaptive workflow.
+- The planner is planning-only. It does not execute tools, issue network requests, or spawn Hermes worker sessions.
+- Every newly discovered asset must be checked against the authorization envelope; discovery never grants scope.
+- Treat PLANNED as a planning state, not proof that a phase ran or passed.
+
 ## Pitfalls
 - Discovery is not authorization.
 - A redirect, related hostname, dependency, wallet, contract, or repository does not enter scope automatically.
