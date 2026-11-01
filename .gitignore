@@ -30,6 +30,7 @@ checkpoints/
 sandboxes/
 
 # VANE local data
+config/approval-public-keys.json
 data/
 target-data/
 evidence-local/
