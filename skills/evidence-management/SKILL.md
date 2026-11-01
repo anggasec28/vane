@@ -20,6 +20,9 @@ Use whenever observations, logs, screenshots, code excerpts, or derived artifact
 5. Use `vane_verify_event_chain` to verify exported event sequences.
 6. Distinguish evidence presence from evidence sufficiency. Preserve disputed and insufficient records without treating them as proof.
 
+## Persistence Tools
+Use `vane_attach_evidence` to validate, persist, and attach evidence to its mission. Use `vane_list_evidence` to reconcile persisted records. Never mark evidence objectives complete from an artifact that failed validation.
+
 ## Pitfalls
 - A digest proves byte identity, not truth, origin, or authorization.
 - An artifact's existence does not prove it supports a finding.
