@@ -8,7 +8,7 @@ def envelope():
     return AuthorizationEnvelope(
         envelope_id="auth-1", principal="master", project_id="p-1",
         rules=(ScopeRule("hostname", "example.com", include_subdomains=True),),
-        allowed_methods=("http_metadata",), expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        allowed_methods=("http_metadata",), starts_at=datetime.now(timezone.utc) - timedelta(minutes=1),\n        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         approval_id="approval-1")
 
 def test_exact_and_subdomain_scope():
