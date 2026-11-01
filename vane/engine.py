@@ -4,6 +4,7 @@ from vane.models import AuthorizationEnvelope, EvidenceRecord, Finding, Mission
 from vane.projects.registry import Project, ProjectRegistry
 from vane.security.approval import Approval
 from vane.security.enforcement import SecurityEnforcer
+from vane.security.policy_engine import HIGH_RISK_METHODS
 from vane.storage.repository import SQLiteRepository
 
 class VaneEngine:
@@ -89,6 +90,7 @@ class VaneEngine:
         decision = self.orchestrator.authorize_observation(envelope, locator, method,
             mission_approval=mission_approval, action_approval=action_approval,
             requires_human_approval=requires_human_approval)
-        if decision.allowed and action_approval is not None and self.repository is not None and envelope is not None:
+        if (decision.allowed and action_approval is not None and self.repository is not None
+                and envelope is not None and (requires_human_approval or method.strip().lower() in HIGH_RISK_METHODS)):
             self.repository.save_approval(envelope.project_id, action_approval, actor="master")
         return decision
