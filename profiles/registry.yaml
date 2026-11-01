@@ -1,6 +1,7 @@
 version: 1
 authority:
   master_profile: vane-master
+  master_profile_file: vane-master.yaml
   approval_authority: master_only
   scope_authority: master_only
   dispatch_owner: vane-master
