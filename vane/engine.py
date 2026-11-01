@@ -61,9 +61,11 @@ class VaneEngine:
             self.projects.add(project)
             return project
 
-    def create_mission(self, project_id: str, objective: str) -> Mission:
+    def create_mission(self, project_id: str, objective: str,
+                       required_evidence: set[str] | None = None) -> Mission:
         project = self.get_project(project_id)
         mission = Mission.create(project_id, objective)
+        mission.required_evidence = set(required_evidence or set())
         if self.repository is not None:
             self.repository.save_mission(mission)
         project.missions[mission.mission_id] = mission
