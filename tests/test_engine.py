@@ -104,3 +104,5 @@ def test_engine_exposes_append_only_decision_ledger(tmp_path):
     assert valid.revision == 2
     assert engine.decision_ledger.get("decision-project", "decision-1") == valid
     assert repository.store.verify_project_integrity("decision-project")
+    assert repository.store.verify_project_integrity(DecisionLedger.LEDGER_PROJECT_ID)
+    assert [item.project_id for item in repository.list_projects()] == ["decision-project"]
