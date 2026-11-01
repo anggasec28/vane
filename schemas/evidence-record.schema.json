@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vane.invalid/schemas/evidence-record.schema.json",
+  "title": "VANE Evidence Record",
+  "type": "object",
+  "required": ["evidence_id", "project_id", "mission_id", "kind", "source", "observed_at", "content_digest", "authorization_id"],
+  "properties": {
+    "evidence_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "kind": {"type": "string", "minLength": 1},
+    "source": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "content_digest": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "authorization_id": {"type": "string", "minLength": 1},
+    "collection_method": {"type": "string"},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "parent_evidence_ids": {"type": "array", "items": {"type": "string"}},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}
