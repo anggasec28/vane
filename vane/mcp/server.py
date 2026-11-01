@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -737,6 +737,23 @@ def vane_list_lifecycle_reviews(project_id: str) -> list[dict[str, Any]]:
         "reviewed_at": item.reviewed_at.isoformat(),
         "approval_reference": item.approval_reference,
     } for item in repository.list_lifecycle_reviews(project_id)]
+
+
+@server.tool()
+def vane_evaluate_case_sla(project_id: str, warning_hours: int = 24) -> list[dict[str, Any]]:
+    """Evaluate case deadlines and escalation recommendations without changing case state."""
+    if warning_hours < 0 or warning_hours > 24 * 365:
+        raise ValueError("warning_hours must be between 0 and 8760.")
+    results = _get_engine().evaluate_case_sla(
+        project_id, warning_window=timedelta(hours=warning_hours))
+    return [{
+        "item_id": item.item_id,
+        "state": item.state.value,
+        "seconds_to_due": item.seconds_to_due,
+        "escalation_recommended": item.escalation_recommended,
+        "suggested_escalation_level": item.suggested_escalation_level,
+        "state_changed": False,
+    } for item in results]
 
 
 def main() -> None:
