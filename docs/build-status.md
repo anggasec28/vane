@@ -11,6 +11,9 @@ Package version: 0.2.0 development baseline.
 - 18 JSON configuration/schema documents are present; schema meta-validation passed in CI.
 - GitHub Actions run #478 on commit `75ec83a` completed successfully: compileall passed, **110 tests passed**, and the CLI version/config check passed. The latest branch-head workflow #484 on commit `109d9d1` completed successfully: compileall passed, **118 tests passed**, and CLI version/config validation passed.
 
+## Executable observation adapters
+- Added an authorization-gated passive HTTP metadata adapter. It requires central policy approval and a signed mission approval, pins connections to validated public DNS addresses, refuses non-public destinations, does not follow redirects, never reads response bodies, and emits provenance-linked metadata evidence. Transport is injectable for deterministic tests.
+
 ## Assessment workflow planner
 - Added an eleven-phase adaptive assessment plan builder and `vane_build_assessment_plan` MCP tool. It requires a current approved authorization envelope and explicitly IN_SCOPE assets, rejects out-of-scope assets, and labels every phase PLANNED. The planner performs no network requests, invokes no scanner, and does not spawn Hermes sessions.
 
