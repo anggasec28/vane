@@ -1,11 +1,22 @@
 package:
-  name: vane-hermes-profile
-  version: 0.1.0
-  artifact_type: profile_source
+  name: vane-agent
+  version: 0.2.0
+  artifact_type: hermes_hosted_agent_and_python_engine
   runtime_dependency: hermes-agent
+  python_requirement: ">=3.11"
   standalone: false
   source_of_truth: https://github.com/anggasec28/vane
-included: [SOUL.md, config.yaml, policies/, skills/, templates/, docs/]
+included:
+  - SOUL.md
+  - config.yaml
+  - pyproject.toml
+  - vane/
+  - policies/
+  - skills/
+  - schemas/
+  - templates/
+  - docs/
+  - tests/
 excluded:
   - Hermes runtime source
   - runtime secrets and credentials
@@ -16,3 +27,4 @@ release_gate:
   requires_master_approval: true
   requires_manifest_verification: true
   requires_validation_report: true
+  requires_hermes_compatibility_review: true
