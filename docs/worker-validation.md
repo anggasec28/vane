@@ -4,4 +4,4 @@ Workers are subordinate execution contexts. Every delegated task must include a 
 
 Independent validation is separate from task execution. It checks evidence completeness, unresolved blockers, finding-to-evidence references, and mission state. A successful worker result is not a closure decision. Validation results are recorded as checks, not silently converted into approval.
 
-The current implementation provides contracts and deterministic validators. It does not spawn Hermes worker sessions or invoke tools.
+The current implementation provides bounded delegation, result validation, and deterministic validators. It persists task records when a repository is configured. It does not spawn Hermes worker sessions or invoke tools; high-risk worker methods are denied until a separately approved delegation path exists.
