@@ -12,6 +12,8 @@ mcp_servers:
   vane_engine:
     command: "${HERMES_HOME}/.venv/bin/python"
     args: ["-m", "vane.mcp.server"]
+    env:
+      VANE_APPROVAL_KEYRING: "${HERMES_HOME}/config/approval-public-keys.json"
     enabled: true
     timeout: 30
     connect_timeout: 15
