@@ -1,7 +1,7 @@
 name: vane
 version: 0.2.0
 description: "VANE modular security assessment agent and Python engine for Hermes Agent"
-hermes_requires: ">=0.22.0"
+hermes_requires: ">=0.12.0"
 author: "VANE Project"
 
 env_requires: []
