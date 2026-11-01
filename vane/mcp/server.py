@@ -42,6 +42,7 @@ from vane.crypto.keyring import load_public_keyring
 from vane.security.serialization import authorization_from_dict
 from vane.validation.independent import validate_mission_closure
 from vane.storage.sqlite_store import SQLiteStore
+from vane.workers.contracts import WorkerTask
 
 server = FastMCP("vane-engine")
 
@@ -80,6 +81,37 @@ def _decision_payload(snapshot) -> dict[str, Any]:
     }
 
 
+
+
+def _worker_task_from_dict(item: dict[str, Any]) -> WorkerTask:
+    deadline = datetime.fromisoformat(str(item["deadline"]).replace("Z", "+00:00"))
+    return WorkerTask(
+        task_id=str(item["task_id"]),
+        parent_mission_id=str(item["parent_mission_id"]),
+        worker_profile=str(item["worker_profile"]),
+        objective=str(item["objective"]),
+        allowed_methods=tuple(item["allowed_methods"]),
+        allowed_asset_ids=tuple(item["allowed_asset_ids"]),
+        deadline=deadline,
+        approval_id=str(item["approval_id"]),
+    )
+
+
+def _worker_assignment_payload(assignment) -> dict[str, Any]:
+    task = assignment.task
+    return {
+        "task_id": task.task_id,
+        "parent_mission_id": task.parent_mission_id,
+        "worker_profile": task.worker_profile,
+        "objective": task.objective,
+        "allowed_methods": list(task.allowed_methods),
+        "allowed_asset_ids": list(task.allowed_asset_ids),
+        "deadline": task.deadline.isoformat(),
+        "approval_id": task.approval_id,
+        "status": assignment.status.value,
+        "result": assignment.result,
+        "history": list(assignment.history),
+    }
 
 
 def _evidence_from_dict(item: dict[str, Any]) -> EvidenceRecord:
@@ -718,6 +750,57 @@ def vane_verify_project_integrity(project_id: str) -> dict[str, Any]:
             "event_chain_valid": store.verify_project_chain(project_id),
             "domain_records_valid": store.verify_domain_records(project_id),
             "project_id": project_id}
+
+@server.tool()
+def vane_delegate_worker_task(project_id: str, mission_id: str,
+                              envelope_json: str, task_json: str) -> dict[str, Any]:
+    """Create a bounded specialist handoff; Hermes owns actual worker-session spawning."""
+    engine = _get_engine()
+    mission = engine.get_mission(project_id, mission_id)
+    envelope = authorization_from_dict(json.loads(envelope_json))
+    task = _worker_task_from_dict(json.loads(task_json))
+    assets = ({item.asset_id: item for item in engine.repository.list_assets(project_id)}
+              if engine.repository is not None else dict(engine.get_project(project_id).assets))
+    assignment = engine.delegate_worker(task, mission, envelope, assets)
+    payload = _worker_assignment_payload(assignment)
+    payload["handoff"] = {
+        "dispatch_owner": "VANE primary Hermes profile",
+        "runtime_owner": "operator-managed Hermes runtime",
+        "session_spawned": False,
+        "required_inputs": list(engine.specialists.get(task.worker_profile).required_inputs),
+        "required_output_fields": list(
+            engine.specialists.get(task.worker_profile).required_output_fields
+        ),
+    }
+    return payload
+
+
+@server.tool()
+def vane_complete_worker_task(task_id: str, result_json: str) -> dict[str, Any]:
+    """Validate and persist a specialist result against its original bounded task contract."""
+    result = json.loads(result_json)
+    assignment = _get_engine().complete_worker_task(task_id, result)
+    return _worker_assignment_payload(assignment)
+
+
+@server.tool()
+def vane_revoke_worker_task(task_id: str, actor: str, reason: str) -> dict[str, Any]:
+    """Revoke a delegated task that has not yet completed."""
+    assignment = _get_engine().revoke_worker_task(task_id, actor=actor, reason=reason)
+    return _worker_assignment_payload(assignment)
+
+
+@server.tool()
+def vane_list_worker_tasks(project_id: str) -> list[dict[str, Any]]:
+    """List durable specialist assignments for one project."""
+    engine = _get_engine()
+    if engine.repository is None:
+        raise RuntimeError("Durable worker assignment repository is not configured.")
+    return [
+        _worker_assignment_payload(item)
+        for item in engine.repository.list_worker_assignments(project_id)
+    ]
+
 
 @server.tool()
 def vane_list_specialists() -> list[dict[str, Any]]:
