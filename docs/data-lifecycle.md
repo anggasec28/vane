@@ -9,3 +9,10 @@ Data with unclear ownership, status, legal hold, or preservation requirement is 
 Lifecycle: CREATE/COLLECT → CLASSIFY → ACTIVE → ARCHIVED/PRESERVED → REVIEW → DISPOSED, with policy-defined transitions and audit events.
 
 Project closure alone is not a deletion instruction. Evidence integrity, preservation status, operational convenience, and project closure are separate inputs.
+
+
+## Implemented review workflow
+
+The policy decision function is in `vane/lifecycle/policy.py`. Auditable review records are created by `vane/lifecycle/review.py`, persisted through `GovernanceRepository`, and exposed through `vane_review_data_lifecycle` and `vane_list_lifecycle_reviews`.
+
+A decision of `DISPOSE_PENDING_APPROVAL` is only a review outcome. It does not authorize or perform deletion. Preservation decisions retain the context, rationale, actor, and timestamp. Automated disposal, retention scheduling, and external preservation integrations remain unimplemented.
