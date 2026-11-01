@@ -9,6 +9,9 @@
 | 59 | A | Central Security Enforcement |
 | 60 | C | Independent Hybrid Validation |
 
+## Build implementation architecture
+- Hybrid modular Python engine + VANE profile + Hermes runtime boundary is the implementation default adopted to proceed with the requested full build. This is an engineering architecture choice, not a change to Master authority or Hermes runtime.
+
 ## Other confirmed choices
 - Data Lifecycle Governance: C, hybrid policy-driven by data class, project context, information status, and preservation need. Exceptions require reason, authority, and record. Unclear ownership/status is never auto-deleted.
 - Workflow: C, adaptive hybrid; deep root-cause and relevant dependency tracing within approved scope.
