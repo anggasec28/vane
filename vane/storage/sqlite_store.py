@@ -41,28 +41,43 @@ class SQLiteStore:
     def _initialize(self) -> None:
         db = self._connect()
         try:
-            db.executescript("""
-                CREATE TABLE IF NOT EXISTS projects (
+            db.execute("BEGIN IMMEDIATE")
+            db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (
+                version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)""")
+            row = db.execute("SELECT MAX(version) AS version FROM schema_migrations").fetchone()
+            version = int(row["version"] or 0)
+            if version < 1:
+                db.execute("""CREATE TABLE IF NOT EXISTS projects (
                     project_id TEXT PRIMARY KEY, name TEXT NOT NULL, owner TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS domain_records (
+                    created_at TEXT NOT NULL)""")
+                db.execute("""CREATE TABLE IF NOT EXISTS domain_records (
                     project_id TEXT NOT NULL, record_type TEXT NOT NULL, record_id TEXT NOT NULL,
                     revision INTEGER NOT NULL, record_json TEXT NOT NULL, updated_at TEXT NOT NULL,
-                    PRIMARY KEY(project_id, record_type, record_id)
-                );
-                CREATE TABLE IF NOT EXISTS events (
+                    PRIMARY KEY(project_id, record_type, record_id))""")
+                db.execute("""CREATE TABLE IF NOT EXISTS events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id TEXT NOT NULL UNIQUE, project_id TEXT NOT NULL,
                     event_type TEXT NOT NULL, actor TEXT NOT NULL,
                     occurred_at TEXT NOT NULL, payload_json TEXT NOT NULL,
-                    previous_digest TEXT, digest TEXT NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS idx_events_project_sequence
-                    ON events(project_id, sequence);
-                CREATE INDEX IF NOT EXISTS idx_records_project_type
-                    ON domain_records(project_id, record_type);
-            """)
+                    previous_digest TEXT, digest TEXT NOT NULL)""")
+                db.execute("""CREATE INDEX IF NOT EXISTS idx_events_project_sequence
+                    ON events(project_id, sequence)""")
+                db.execute("""CREATE INDEX IF NOT EXISTS idx_records_project_type
+                    ON domain_records(project_id, record_type)""")
+                db.execute("INSERT INTO schema_migrations(version, applied_at) VALUES(1, ?)",
+                           (datetime.now(timezone.utc).isoformat(),))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def schema_version(self) -> int:
+        db = self._connect()
+        try:
+            row = db.execute("SELECT MAX(version) AS version FROM schema_migrations").fetchone()
+            return int(row["version"] or 0)
         finally:
             db.close()
 
