@@ -95,10 +95,10 @@ def _verify_approval(envelope_json: str, approval_json: str, expected_digest: st
                  and approval.expires_at is not None
                  and approval.expires_at <= envelope.expires_at
                  and approval.is_valid_for(expected_digest) and verifier.verify(approval))
-        return {"verified": valid, "approval_id": approval.approval_id,
-                "key_id": approval.key_id, "execution_authorized": valid}
+        return {"signature_valid": valid, "approval_id": approval.approval_id,
+                "key_id": approval.key_id}
     except Exception as exc:
-        return {"verified": False, "execution_authorized": False, "reason": str(exc)}
+        return {"signature_valid": False, "reason": str(exc)}
 
 
 @server.tool()
@@ -108,8 +108,11 @@ def vane_verify_mission_approval(envelope_json: str, approval_json: str) -> dict
     if not envelope.is_time_valid():
         return {"verified": False, "execution_authorized": False,
                 "reason": "Authorization envelope is expired, revoked, or missing a finite validity window."}
-    return _verify_approval(envelope_json, approval_json, authorization_digest(envelope),
-                            envelope.approval_id)
+    result = _verify_approval(envelope_json, approval_json, authorization_digest(envelope),
+                              envelope.approval_id)
+    result["mission_approval_verified"] = result.pop("signature_valid", False)
+    result["execution_authorized"] = False
+    return result
 
 
 @server.tool()
@@ -120,7 +123,8 @@ def vane_verify_action_approval(envelope_json: str, approval_json: str,
     require_authorized(envelope, locator, method)
     digest = capability_action_digest(envelope, locator, method)
     result = _verify_approval(envelope_json, approval_json, digest, None)
-    result.update({"locator": locator, "method": method})
+    result["action_approval_verified"] = result.pop("signature_valid", False)
+    result.update({"locator": locator, "method": method, "execution_authorized": False})
     return result
 
 
