@@ -41,6 +41,26 @@ class KnowledgeCandidate:
     expires_at: datetime | None = None
     revoked: bool = False
 
+    def __post_init__(self) -> None:
+        for name in (
+            "knowledge_id", "source_project_id", "target_project_id",
+            "provenance_reference", "ownership_reference", "quality_review_reference",
+            "reuse_authorization_reference", "applicability_reference",
+        ):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{name} must be a non-empty string.")
+        for name in ("sanitized_record_reference", "sanitization_method", "sanitization_reviewer"):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise ValueError(f"{name} must be a non-empty string when supplied.")
+        if type(self.revoked) is not bool:
+            raise ValueError("revoked must be a boolean.")
+        if self.expires_at is not None and (
+            self.expires_at.tzinfo is None or self.expires_at.utcoffset() is None
+        ):
+            raise ValueError("expires_at must be timezone-aware.")
+
 
 @dataclass(frozen=True, slots=True)
 class KnowledgeReuseDecision:
