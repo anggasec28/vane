@@ -312,4 +312,4 @@ class SQLiteRepository:
         return [Project(item["project_id"], item["name"], item["owner"],
                         datetime.fromisoformat(item["created_at"]))
                 for item in self.store.list_projects()
-                if item["project_id"] != "__global_intelligence__"]
+                if item["project_id"] not in {"__global_intelligence__", "__central_decision_ledger__"}]
