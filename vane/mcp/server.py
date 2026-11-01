@@ -18,6 +18,7 @@ from vane.assessment.web2 import plan_web2_surface_review
 from vane.assessment.web3 import plan_contract_review
 from vane.evidence.chain import verify_event_chain
 from vane.decisions.ledger import DecisionStatus
+from vane.decisions.arbitration import (ClaimAssessment, EvidenceQuality, arbitrate_claims)
 from vane.evidence.manager import validate_evidence
 from vane.findings.governance import validate_finding
 from vane.findings.reporting import render_markdown
@@ -255,6 +256,47 @@ def vane_list_projects() -> list[dict[str, Any]]:
                 else [engine.projects.get(pid) for pid in engine.projects.list_ids()])
     return [{"project_id":p.project_id,"name":p.name,"owner":p.owner,
              "created_at":p.created_at.isoformat()} for p in projects]
+
+
+@server.tool()
+def vane_arbitrate_claims(claims_json: str) -> dict[str, Any]:
+    """Compare competing claims using evidence quality and hard authority gates; never uses majority voting."""
+    raw = json.loads(claims_json)
+    if not isinstance(raw, list):
+        raise ValueError("claims_json must be a JSON array.")
+    claims = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise ValueError("Each claim must be a JSON object.")
+        def parse_quality(value: dict[str, Any]) -> EvidenceQuality:
+            return EvidenceQuality(
+                evidence_id=str(value["evidence_id"]),
+                independence_group=str(value["independence_group"]),
+                provenance=int(value["provenance"]), integrity=int(value["integrity"]),
+                independence=int(value["independence"]),
+                reproducibility=int(value["reproducibility"]),
+                freshness=int(value["freshness"]), relevance=int(value["relevance"]),
+            )
+        claims.append(ClaimAssessment(
+            claim_id=str(item["claim_id"]),
+            supporting_evidence=tuple(parse_quality(x) for x in item.get("supporting_evidence", [])),
+            contradicting_evidence=tuple(parse_quality(x) for x in item.get("contradicting_evidence", [])),
+            scope_valid=bool(item.get("scope_valid", True)),
+            policy_valid=bool(item.get("policy_valid", True)),
+            authority_valid=bool(item.get("authority_valid", True)),
+            mission_priority=int(item.get("mission_priority", 0)),
+            impact=int(item.get("impact", 0)),
+            specialist_competence=int(item.get("specialist_competence", 0)),
+        ))
+    result = arbitrate_claims(claims)
+    return {
+        "status": result.status.value, "selected_claim_id": result.selected_claim_id,
+        "considered_claim_ids": list(result.considered_claim_ids),
+        "excluded_claim_ids": list(result.excluded_claim_ids),
+        "rationale": list(result.rationale),
+        "majority_voting_used": False,
+        "execution_authorized": False,
+    }
 
 
 @server.tool()
