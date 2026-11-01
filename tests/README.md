@@ -14,3 +14,6 @@ These are scenario specifications, not claims of executed tests.
 10. Verifier cannot access private signing key.
 11. Anchor regression fails closed.
 12. Signature state and closure state remain distinct.
+
+
+The VANE MCP server smoke test requires the optional MCP extra. Install development dependencies with `python -m pip install -e '.[dev,mcp]'`.
