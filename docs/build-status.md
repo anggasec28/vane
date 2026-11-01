@@ -5,11 +5,11 @@ Architecture: One primary VANE Hermes profile + seven logical domains + supporti
 Package version: 0.2.0 development baseline.
 
 ## Current repository inventory
-- 190 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
+- 193 paths registered in `FILE-MANIFEST.json` (unique manifest entries).
 - 13 Hermes skills with valid frontmatter and descriptions within the documented length limit.
 - 52 MCP tools defined in the server and exactly matched by the profile tool allowlist.
-- 11 JSON configuration/schema documents are present; all schema meta-validation passed in GitHub Actions run #406.
-- GitHub Actions run #406 on code commit `8a7d16f` completed successfully: compileall passed, all 77 tests passed, and the CLI version/config check passed. Subsequent source commits add stricter arbitration input validation and one additional test; those latest changes still need a CI rerun.
+- 11 JSON configuration/schema documents are present; schema meta-validation passed in CI.
+- GitHub Actions run #443 on code commit `a1201ce` completed successfully: compileall passed, **93 tests passed**, and the CLI version/config check passed. Run #442 also passed all 93 tests after the bootstrap tests were added.
 
 ## Source implemented
 - Python package metadata, CLI, domain models, and typed domain exceptions.
@@ -32,7 +32,9 @@ Package version: 0.2.0 development baseline.
 - JSON Schema enforcement on typed writes for project, authorization, approval, mission, asset, evidence, finding, and worker-task records, plus repository-wide schema meta-validation.
 - Auditable lifecycle review records are persisted through the governance repository and exposed through two MCP tools.
 - Append-only Central Decision Ledger foundation: immutable full decision snapshots in the central ledger event chain, explicit decision status transitions, authority/evidence/dependency references, revision checks, event-head compare-and-swap for concurrent append safety, and JSON Schema validation on every append. Exposed through the VANE engine facade and four allowlisted MCP tools.
-- Conservative hierarchical evidence-weighted arbitration: six evidence-quality dimensions, strict Pareto dominance without arbitrary weights, hard scope/policy/authority gates, and explicit UNRESOLVED outcomes for ties, incomparable evidence, or material contradictions. Exposed through a fifth decision-related MCP tool. Initial implementation passed the 77-test CI run; later strict input-type hardening and one extra test await rerun.
+- Conservative hierarchical evidence-weighted arbitration: six evidence-quality dimensions, strict Pareto dominance without arbitrary weights, hard scope/policy/authority gates, and explicit UNRESOLVED outcomes for ties, incomparable evidence, or material contradictions. Exposed through an allowlisted MCP tool.
+- Rebuildable project-scoped Decision Relationship Index for dependency, supersession, and shared-evidence links; retrieval is bounded and derived from the authoritative ledger, not persisted as an authority source.
+- Master-only Emergency Suspension Authority: signed operation-bound SUSPEND/RELEASE, configured Master principal and key-ID allowlist, revision/CAS protection, full event-chain and historical signature verification, and fail-closed central enforcement. Hermes bootstrap requires this control by default; missing identity/key configuration or unverifiable state denies actions.
 - Engine-level report assembly and remediation-plan validation, plus MCP tools for specialist listing, mission reports, remediation, case operations, and supplied threat-intelligence ingestion.
 - Expanded tests for graph scope boundaries, threat-intelligence time validation, case/remediation dependency cycles, report evidence binding, specialist registry, and worker assignment restoration.
 - External Ed25519 signing contract, public-only approval verifier/keyring, and inert Hermes adapter.
@@ -50,7 +52,8 @@ Package version: 0.2.0 development baseline.
 - Align all seven logical domains and cross-domain dependency/acceptance criteria in a source-decision-to-code traceability matrix.
 - Adjudicate CF-01 through CF-07 in `docs/architecture-conflicts.md` without silently changing recorded Master choices.
 - Complete case SLA/escalation automation and map every Master decision and historical requirement to code-level acceptance tests.
-- Complete Decision Ledger arbitration, appeals/reversals, supersession linkage across decision IDs, authoritative projections, continuity caches, and causal reconciliation.
+- Complete context-sensitive Decision Ledger arbitration, appeals/reversals, durable projections, authority continuity, and causal reconciliation.
+- Bind the canonical Master principal to the actual operator-owned Hermes Telegram identity and provision the external Master signing key through the separate signing authority; until then the bootstrap emergency-control gate intentionally fails closed.
 - Finish end-to-end consistency review, compare the manifest against the live Git tree, and resolve remaining acceptance-test gaps.
 
 ## Architecture identity correction
