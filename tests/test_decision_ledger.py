@@ -36,12 +36,12 @@ def test_decision_ledger_preserves_immutable_transition_history(tmp_path):
     assert second.revision == 2
     assert ledger.get("p1", "d1") == second
 
-    history = [event for event in store.list_events("p1", limit=None)
+    history = [event for event in store.list_events(DecisionLedger.LEDGER_PROJECT_ID, limit=None)
                if event["event_type"] == DecisionLedger.EVENT_TYPE]
     assert len(history) == 2
     assert history[0]["payload"]["snapshot"]["status"] == "UNRESOLVED"
     assert history[1]["payload"]["snapshot"]["status"] == "VALID"
-    assert store.verify_project_integrity("p1")
+    assert store.verify_project_integrity(DecisionLedger.LEDGER_PROJECT_ID)
 
 
 def test_decision_ledger_rejects_stale_revision_and_invalid_transition(tmp_path):
