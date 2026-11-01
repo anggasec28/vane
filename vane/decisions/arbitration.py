@@ -24,12 +24,13 @@ class EvidenceQuality:
     relevance: int
 
     def __post_init__(self) -> None:
-        if not self.evidence_id.strip() or not self.independence_group.strip():
+        if (not isinstance(self.evidence_id, str) or not self.evidence_id.strip()
+                or not isinstance(self.independence_group, str) or not self.independence_group.strip()):
             raise ValueError("Evidence ID and independence group are required.")
         for name in ("provenance", "integrity", "independence",
                      "reproducibility", "freshness", "relevance"):
             value = getattr(self, name)
-            if not isinstance(value, int) or not 0 <= value <= 3:
+            if type(value) is not int or not 0 <= value <= 3:
                 raise ValueError(f"{name} must be an integer from 0 to 3.")
 
     def dominates(self, other: "EvidenceQuality") -> bool:
@@ -56,11 +57,11 @@ class ClaimAssessment:
     specialist_competence: int = 0
 
     def __post_init__(self) -> None:
-        if not self.claim_id.strip():
+        if not isinstance(self.claim_id, str) or not self.claim_id.strip():
             raise ValueError("claim_id is required.")
         for name in ("mission_priority", "impact", "specialist_competence"):
             value = getattr(self, name)
-            if not isinstance(value, int) or not 0 <= value <= 3:
+            if type(value) is not int or not 0 <= value <= 3:
                 raise ValueError(f"{name} must be an integer from 0 to 3.")
         ids = [item.evidence_id for item in
                (*self.supporting_evidence, *self.contradicting_evidence)]
